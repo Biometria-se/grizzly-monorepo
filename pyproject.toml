@@ -1,0 +1,189 @@
+[project]
+name = "grizzly-monorepo"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.uv.workspace]
+members = [
+    "framework",
+    "common",
+    "docs",
+]
+
+[dependency-groups]
+dev = [
+    "astunparse>=1.6.3",
+    "atomicwrites>=1.4.1",
+    "coverage[toml]>=7.10.5",
+    "line-profiler>=5.0.0",
+    "mypy>=1.17.1",
+    "parameterized>=0.9.0",
+    "pipdeptree>=2.28.0",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "pytest-mock>=3.14.1",
+    "pytest-timeout>=2.4.0",
+    "ruff>=0.12.10",
+    "snakeviz>=2.2.2",
+]
+
+[tool.ruff]
+exclude = [
+    ".env", ".venv", ".pytest_tmp", "build", "dist", "**/__version__.py"
+]
+line-length = 180
+indent-width = 4
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "ANN401",
+    "BLE001",
+    "COM812",
+    "D101", "D102", "D103", "D105", "D106", "D107", "D203", "D213", "D205", "D301", "D407", "D417",
+    "DTZ005",
+    "E722", "E402",
+    "F405", "F403",
+    "N801",
+    "PD011",
+    "PLR2004",
+    "UP007", "UP006",
+    "Q000", "Q003",
+    "S101", "S104", "S314", "S603", "S701",
+    "SLF001",
+    "T201",
+    "TRY301"
+]
+
+[tool.ruff.lint.per-file-ignores]
+"docs/src/**" = ["G004"]
+"**/tests/**/*.py" = ["S106", "PLC0415"]
+"framework/tests/test_framework/unit/test_locust_dispatch.py" = ["PT009", "PT027"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15
+
+[tool.ruff.lint.pylint]
+max-branches = 15
+max-args = 10
+
+[tool.mypy]
+explicit_package_bases = true
+mypy_path = "$MYPY_CONFIG_FILE_DIR/framework/src,$MYPY_CONFIG_FILE_DIR/common/src,$MYPY_CONFIG_FILE_DIR/docs/src,$MYPY_CONFIG_FILE_DIR/framework/tests,$MYPY_CONFIG_FILE_DIR/common/tests,$MYPY_CONFIG_FILE_DIR/example"
+files = "framework/src,framework/tests,common/src,common/tests,docs/src,docs/tests"
+exclude = ["framework/tests/test-project/"]
+# https://github.com/python/mypy/issues/5870
+#follow_missing_imports = true
+show_column_numbers = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+#disallow_incomplete_defs = true
+#disallow_any_generics = true
+#disallow_subclassing_any = true
+#disallow_untyped_calls = true
+disallow_incomplete_defs = true
+#disallow_untyped_decorators = true
+no_implicit_optional = true
+no_implicit_reexport = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = "tests.unit.test_grizzly.test_locust_dispatch"
+disable_error_code = ["type-abstract", "unused-ignore"]
+
+[[tool.mypy.overrides]]
+module = "grizzly.steps.*"
+no_implicit_reexport = false
+
+[[tool.mypy.overrides]]
+module = "behave.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "pymqi.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "gevent.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "influxdb.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "lxml.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "jsonpath_ng.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "parse.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "opencensus.ext.azure.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "azure.iot.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "geventhttpclient.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "piplicenses.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "frontmatter.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "roundrobin.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "parameterized.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "jinja2_simple_tags.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "greenlet.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+addopts = [
+    "--cov=.",
+    "--cov-report=",
+    "--no-cov-on-fail"
+]
+timeout = 10
+filterwarnings = [
+    "ignore:setDaemon\\(\\) is deprecated.*:DeprecationWarning",
+    "ignore:.*pkg_resources.*:DeprecationWarning",
+    "ignore:Use setlocale.*instead:DeprecationWarning",
+    "error:.*:gevent.monkey.MonkeyPatchWarning",
+    "ignore:.*Use timezone-aware objects to represent datetimes",
+    "ignore:.*use of fork\\(\\) may lead to deadlocks in the child",
+    "ignore:'locale\\.getdefaultlocale' is deprecated"
+]

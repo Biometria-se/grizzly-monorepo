@@ -1,0 +1,104 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.209.5/containers/python-3
+{
+    "name": "Python 3",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": "..",
+        "args": {
+            "VARIANT": "3.13",
+            // Options
+            "INSTALL_NODE": "true",
+            "NODE_VERSION": "lts/*"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "python.defaultInterpreterPath": ".venv/bin/python",
+                "python.pythonPath": ".venv/bin/python",
+                "python.terminal.activateEnvInCurrentTerminal": true,
+                "python.languageServer": "Pylance",
+                "pythonTestExplorer.testFramework": "pytest",
+                "github.copilot.enable": {
+                    "*": false
+                },
+                "files.associations": {
+                    "*.j2.json": "jinja-json",
+                    "*.j2.xml": "jinja-xml"
+                },
+                "mypy.extraArguments": [
+                    "--config-file",
+                    "pyproject.toml"
+                ],
+                "python.testing.pytestEnabled": true,
+                "python.testing.pytestArgs": [
+                    "--cov=.",
+                    "--cov-report=xml:coverage.xml",
+                    "framework/tests/",
+                    "common/tests",
+                    "docs/tests"
+                ],
+                "coverage-gutters.xmlname": "coverage.xml",
+                "coverage-gutters.ignoredPathGlobs": "**/{node_modules,venv,.venv,vendor,tests}/**",
+                "[python]": {
+                    "editor.defaultFormatter": "charliermarsh.ruff",
+                    "editor.formatOnSave": true,
+                    "editor.codeActionsOnSave": {
+                        "source.fixAll.ruff": "always",
+                        "source.organizeImports.ruff": "never"
+                    }
+                },
+                "ruff.lint.ignore": [
+                    "F401"
+                ]
+            },
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "editorconfig.editorconfig",
+                "eamodio.gitlens",
+                "samuelcolvin.jinjahtml",
+                "mikestead.dotenv",
+                "ryanluker.vscode-coverage-gutters",
+                "stevejpurves.cucumber",
+                "silverbulleters.gherkin-autocomplete",
+                "matangover.mypy",
+                "redhat.vscode-yaml",
+                "ms-vscode.live-server",
+                "charliermarsh.ruff",
+                "oderwat.indent-rainbow",
+                "SanjulaGanepola.github-local-actions"
+            ]
+        }
+    },
+    // Set *default* container specific settings.json values on container create.
+    // Add the IDs of extensions you want installed when the container is created.
+    "mounts": [
+        "source=/etc/timezone,target=/etc/timezone,type=bind",
+        "source=/etc/localtime,target=/etc/localtime,type=bind",
+        "source=grizzly-monorepo-bashhistory,target=/commandhistory,type=volume"
+    ],
+    "containerEnv": {
+        "PYTHONPATH": "${containerWorkspaceFolder}",
+        "E2E_RUN_MODE": "local"
+    },
+    "remoteEnv": {
+        "GRIZZLY_MOUNT_CONTEXT": "${localWorkspaceFolder}"
+    },
+    "runArgs": [
+        "--add-host=host.docker.internal:host-gateway"
+    ],
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    // "forwardPorts": [],
+    "postCreateCommand": "ssh-add -l; uv sync --all-packages --all-extras",
+    // Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+    "remoteUser": "vscode",
+    "features": {
+        "ghcr.io/devcontainers/features/docker-from-docker:1": {},
+        "ghcr.io/devcontainers/features/git:1": {},
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/itsmechlark/features/act:1": {},
+        "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {}
+    }
+}
