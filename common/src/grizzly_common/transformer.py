@@ -32,11 +32,11 @@ class TransformerContentType(PermutationEnum):
     __vector__ = (False, True)
 
     UNDEFINED = None
-    JSON = "application/json"
-    XML = "application/xml"
-    PLAIN = "text/plain"
-    MULTIPART_FORM_DATA = "multipart/form-data"
-    OCTET_STREAM_UTF8 = "application/octet-stream; charset=utf-8"
+    JSON = 'application/json'
+    XML = 'application/xml'
+    PLAIN = 'text/plain'
+    MULTIPART_FORM_DATA = 'multipart/form-data'
+    OCTET_STREAM_UTF8 = 'application/octet-stream; charset=utf-8'
 
     @classmethod
     def from_string(cls, value: str) -> TransformerContentType:
@@ -56,24 +56,24 @@ class TransformerContentType(PermutationEnum):
 class Transformer(metaclass=ABCMeta):
     __wrapped_transform__: ClassVar[Callable[[str], Any]]
 
-    EMPTY: str = ""
+    EMPTY: str = ''
 
     @classmethod
     @abstractmethod
     def transform(cls, raw: str) -> Any:  # pragma: no cover
-        message = f"{cls.__name__} has not implemented transform"
+        message = f'{cls.__name__} has not implemented transform'
         raise NotImplementedError(message)
 
     @classmethod
     @abstractmethod
     def validate(cls, expression: str) -> bool:  # pragma: no cover
-        message = f"{cls.__name__} has not implemented validate"
+        message = f'{cls.__name__} has not implemented validate'
         raise NotImplementedError(message)  # pragma: no cover
 
     @classmethod
     @abstractmethod
     def parser(cls, expression: str) -> Callable[[Any], list[str]]:  # pragma: no cover
-        message = f"{cls.__name__} has not implemented parse"
+        message = f'{cls.__name__} has not implemented parse'
         raise NotImplementedError(message)
 
 
@@ -83,7 +83,7 @@ class transformer:
 
     def __init__(self, content_type: TransformerContentType) -> None:
         if content_type == TransformerContentType.UNDEFINED:
-            message = "it is not allowed to register a transformer of type UNDEFINED"
+            message = 'it is not allowed to register a transformer of type UNDEFINED'
             raise ValueError(message)
 
         self.content_type = content_type
@@ -97,21 +97,21 @@ class transformer:
             try:
                 return impl_transform(raw)
             except Exception as e:
-                message = f"failed to transform input as {content_type_name}: {e!s}"
+                message = f'failed to transform input as {content_type_name}: {e!s}'
                 raise TransformerError(message) from e
 
         impl.__wrapped_transform__ = impl_transform
-        setattr(impl, "transform", wrapped_transform)  # noqa: B010
+        setattr(impl, 'transform', wrapped_transform)  # noqa: B010
 
         if self.content_type not in transformer.available:
-            transformer.available.update({self.content_type: impl})
+            self.available.update({self.content_type: impl})
 
         return impl
 
 
 @transformer(TransformerContentType.JSON)
 class JsonTransformer(Transformer):
-    EMPTY = "null"
+    EMPTY = 'null'
 
     @classmethod
     def transform(cls, raw: str) -> Any:
@@ -119,7 +119,7 @@ class JsonTransformer(Transformer):
 
     @classmethod
     def validate(cls, expression: str) -> bool:
-        valid = expression.startswith("$.") and len(expression) > 2
+        valid = expression.startswith('$.') and len(expression) > 2
         if not valid:
             return valid
 
@@ -135,7 +135,7 @@ class JsonTransformer(Transformer):
         _actual = caster(actual)
         _expected = caster(expected)
 
-        return cast("bool", _actual == _expected)
+        return cast('bool', _actual == _expected)
 
     @classmethod
     def _op_in(cls, actual: str, expected: list[str]) -> bool:
@@ -146,14 +146,14 @@ class JsonTransformer(Transformer):
         _actual = caster(actual)
         _expected = caster(expected)
 
-        return cast("bool", _actual >= _expected)
+        return cast('bool', _actual >= _expected)
 
     @classmethod
     def _op_le(cls, actual: str, expected: str) -> bool:
         _actual = caster(actual)
         _expected = caster(expected)
 
-        return cast("bool", _actual >= _expected)
+        return cast('bool', _actual >= _expected)
 
     @classmethod
     def _get_outer_op(cls, expression: str, op: str) -> tuple[str, str] | None:
@@ -164,7 +164,7 @@ class JsonTransformer(Transformer):
             return None
 
         # check if expression contains any (complete) groups (`[..]`)
-        if not ("[" in expression and "]" in expression):
+        if not ('[' in expression and ']' in expression):
             jsonpath_expression, expected_value = expression.rsplit(op, 1)
             return jsonpath_expression, expected_value
 
@@ -173,8 +173,8 @@ class JsonTransformer(Transformer):
         try:  # check left side
             op_index = expression.rindex(op)
 
-            start_group = expression[:op_index].rindex("[")
-            end_group = expression[:op_index].rindex("]")
+            start_group = expression[:op_index].rindex('[')
+            end_group = expression[:op_index].rindex(']')
 
             if end_group < start_group:  # check right side
                 raise ValueError
@@ -187,8 +187,8 @@ class JsonTransformer(Transformer):
             expected_value = expression[op_index + op_length :]
         except ValueError:  # check right side
             try:
-                end_group = expression[op_index:].index("]") + op_index
-                start_group = expression[op_index:].index("[") + op_index
+                end_group = expression[op_index:].index(']') + op_index
+                start_group = expression[op_index:].index('[') + op_index
                 if start_group < op_index < end_group:
                     raise ValueError
 
@@ -208,30 +208,24 @@ class JsonTransformer(Transformer):
             assertion: Callable[[Any, Any], bool] | None = None
 
             operators: list[tuple[str, Callable[[Any, Any], bool]]] = [
-                ("==", cls._op_eq),
-                ("|=", cls._op_in),
-                (">=", cls._op_ge),
-                ("<=", cls._op_le),
+                ('==', cls._op_eq),
+                ('|=', cls._op_in),
+                ('>=', cls._op_ge),
+                ('<=', cls._op_le),
             ]
 
             for op, func in operators:
                 if (outer_op := cls._get_outer_op(expression, op)) is not None:
                     expression, expected_value = outer_op
-                    expected_value = expected_value.strip("\"'")
+                    expected_value = expected_value.strip('"\'')
 
-                    if op == "|=":
+                    if op == '|=':
                         # make string that is json compatible
-                        if (
-                            expected_value[0] in ['"', "'"]
-                            and expected_value[0] == expected_value[-1]
-                        ):
+                        if expected_value[0] in ['"', "'"] and expected_value[0] == expected_value[-1]:
                             expected_value = expected_value[1:-1]
 
                         expected_value = expected_value.replace("'", '"')
-                        expected = [
-                            str(ev)
-                            for ev in cast("list[str]", jsonloads(expected_value))
-                        ]
+                        expected = [str(ev) for ev in cast('list[str]', jsonloads(expected_value))]
                     else:
                         expected = expected_value
 
@@ -239,7 +233,7 @@ class JsonTransformer(Transformer):
                     break
 
             if not cls.validate(expression):
-                message = "not a valid expression"
+                message = 'not a valid expression'
                 raise RuntimeError(message)
 
             jsonpath = jsonpath_parse(expression)
@@ -248,11 +242,7 @@ class JsonTransformer(Transformer):
                 # we need to fool jsonpath-ng to allow "validation" queries on objects on multiple properties
                 # this shouldn't be done if the input is a nested object, and the query looks for any properties
                 # recursively under the root (`@.`)
-                if (
-                    isinstance(input_payload, dict)
-                    and "`this`" in expression
-                    and "@." not in expression
-                ):
+                if isinstance(input_payload, dict) and '`this`' in expression and '@.' not in expression:
                     input_payload = [input_payload]
 
                 values: list[str] = []
@@ -260,15 +250,9 @@ class JsonTransformer(Transformer):
                     if m is None or m.value is None:
                         continue
 
-                    value = (
-                        jsondumps(m.value)
-                        if isinstance(m.value, dict | list)
-                        else str(m.value)
-                    )
+                    value = jsondumps(m.value) if isinstance(m.value, dict | list) else str(m.value)
 
-                    if expected is None or (
-                        assertion is not None and assertion(value, expected)
-                    ):
+                    if expected is None or (assertion is not None and assertion(value, expected)):
                         values.append(value)
 
                 return values
@@ -320,11 +304,7 @@ class XmlTransformer(Transformer):
                     for match in xmlpath(input_payload):
                         if match is not None:
                             value: str
-                            value = (
-                                XML.tostring(match, with_tail=False).decode()
-                                if isinstance(match, XML._Element)
-                                else str(match).strip()
-                            )
+                            value = XML.tostring(match, with_tail=False).decode() if isinstance(match, XML._Element) else str(match).strip()
 
                             if len(value) > 0:
                                 values.append(value)
@@ -358,15 +338,15 @@ class PlainTransformer(Transformer):
         try:
             strict_expression = expression
             if len(strict_expression) > 1:
-                if strict_expression[0] != "^":
-                    strict_expression = f"^{strict_expression}"
-                if strict_expression[-1] != "$":
-                    strict_expression = f"{strict_expression}$"
+                if strict_expression[0] != '^':
+                    strict_expression = f'^{strict_expression}'
+                if strict_expression[-1] != '$':
+                    strict_expression = f'{strict_expression}$'
 
             pattern = re.compile(strict_expression)
 
             if pattern.groups < 0 or pattern.groups > 1:
-                message = f"{cls.__name__}: only expressions that has zero or one match group is allowed"
+                message = f'{cls.__name__}: only expressions that has zero or one match group is allowed'
                 raise ValueError(message)
 
             def get_values(input_payload: Any) -> list[str]:
@@ -391,8 +371,8 @@ class JsonBytesEncoder(JSONEncoder):
     def default(self, o: Any) -> Any:
         if isinstance(o, bytes):
             try:
-                return o.decode("utf-8")
+                return o.decode('utf-8')
             except Exception:
-                return o.decode("latin-1")
+                return o.decode('latin-1')
 
         return JSONEncoder.default(self, o)

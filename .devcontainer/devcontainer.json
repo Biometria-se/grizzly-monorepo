@@ -32,13 +32,6 @@
                     "pyproject.toml"
                 ],
                 "python.testing.pytestEnabled": true,
-                "python.testing.pytestArgs": [
-                    "--cov=.",
-                    "--cov-report=xml:coverage.xml",
-                    "framework/tests/",
-                    "common/tests",
-                    "docs/tests"
-                ],
                 "coverage-gutters.xmlname": "coverage.xml",
                 "coverage-gutters.ignoredPathGlobs": "**/{node_modules,venv,.venv,vendor,tests}/**",
                 "[python]": {
@@ -80,7 +73,6 @@
         "source=grizzly-monorepo-bashhistory,target=/commandhistory,type=volume"
     ],
     "containerEnv": {
-        "PYTHONPATH": "${containerWorkspaceFolder}",
         "E2E_RUN_MODE": "local"
     },
     "remoteEnv": {

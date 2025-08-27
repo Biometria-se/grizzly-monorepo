@@ -38,6 +38,7 @@ def test_step_task_transformer_parse_json(behave_fixture: BehaveFixture) -> None
         'document_id',
     )
     assert behave.exceptions == {behave.scenario.name: [ANY(AssertionError, message='TransformerTask: document_id has not been initialized')]}
+    behave.exceptions.clear()
 
     grizzly.scenario.variables['document_id'] = 'None'
     step_task_transformer_parse(
@@ -54,6 +55,8 @@ def test_step_task_transformer_parse_json(behave_fixture: BehaveFixture) -> None
         '$.document.id',
         'document_id',
     )
+
+    assert behave.exceptions == {}
 
     task = grizzly.scenario.tasks()[-1]
     assert isinstance(task, TransformerTask)

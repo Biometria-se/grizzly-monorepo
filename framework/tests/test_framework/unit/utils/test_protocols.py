@@ -16,7 +16,8 @@ from grizzly.utils.protocols import (
     mq_client_logs,
     zmq_disconnect,
 )
-from test_common.helpers import SOME
+
+from test_framework.helpers import SOME
 
 if TYPE_CHECKING:  # pragma: no cover
     from _pytest.logging import LogCaptureFixture

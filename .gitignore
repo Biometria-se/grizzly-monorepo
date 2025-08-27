@@ -13,12 +13,20 @@ wheels/
 .mypy_cache
 .pytest_cache
 
-# Project specific
+# *
 .coverage*
 coverage.xml
 **/__version__.py
 **/.pytest_tmp
+
+# docs/
 docs/build
+
+# example/
 example/environments/*.yaml
 !example/environments/example.yaml
+
+# command-line-interface/
+command-line-interface/tests/test_cli/e2e/example
+command-line-interface/tests/test_cli/tmp
 

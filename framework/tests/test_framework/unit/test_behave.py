@@ -42,7 +42,7 @@ def test_behave_no_pymqi_dependencies() -> None:
     with suppress(KeyError):
         del env['LD_LIBRARY_PATH']
 
-    env['PYTHONPATH'] = '.'
+    env['PYTHONPATH'] = '.:framework/src:common/src'
 
     out = subprocess.check_output(
         [

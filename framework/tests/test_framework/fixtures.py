@@ -587,10 +587,10 @@ def step_start_webserver(context: Context, port: int) -> None:
         self.test_tmp_dir = (Path(__file__) / '..' / '..' / '..' / '.pytest_tmp').resolve()
         self.test_tmp_dir.mkdir(exist_ok=True)
         self._tmp_path_factory_basetemp = tmp_path_factory._basetemp
-        self.webserver = webserver
         tmp_path_factory._basetemp = self.test_tmp_dir
 
         self._tmp_path_factory = tmp_path_factory
+        self.webserver = webserver
         self.cwd = (Path(__file__).parent / '..' / '..').resolve()
         self._env = {}
         self._validators = {}
@@ -666,19 +666,6 @@ def step_start_webserver(context: Context, port: int) -> None:
             if env_value is not None:
                 self._env.update({env_key: env_value})
 
-        # install grizzly-cli
-        rc, output = run_command(
-            ['python3', '-m', 'pip', 'install', 'git+https://github.com/biometria-se/grizzly-cli.git@main'],
-            cwd=test_context,
-            env=self._env,
-        )
-
-        try:
-            assert rc == 0
-        except AssertionError:
-            print(''.join(output))
-            raise
-
         # create grizzly project
         extra_args = '--with-mq' if pymqi.__name__ != 'grizzly_common.dummy_pymqi' else ''
         rc, output = run_command(
@@ -751,7 +738,7 @@ def step_start_webserver(context: Context, port: int) -> None:
 
             rc, output = run_command(
                 ['uv', 'pip', 'install', grizzly_package],
-                cwd=self.test_tmp_dir.parent,
+                cwd=self.cwd,
                 env=self._env,
             )
 

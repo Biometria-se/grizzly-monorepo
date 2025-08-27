@@ -35,7 +35,7 @@ class TestMessageQueueClientTaskNoPymqi:
         with suppress(KeyError):
             del env['LD_LIBRARY_PATH']
 
-        env['PYTHONPATH'] = '.'
+        env['PYTHONPATH'] = '.:framework/src:common/src'
 
         with pytest.raises(subprocess.CalledProcessError) as e:
             subprocess.check_output(

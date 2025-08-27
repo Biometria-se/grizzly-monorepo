@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+from gevent import monkey
+
+monkey.patch_all()
+
 from os import environ
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -34,6 +39,19 @@ E2E_RUN_DIST = environ.get('E2E_RUN_DIST', 'False').lower() == 'True'.lower()
 
 
 PYTEST_TIMEOUT = 500 if E2E_RUN_DIST or E2E_RUN_MODE == 'dist' else 180
+
+
+@pytest.fixture(autouse=True)
+def run_before_and_after_tests(tmp_path_factory: TempPathFactory) -> Generator[None, None, None]:
+    original_tmp_path = tmp_path_factory._basetemp
+    test_root = (Path(__file__).parent / '..' / '..' / '.pytest_tmp').resolve()
+    tmp_path_factory._basetemp = test_root
+    tmp_path_factory._basetemp.mkdir(exist_ok=True)
+
+    try:
+        yield
+    finally:
+        tmp_path_factory._basetemp = original_tmp_path
 
 
 # if we're only running E2E tests, set global timeout

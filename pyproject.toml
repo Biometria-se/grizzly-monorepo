@@ -1,3 +1,7 @@
+# Adding a new package to the workspace, also needs to be added here:
+# - tool.pytest.ini_options
+# - tool.coverage.run
+# - tool.mypy
 [project]
 name = "grizzly-monorepo"
 version = "0.1.0"
@@ -11,9 +15,14 @@ members = [
     "framework",
     "common",
     "docs",
+    "command-line-interface",
 ]
 
 [dependency-groups]
+ci = [
+    "build>=1.3.0",
+    "twine>=6.1.0",
+]
 dev = [
     "astunparse>=1.6.3",
     "atomicwrites>=1.4.1",
@@ -66,6 +75,8 @@ ignore = [
 "docs/src/**" = ["G004"]
 "**/tests/**/*.py" = ["S106", "PLC0415"]
 "framework/tests/test_framework/unit/test_locust_dispatch.py" = ["PT009", "PT027"]
+"command-line-interface/src/**/*.py" = ["S607"]
+"command-line-interface/tests/test_cli/unit/utils/test___init__.py" = ["W291"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 15
@@ -74,10 +85,48 @@ max-complexity = 15
 max-branches = 15
 max-args = 10
 
+[tool.pytest.ini_options]
+pythonpath = [
+    "framework/src",
+    "common/src",
+    "docs/src",
+    "command-line-interface/src"
+]
+addopts = [
+    "-p", "no:requests_mock",
+    "--cov=.",
+    "--cov-report=xml:coverage.xml",
+    "--no-cov-on-fail"
+]
+testpaths = [
+    "framework/tests",
+    "common/tests",
+    "docs/tests",
+    "command-line-interface/tests"
+]
+timeout = 10
+filterwarnings = [
+    "ignore:setDaemon\\(\\) is deprecated.*:DeprecationWarning",
+    "ignore:.*pkg_resources.*:DeprecationWarning",
+    "ignore:Use setlocale.*instead:DeprecationWarning",
+    "error:.*:gevent.monkey.MonkeyPatchWarning",
+    "ignore:.*Use timezone-aware objects to represent datetimes",
+    "ignore:.*use of fork\\(\\) may lead to deadlocks in the child",
+    "ignore:'locale\\.getdefaultlocale' is deprecated"
+]
+
+[tool.coverage.run]
+source = [
+    "framework/src",
+    "common/src",
+    "docs/src",
+    "command-line-interface/src"
+]
+
 [tool.mypy]
 explicit_package_bases = true
-mypy_path = "$MYPY_CONFIG_FILE_DIR/framework/src,$MYPY_CONFIG_FILE_DIR/common/src,$MYPY_CONFIG_FILE_DIR/docs/src,$MYPY_CONFIG_FILE_DIR/framework/tests,$MYPY_CONFIG_FILE_DIR/common/tests,$MYPY_CONFIG_FILE_DIR/example"
-files = "framework/src,framework/tests,common/src,common/tests,docs/src,docs/tests"
+mypy_path = "$MYPY_CONFIG_FILE_DIR/framework/src,$MYPY_CONFIG_FILE_DIR/common/src,$MYPY_CONFIG_FILE_DIR/docs/src,$MYPY_CONFIG_FILE_DIR/framework/tests,$MYPY_CONFIG_FILE_DIR/common/tests,$MYPY_CONFIG_FILE_DIR/example,$MYPY_CONFIG_FILE_DIR/command-line-interface/src,$MYPY_CONFIG_FILE_DIR/command-line-interface/tests"
+files = "framework/src,framework/tests,common/src,common/tests,docs/src,docs/tests,command-line-interface/src,command-line-interface/tests"
 exclude = ["framework/tests/test-project/"]
 # https://github.com/python/mypy/issues/5870
 #follow_missing_imports = true
@@ -171,19 +220,6 @@ ignore_missing_imports = true
 module = "greenlet.*"
 ignore_missing_imports = true
 
-[tool.pytest.ini_options]
-addopts = [
-    "--cov=.",
-    "--cov-report=",
-    "--no-cov-on-fail"
-]
-timeout = 10
-filterwarnings = [
-    "ignore:setDaemon\\(\\) is deprecated.*:DeprecationWarning",
-    "ignore:.*pkg_resources.*:DeprecationWarning",
-    "ignore:Use setlocale.*instead:DeprecationWarning",
-    "error:.*:gevent.monkey.MonkeyPatchWarning",
-    "ignore:.*Use timezone-aware objects to represent datetimes",
-    "ignore:.*use of fork\\(\\) may lead to deadlocks in the child",
-    "ignore:'locale\\.getdefaultlocale' is deprecated"
-]
+[[tool.mypy.overrides]]
+module = "progress.*"
+ignore_missing_imports = true

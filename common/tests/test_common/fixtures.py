@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 from urllib.parse import urlparse
 
 import yaml
+from _pytest.tmpdir import TempPathFactory
 from behave.configuration import Configuration
 from behave.model import Background
 from behave.runner import Runner as BehaveRunner
@@ -44,7 +45,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from types import TracebackType
     from unittest.mock import MagicMock
 
-    from _pytest.tmpdir import TempPathFactory
     from grizzly.scenarios import GrizzlyScenario
     from grizzly.types import Self
     from grizzly.users import GrizzlyUser
@@ -60,6 +60,7 @@ __all__ = [
     'MockerFixture',
     'NoopZmqFixture',
     'RequestTaskFixture',
+    'TempPathFactory',
 ]
 
 

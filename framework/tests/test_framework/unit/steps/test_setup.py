@@ -400,12 +400,12 @@ def test__execute_python_script(behave_fixture: BehaveFixture, mocker: MockerFix
 
     mocker.patch('grizzly.steps.setup.on_worker', return_value=False)
 
-    assert not hasattr(context, '__foobar__')
+    assert not hasattr(context, 'foobar')
 
-    _execute_python_script(context, "from pathlib import Path\nfrom os import path\nsetattr(context, '__foobar__', 'foobar')", None)
+    _execute_python_script(context, "from pathlib import Path\nfrom os import path\nsetattr(context, 'foobar', 'foobar')", None)
 
-    assert context.__foobar__ == 'foobar'
-    assert hasattr(context, '__foobar__')
+    assert hasattr(context, 'foobar')
+    assert context.foobar == 'foobar'
     assert globals().get('context', None) is None
 
 

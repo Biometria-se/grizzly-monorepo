@@ -21,16 +21,15 @@ from unittest.mock import MagicMock
 from uuid import UUID
 
 from geventhttpclient.response import HTTPSocketPoolResponse
-from locust import task
-from locust.contrib.fasthttp import FastResponse
-from locust.contrib.fasthttp import ResponseContextManager as FastResponseContextManager
-
 from grizzly.scenarios import GrizzlyScenario
 from grizzly.tasks import GrizzlyTask, RequestTask, grizzlytask, template
 from grizzly.testdata.variables import AtomicVariable
 from grizzly.types import GrizzlyResponse, RequestMethod, StrDict
 from grizzly.types.locust import Environment, Message
 from grizzly.users import GrizzlyUser
+from locust import task
+from locust.contrib.fasthttp import FastResponse
+from locust.contrib.fasthttp import ResponseContextManager as FastResponseContextManager
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable, Generator

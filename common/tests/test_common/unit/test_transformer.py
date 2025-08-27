@@ -100,6 +100,7 @@ class Testtransformer:
         original_transformers = transformer.available.copy()
 
         try:
+            assert len(original_transformers) == 3
             assert len(transformer.available) == 3
             transformer_decorator = transformer(TransformerContentType.JSON)
 
@@ -115,6 +116,7 @@ class Testtransformer:
         finally:
             # remove dummy transformer
             transformer.available = original_transformers
+            assert len(transformer.available) == 3
 
 
 class TestJsonTransformer:

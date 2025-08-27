@@ -1,0 +1,62 @@
+[project]
+name = "grizzly-cli"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Mikael Göransson", email = "github@mgor.se" }
+]
+requires-python = ">=3.9"
+dependencies = [
+    "azure-identity>=1.24.0",
+    "azure-keyvault-secrets>=4.10.0",
+    "grizzly-common",
+    "progress>=1.6.1",
+    "requests>=2.32.5",
+    "tomli>=2.2.1",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12"
+]
+keywords = [
+    "grizzly",
+    "grizzly-loadtester",
+    "cli",
+    "command line interface",
+    "locust",
+    "behave",
+    "load",
+    "loadtest",
+    "performance",
+    "traffic generator"
+]
+
+[project.urls]
+Documentation = "https://biometria-se.github.io/grizzly/command-line-interface/usage/"
+Code = "https://github.com/biometria-se/grizzly/"
+Tracker = "https://github.com/Biometria-se/grizzly/issues"
+
+[project.scripts]
+grizzly-cli = "grizzly_cli.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv.sources]
+grizzly-common = { workspace = true }
+grizzly = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "grizzly",
+    "requests-mock>=1.12.1",
+]
