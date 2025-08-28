@@ -8,7 +8,7 @@ from importlib.metadata import PackageNotFoundError, version
 
 # @TODO: dynamic
 try:
-    __version__ = version('grizzly')
+    __version__ = version('grizzly-loadtester')
 except PackageNotFoundError:  # pragma: no cover
     __version__ = '<unknown>'
 

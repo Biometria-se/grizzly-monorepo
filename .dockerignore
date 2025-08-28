@@ -1,0 +1,5 @@
+.venv/
+docs/
+**/.pytest_tmp
+**/__pycache__
+**/.*_cache

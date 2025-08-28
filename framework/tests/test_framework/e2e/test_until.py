@@ -14,9 +14,9 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def test_e2e_until(e2e_fixture: End2EndFixture) -> None:
     def after_feature(context: Context, *_args: Any, **_kwargs: Any) -> None:
-        from grizzly.locust import on_master
+        from grizzly.locust import on_worker
 
-        if on_master(context):
+        if on_worker(context):
             return
 
         grizzly = cast('GrizzlyContext', context.grizzly)
@@ -74,6 +74,10 @@ def test_e2e_until(e2e_fixture: End2EndFixture) -> None:
     """),  # noqa: E501
     )
 
-    rc, _ = e2e_fixture.execute(feature_file, env_conf=env_conf)
+    rc, output = e2e_fixture.execute(feature_file, env_conf=env_conf)
 
-    assert rc == 0
+    try:
+        assert rc == 0
+    except AssertionError:
+        print(''.join(output))
+        raise

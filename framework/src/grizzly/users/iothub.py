@@ -119,13 +119,13 @@ from azure.iot.device.exceptions import ClientError
 from azure.storage.blob import BlobClient, ContentSettings
 from gevent import sleep as gsleep
 from gevent.queue import Empty, Queue
+from grizzly_common.queues import VolatileDeque
+from grizzly_common.transformer import JsonTransformer, TransformerContentType
 
 from grizzly.events import GrizzlyEventDecoder, event, events
 from grizzly.exceptions import retry
 from grizzly.types import GrizzlyResponse, RequestMethod, ScenarioState, StrDict
 from grizzly.utils import has_template
-from grizzly_common.queue import VolatileDeque
-from grizzly_common.transformer import JsonTransformer, TransformerContentType
 
 from . import GrizzlyUser, grizzlycontext
 

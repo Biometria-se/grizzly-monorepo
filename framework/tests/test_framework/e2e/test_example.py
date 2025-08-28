@@ -5,7 +5,7 @@ from __future__ import annotations
 from contextlib import suppress
 from pathlib import Path
 from shutil import copytree
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
@@ -13,62 +13,71 @@ if TYPE_CHECKING:  # pragma: no cover
     from test_framework.fixtures import End2EndFixture
 
 
-def test_e2e_example(e2e_fixture: End2EndFixture) -> None:  # noqa: PLR0915
-    result: str | None = None
+def _prepare_example_project(e2e_fixture: End2EndFixture, root: Path) -> Path:
+    # copy examples
+    example_root = e2e_fixture.root.parent / 'test-example'
+    copytree(root, example_root, dirs_exist_ok=True)
+
+    with Path.joinpath(example_root, 'features', 'steps', 'steps.py').open('a') as fd:
+        fd.write(
+            e2e_fixture.step_start_webserver.format('/srv/grizzly'),
+        )
+
+    # create steps/webserver.py
+    webserver_source = e2e_fixture.test_tmp_dir.parent / 'tests' / 'test_framework' / 'webserver.py'
+    webserver_destination = example_root / 'features' / 'steps' / 'webserver.py'
+    webserver_destination.write_text(webserver_source.read_text())
+
+    feature_file_path = Path.joinpath(example_root, 'features', 'example.feature')
+    feature_file_contents = feature_file_path.read_text().split('\n')
+
+    index = feature_file_contents.index('  Scenario: dog facts api')
+    # should go last in "Background"-section
+    feature_file_contents.insert(index - 1, f'    Then start webserver on master port "{e2e_fixture.webserver.port}"')
+
+    with Path(feature_file_path).open('w') as fd:
+        fd.truncate(0)
+        fd.write('\n'.join(feature_file_contents))
+
+    return example_root
+
+
+def _create_env_file_in_root(e2e_fixture: End2EndFixture) -> tuple[Path, dict[str, Any]]:
     root = (Path(__file__).parent / '..' / '..' / '..' / '..' / 'example').resolve()
 
-    with Path.joinpath(root, 'environments/example.yaml').open() as env_yaml_file:
+    with Path.joinpath(root, 'environments', 'example.yaml').open() as env_yaml_file:
         env_conf = yaml.full_load(env_yaml_file)
 
         for name in ['dog', 'cat', 'book']:
             env_conf['configuration']['facts'][name]['host'] = f'http://{e2e_fixture.host}'
 
-    if e2e_fixture._distributed:
-        # copy examples
-        example_root = e2e_fixture.root.parent / 'test-example'
-        copytree(root, example_root, dirs_exist_ok=True)
+    return root, env_conf
 
-        with (Path(example_root) / 'features' / 'steps' / 'steps.py').open('a') as fd:
-            fd.write(
-                e2e_fixture.step_start_webserver.format('/srv/grizzly'),
-            )
 
-        # create steps/webserver.py
-        webserver_source = e2e_fixture.test_tmp_dir.parent / 'tests' / 'webserver.py'
-        webserver_destination = example_root / 'features' / 'steps' / 'webserver.py'
-        webserver_destination.write_text(webserver_source.read_text())
-
-        feature_file_root = str(example_root).replace(f'{root}/', '')
-        feature_file = f'{feature_file_root}/features/example.feature'
-        feature_file_contents = Path(feature_file).read_text().split('\n')
-
-        index = feature_file_contents.index('  Scenario: dog facts api')
-        # should go last in "Background"-section
-        feature_file_contents.insert(index - 1, f'    Then start webserver on master port "{e2e_fixture.webserver.port}"')
-
-        with Path(feature_file).open('w') as fd:
-            fd.truncate(0)
-            fd.write('\n'.join(feature_file_contents))
-    else:
-        example_root = root
-
-    feature_file = 'features/example.feature'
-
-    # use test-example project stucture, but with original project name (image)
-    original_root = e2e_fixture.root
-    e2e_fixture._root = example_root
+def test_e2e_example(e2e_fixture: End2EndFixture) -> None:  # noqa: PLR0915
+    result: str | None = None
 
     try:
-        code, output = e2e_fixture.execute(feature_file, env_conf=env_conf, project_name=original_root.name)
+        root, env_conf = _create_env_file_in_root(e2e_fixture)
 
-        result = ''.join(output)
-    finally:
-        # restore original root
-        e2e_fixture._root = original_root
+        example_root = _prepare_example_project(e2e_fixture, root) if e2e_fixture._distributed else root
 
-    assert code == 0
+        feature_file = 'features/example.feature'
 
-    try:
+        # use test-example project stucture, but with original project name (image)
+        original_root = e2e_fixture.root
+        e2e_fixture._root = example_root
+
+        try:
+            code, output = e2e_fixture.execute(feature_file, env_conf=env_conf, project_name=original_root.name)
+
+            result = ''.join(output)
+        finally:
+            # restore original root
+            e2e_fixture._root = original_root
+
+        assert code == 0
+
         assert 'Exception ignored in' not in result
         assert 'ERROR' not in result
         assert 'WARNING' not in result
@@ -91,7 +100,7 @@ def test_e2e_example(e2e_fixture: End2EndFixture) -> None:  # noqa: PLR0915
         # check debugging and that task index -> step expression is correct
         # dog facts api
         assert '1 of 4 executed: iterator' in result
-        assert ('2 of 4 executed: Then get request with name "get-dog-facts" from endpoint "/api/v1/resources/dogs?number={{ AtomicRandomInteger.dog_facts_count }}') in result
+        assert '2 of 4 executed: Then get request with name "get-dog-facts" from endpoint "/api/v1/resources/dogs?number={{ AtomicRandomInteger.dog_facts_count }}' in result
         assert '3 of 4 executed: Then log message' in result
         assert '4 of 4 executed: pace' in result
 
@@ -118,50 +127,18 @@ def test_e2e_example(e2e_fixture: End2EndFixture) -> None:  # noqa: PLR0915
         assert 'dog=foobar' in result
         assert 'book=foobar' in result
     except:
-        print(result)
+        if result is not None:
+            print(result)
         raise
 
 
-def test_e2e_example_dry_run(e2e_fixture: End2EndFixture) -> None:  # noqa: PLR0915
+def test_e2e_example_dry_run(e2e_fixture: End2EndFixture) -> None:
+    result: str | None = None
+
     try:
-        result: str | None = None
-        root = (Path(__file__).parent / '..' / '..' / '..' / '..' / 'example').resolve()
+        root, env_conf = _create_env_file_in_root(e2e_fixture)
 
-        with Path.joinpath(root, 'environments/example.yaml').open() as env_yaml_file:
-            env_conf = yaml.full_load(env_yaml_file)
-
-            for name in ['dog', 'cat', 'book']:
-                env_conf['configuration']['facts'][name]['host'] = f'http://{e2e_fixture.host}'
-
-        if e2e_fixture._distributed:
-            # copy examples
-            example_root = e2e_fixture.root.parent / 'test-example'
-            copytree(root, example_root, dirs_exist_ok=True)
-
-            with (Path(example_root) / 'features' / 'steps' / 'steps.py').open('a') as fd:
-                fd.write(
-                    e2e_fixture.step_start_webserver.format('/srv/grizzly'),
-                )
-
-            # create steps/webserver.py
-            webserver_source = e2e_fixture.test_tmp_dir.parent / 'tests' / 'webserver.py'
-            webserver_destination = example_root / 'features' / 'steps' / 'webserver.py'
-            webserver_destination.write_text(webserver_source.read_text())
-
-            root = (Path(__file__) / '..' / '..' / '..').resolve()
-            feature_file_root = str(example_root).replace(f'{root}/', '')
-            feature_file = f'{feature_file_root}/features/example.feature'
-            feature_file_contents = Path(feature_file).read_text().split('\n')
-
-            index = feature_file_contents.index('  Scenario: dog facts api')
-            # should go last in "Background"-section
-            feature_file_contents.insert(index - 1, f'    Then start webserver on master port "{e2e_fixture.webserver.port}"')
-
-            with Path(feature_file).open('w') as fd:
-                fd.truncate(0)
-                fd.write('\n'.join(feature_file_contents))
-        else:
-            example_root = root
+        example_root = _prepare_example_project(e2e_fixture, root) if e2e_fixture._distributed else root
 
         feature_file = 'features/example.feature'
 

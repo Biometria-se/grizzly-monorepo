@@ -1,14 +1,14 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.13"
 
 [manifest]
 members = [
-    "grizzly",
-    "grizzly-cli",
-    "grizzly-common",
+    "grizzly-loadtester",
+    "grizzly-loadtester-cli",
+    "grizzly-loadtester-common",
+    "grizzly-loadtester-monorepo",
     "grizzly-mkdocs",
-    "grizzly-monorepo",
 ]
 
 [[package]]
@@ -627,13 +627,13 @@ wheels = [
 ]
 
 [[package]]
-name = "grizzly"
+name = "grizzly-loadtester"
 version = "0.1.0"
 source = { editable = "framework" }
 dependencies = [
     { name = "azure-iot-device" },
     { name = "azure-storage-blob" },
-    { name = "grizzly-common" },
+    { name = "grizzly-loadtester-common" },
     { name = "influxdb" },
     { name = "influxdb-client" },
     { name = "locust" },
@@ -642,15 +642,15 @@ dependencies = [
 
 [package.optional-dependencies]
 mq = [
-    { name = "grizzly-common", extra = ["mq"] },
+    { name = "grizzly-loadtester-common", extra = ["mq"] },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "azure-iot-device", specifier = ">=2.14.0" },
     { name = "azure-storage-blob", specifier = ">=12.26.0" },
-    { name = "grizzly-common", editable = "common" },
-    { name = "grizzly-common", extras = ["mq"], marker = "extra == 'mq'", editable = "common" },
+    { name = "grizzly-loadtester-common", editable = "common" },
+    { name = "grizzly-loadtester-common", extras = ["mq"], marker = "extra == 'mq'", editable = "common" },
     { name = "influxdb", specifier = ">=5.3.2" },
     { name = "influxdb-client", specifier = ">=1.49.0" },
     { name = "locust", specifier = ">=2.39.0" },
@@ -659,13 +659,13 @@ requires-dist = [
 provides-extras = ["mq"]
 
 [[package]]
-name = "grizzly-cli"
+name = "grizzly-loadtester-cli"
 version = "0.1.0"
 source = { editable = "command-line-interface" }
 dependencies = [
     { name = "azure-identity" },
     { name = "azure-keyvault-secrets" },
-    { name = "grizzly-common" },
+    { name = "grizzly-loadtester-common" },
     { name = "progress" },
     { name = "requests" },
     { name = "tomli" },
@@ -673,7 +673,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "grizzly" },
+    { name = "grizzly-loadtester" },
     { name = "requests-mock" },
 ]
 
@@ -681,7 +681,7 @@ dev = [
 requires-dist = [
     { name = "azure-identity", specifier = ">=1.24.0" },
     { name = "azure-keyvault-secrets", specifier = ">=4.10.0" },
-    { name = "grizzly-common", editable = "common" },
+    { name = "grizzly-loadtester-common", editable = "common" },
     { name = "progress", specifier = ">=1.6.1" },
     { name = "requests", specifier = ">=2.32.5" },
     { name = "tomli", specifier = ">=2.2.1" },
@@ -689,12 +689,12 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "grizzly", editable = "framework" },
+    { name = "grizzly-loadtester", editable = "framework" },
     { name = "requests-mock", specifier = ">=1.12.1" },
 ]
 
 [[package]]
-name = "grizzly-common"
+name = "grizzly-loadtester-common"
 version = "0.1.0"
 source = { editable = "common" }
 dependencies = [
@@ -746,42 +746,7 @@ dev = [
 ]
 
 [[package]]
-name = "grizzly-mkdocs"
-version = "0.1.0"
-source = { editable = "docs" }
-dependencies = [
-    { name = "cssselect" },
-    { name = "mkdocs" },
-    { name = "mkdocs-autorefs" },
-    { name = "mkdocs-gen-files" },
-    { name = "mkdocs-macros-plugin" },
-    { name = "mkdocs-material" },
-    { name = "mkdocs-section-index" },
-    { name = "mkdocstrings-python" },
-    { name = "packaging" },
-    { name = "pip-licenses" },
-    { name = "pytablewriter" },
-    { name = "requests" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "cssselect", specifier = ">=1.3.0" },
-    { name = "mkdocs", specifier = ">=1.6.1" },
-    { name = "mkdocs-autorefs", specifier = ">=1.4.2" },
-    { name = "mkdocs-gen-files", specifier = ">=0.5.0" },
-    { name = "mkdocs-macros-plugin", specifier = ">=1.3.9" },
-    { name = "mkdocs-material", specifier = ">=9.6.18" },
-    { name = "mkdocs-section-index", specifier = ">=0.3.10" },
-    { name = "mkdocstrings-python", specifier = ">=1.17.0" },
-    { name = "packaging", specifier = ">=25.0" },
-    { name = "pip-licenses", specifier = ">=5.0.0" },
-    { name = "pytablewriter", specifier = ">=1.2.1" },
-    { name = "requests", specifier = ">=2.32.5" },
-]
-
-[[package]]
-name = "grizzly-monorepo"
+name = "grizzly-loadtester-monorepo"
 version = "0.1.0"
 source = { virtual = "." }
 
@@ -827,6 +792,41 @@ dev = [
     { name = "pytest-timeout", specifier = ">=2.4.0" },
     { name = "ruff", specifier = ">=0.12.10" },
     { name = "snakeviz", specifier = ">=2.2.2" },
+]
+
+[[package]]
+name = "grizzly-mkdocs"
+version = "0.1.0"
+source = { editable = "docs" }
+dependencies = [
+    { name = "cssselect" },
+    { name = "mkdocs" },
+    { name = "mkdocs-autorefs" },
+    { name = "mkdocs-gen-files" },
+    { name = "mkdocs-macros-plugin" },
+    { name = "mkdocs-material" },
+    { name = "mkdocs-section-index" },
+    { name = "mkdocstrings-python" },
+    { name = "packaging" },
+    { name = "pip-licenses" },
+    { name = "pytablewriter" },
+    { name = "requests" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "cssselect", specifier = ">=1.3.0" },
+    { name = "mkdocs", specifier = ">=1.6.1" },
+    { name = "mkdocs-autorefs", specifier = ">=1.4.2" },
+    { name = "mkdocs-gen-files", specifier = ">=0.5.0" },
+    { name = "mkdocs-macros-plugin", specifier = ">=1.3.9" },
+    { name = "mkdocs-material", specifier = ">=9.6.18" },
+    { name = "mkdocs-section-index", specifier = ">=0.3.10" },
+    { name = "mkdocstrings-python", specifier = ">=1.17.0" },
+    { name = "packaging", specifier = ">=25.0" },
+    { name = "pip-licenses", specifier = ">=5.0.0" },
+    { name = "pytablewriter", specifier = ">=1.2.1" },
+    { name = "requests", specifier = ">=2.32.5" },
 ]
 
 [[package]]

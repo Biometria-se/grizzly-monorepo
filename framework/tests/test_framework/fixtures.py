@@ -716,9 +716,8 @@ def step_start_webserver(context: Context, port: int) -> None:
             webserver_destination = self.root / 'features' / 'steps' / 'webserver.py'
             webserver_destination.write_text(webserver_source.read_text())
 
-            command = ['grizzly-cli', 'dist', '--project-name', self.root.name, 'build', '--no-cache', '--local-install', '--verbose', '--no-progress']
-            command_log = ' '.join(command)
-            print(f'cmd={command_log}, cwd={self.cwd}')
+            command = ['grizzly-cli', 'dist', '--project-name', self.root.name, 'build', '--no-cache', '--local-install', self.root.as_posix()]
+
             rc, output = run_command(
                 command,
                 cwd=self.cwd.parent,

@@ -38,21 +38,20 @@ RUN cp /tmp/mqm/inc/*.h* /opt/mqm/inc/ \
 
 # <!-- python-base-remote (no extras, remote install)
 FROM base AS python-base-remote
-## NOOP
+
+RUN mkdir /build
 # python-base-remote (no extras) -->
 
 # <!-- python-base-local (no extras, local install)
 FROM base AS python-base-local
 
-COPY . /tmp/grizzly
+COPY . /build/
 # python-base-local (get code from build machine) -->
 
 # <!-- python-mq (with mq extras -> pymqi)
 FROM python-base-${GRIZZLY_INSTALL_TYPE} AS python-mq
 
 COPY --from=mq /opt/mqm /opt/mqm
-
-ENV LD_LIBRARY_PATH="/opt/mqm/lib64:${LD_LIBRARY_PATH}"
 # python-mq (with mq extras -> pymqi) -->
 
 # <!-- python-mq-local (with mq extras -> pymqi, local install)
@@ -85,36 +84,44 @@ RUN mkdir -p -m 0600 /root/.ssh
 
 RUN python -m venv /venv
 
+ENV VIRTUAL_ENV=/venv
+
 ENV PATH="/venv/bin:$PATH"
 
-RUN python -m pip install wheel
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+ENV UV_LINK_MODE=copy
+
+WORKDIR /build
 # python-venv -->
 
 # <!-- python-venv-base-local (no mq extras, local install)
 FROM python-venv AS python-venv-base-local
 
-RUN python -m pip --disable-pip-version-check --no-cache-dir install /tmp/grizzly
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --active --frozen --no-editable --package grizzly-loadtester
 # python-venv-base-local (no mq extras, local install) -->
 
 # <!-- python-venv-mq-local (mq extras, local install)
 FROM python-venv AS python-venv-mq-local
 
-RUN python -m pip --disable-pip-version-check --no-cache-dir install /tmp/grizzly[mq]
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --active --frozen --no-editable --package grizzly-loadtester --extra mq
 # python-venv-mq-local (mq extras, local install) -->
 
 # <!-- python-venv-base-remote (no mq extras, remote install)
 FROM python-venv AS python-venv-base-remote
 
-COPY requirements.txt /tmp
+COPY requirements.txt /build
 
-RUN --mount=type=ssh GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' python -m pip --disable-pip-version-check --no-cache-dir install -r /tmp/requirements.txt
+RUN --mount=type=ssh,type=cache,target=/root/.cache/uv GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' /bin/uv pip install -r /build/requirements.txt
 # python-venv-base-remote (no mq extras, remote install) -->
 
 
-# <!-- python-venv-mq-remote (no mq extras, remote install)
+# <!-- python-venv-mq-remote (mq extras, remote install)
 FROM python-venv-base-remote AS python-venv-mq-remote
 # NOOP, same as without mq extras, installed from requirements.txt
-# python-venv-mq-remote (no mq extras, remote install) -->
+# python-venv-mq-remote (mq extras, remote install) -->
 
 # <!-- python (simple reference to copy from)
 FROM python-venv-${GRIZZLY_EXTRA}-${GRIZZLY_INSTALL_TYPE} AS python
@@ -155,6 +162,7 @@ RUN groupadd \
         -G grizzly \
         -N \
         -s /bin/bash \
+        -m \
         grizzly
 
 RUN apt-get install -y --no-install-recommends \
@@ -168,7 +176,7 @@ ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ENV PATH="/venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH="/srv/grizzly"
+ENV PYTHONPATH=/srv/grizzly
 # grizzly-base -->
 
 # <!-- grizzly-mq
@@ -176,10 +184,10 @@ FROM grizzly-base AS grizzly-mq
 
 COPY --from=mq /opt/mqm /opt/mqm
 
-ENV LD_LIBRARY_PATH="/opt/mqm/lib64:${LD_LIBRARY_PATH}"
+ENV LD_LIBRARY_PATH="/opt/mqm/lib64"
 
 RUN mkdir -p /home/grizzly/IBM/MQ/data && \
-    chown -R grizzly:grizzly /home/grizzly \
+    chown -R grizzly:grizzly /home/grizzly/IBM \
     && mkdir -p /srv/grizzly/features/logs \
     && ln -sf /srv/grizzly/features/logs /home/grizzly/IBM/MQ/data/errors \
     && rm -rf /srv/grizzly/features

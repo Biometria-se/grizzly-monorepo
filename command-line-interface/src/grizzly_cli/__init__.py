@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 # @TODO: dynamic
 try:
-    __version__ = version('grizzly-cli')
+    __version__ = version('grizzly-loadtester-cli')
 except PackageNotFoundError:  # pragma: no cover
     __version__ = '<unknown>'
 

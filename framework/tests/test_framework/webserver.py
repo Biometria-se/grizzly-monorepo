@@ -22,6 +22,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from grizzly.types import Self
 
 logger = logging.getLogger('webserver')
+logger.setLevel(logging.INFO)
 
 
 class TestApp(Flask):
@@ -41,10 +42,15 @@ class TestApp(Flask):
 app = TestApp('webserver')
 
 # ugly hack to get correct path when webserver.py is injected for running distributed
-root_dir = (Path(__file__).parent / '..' / '..' / '..').resolve()
+webserver_path = Path(__file__).parent
 
-if '/srv/grizzly' not in str(root_dir):
-    root_dir = root_dir / 'example' / 'features'
+logger.info('webserver_path=%s', webserver_path.as_posix())
+
+root_dir = (
+    Path.joinpath(webserver_path, '..').resolve() if webserver_path.is_relative_to('/srv/grizzly') else Path.joinpath(webserver_path, '..', '..', '..', 'example', 'features')
+)
+
+logger.info('root_dir=%s', root_dir.as_posix())
 
 
 @app.route('/api/v1/resources/dogs')
@@ -78,19 +84,23 @@ def app_get_book(book: str) -> FlaskResponse:
     if len(request.get_data(cache=False, as_text=True)) > 0:
         return FlaskResponse(status=403)
 
-    with (root_dir / 'requests' / 'books' / 'books.csv').open() as fd:
-        reader = csv.DictReader(fd)
-        for row in reader:
-            if row['book'] == book:
-                return jsonify(
-                    {
-                        'number_of_pages': row['pages'],
-                        'isbn_10': [row['isbn_10']] * 2,
-                        'authors': [
-                            {'key': '/author/' + row['author'].replace(' ', '_').strip() + '|' + row['isbn_10'].strip()},
-                        ],
-                    },
-                )
+    books_file = root_dir / 'requests' / 'books' / 'books.csv'
+    try:
+        with books_file.open() as fd:
+            reader = csv.DictReader(fd)
+            for row in reader:
+                if row['book'] == book:
+                    return jsonify(
+                        {
+                            'number_of_pages': row['pages'],
+                            'isbn_10': [row['isbn_10']] * 2,
+                            'authors': [
+                                {'key': '/author/' + row['author'].replace(' ', '_').strip() + '|' + row['isbn_10'].strip()},
+                            ],
+                        },
+                    )
+    except Exception:
+        logger.exception('request failed')
 
     response = jsonify({'success': False})
     response.status_code = 500

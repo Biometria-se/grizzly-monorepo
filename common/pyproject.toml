@@ -1,5 +1,5 @@
 [project]
-name = "grizzly-common"
+name = "grizzly-loadtester-common"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -28,6 +28,9 @@ mq = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/grizzly_common"]
 
 [dependency-groups]
 dev = [
