@@ -27,7 +27,7 @@ from locust.log import setup_logging
 from locust.util.timespan import parse_timespan
 from roundrobin import smooth
 
-from . import __locust_version__, __version__
+from . import __common_version__, __locust_version__, __version__
 from .listeners import init, init_statistics_listener, locust_test_start, locust_test_stop, spawning_complete, validate_result, worker_report
 from .testdata.utils import initialize_testdata
 from .testdata.variables.csv_writer import open_files
@@ -995,7 +995,7 @@ def run(context: Context) -> int:  # noqa: C901, PLR0915, PLR0912
 
         if environ.get('GRIZZLY_DRY_RUN', 'false').lower() == 'true':
             if isinstance(runner, MasterRunner):
-                logger.info('dry-run starting locust-%s via grizzly-%s', __locust_version__, __version__)
+                logger.info('dry-run starting locust-%s via grizzly-%s, with grizzly-common-%s', __locust_version__, __version__, __common_version__)
                 runner.send_message('grizzly_worker_quit', None)
 
             if not isinstance(runner, WorkerRunner):
@@ -1138,7 +1138,7 @@ def run(context: Context) -> int:  # noqa: C901, PLR0915, PLR0912
             )
 
         if not isinstance(runner, WorkerRunner):
-            logger.info('starting locust-%s via grizzly-%s', __locust_version__, __version__)
+            logger.info('starting locust-%s via grizzly-%s with grizzly-common-%s', __locust_version__, __version__, __common_version__)
             # user_count == -1 means that the dispatcher will use use class properties `fixed_count`
             user_count = grizzly.setup.user_count or 0 if runner.environment.dispatcher_class == UsersDispatcher else -1
 

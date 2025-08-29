@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-from importlib.metadata import PackageNotFoundError, version
 from os import environ
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
-# @TODO: dynamic
-try:
-    __version__ = version('grizzly-loadtester-cli')
-except PackageNotFoundError:  # pragma: no cover
-    __version__ = '<unknown>'
+from grizzly_common.__version__ import __version__ as __common_version__
+
+from grizzly_cli.__version__ import __version__
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
@@ -49,6 +46,4 @@ class register_parser:
         return func
 
 
-__all__ = [
-    '__version__',
-]
+__all__ = ['__common_version__', '__version__']

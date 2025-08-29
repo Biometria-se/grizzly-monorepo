@@ -107,8 +107,8 @@ def create_scenario(name: str, background_steps: list[str], steps: list[str]) ->
     return scenario
 
 
-def get_current_version() -> str:
-    return version('grizzly-loadtester-cli')
+def get_current_version() -> tuple[str, str]:
+    return version('grizzly-loadtester-cli'), version('grizzly-loadtester-common')
 
 
 @contextmanager

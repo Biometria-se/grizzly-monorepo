@@ -27,6 +27,7 @@ dev = [
     "astunparse>=1.6.3",
     "atomicwrites>=1.4.1",
     "coverage[toml]>=7.10.5",
+    "hatch>=1.14.1",
     "line-profiler>=5.0.0",
     "mypy>=1.17.1",
     "parameterized>=0.9.0",
@@ -92,8 +93,12 @@ pythonpath = [
     "docs/src",
     "command-line-interface/src"
 ]
+# new dependencies, can silently register a pytest plugin, which will cause monkey patchning to fail, and hence not finding any tests;
+# find .venv/lib/python*/ -name 'entry_points.txt' -exec grep -A 1 'pytest11' {} \; | grep -v pytest11
+# pytest --trace-config
 addopts = [
     "-p", "no:requests_mock",
+    "-p", "no:anyio",
     "--cov=.",
     "--cov-report=xml:coverage.xml",
     "--no-cov-on-fail"

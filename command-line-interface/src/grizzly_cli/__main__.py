@@ -9,7 +9,7 @@ from shutil import which
 from traceback import format_exc
 from typing import TYPE_CHECKING
 
-from grizzly_cli import __version__, register_parser
+from grizzly_cli import __common_version__, __version__, register_parser
 from grizzly_cli.argparse import ArgumentParser
 from grizzly_cli.auth import auth
 from grizzly_cli.distributed import distributed
@@ -60,8 +60,6 @@ def _create_parser() -> ArgumentParser:
 
 
 def _parse_show_version(args: argparse.Namespace) -> None:
-    version = '(development)' if __version__ == '0.0.0' else __version__
-
     grizzly_versions: tuple[str | None, list[str] | None] | None = None
 
     if args.version == 'all':
@@ -69,7 +67,10 @@ def _parse_show_version(args: argparse.Namespace) -> None:
     else:
         grizzly_versions, locust_version = None, None
 
-    print(f'grizzly-cli {version}')
+    tree_branch = '├' if grizzly_versions is not None else '└'
+
+    print(f'grizzly-cli {__version__}')
+    print(f'{tree_branch}── grizzly-common {__common_version__}')
     if grizzly_versions is not None:
         grizzly_version, grizzly_extras = grizzly_versions
         if grizzly_version is not None:

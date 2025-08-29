@@ -398,9 +398,6 @@ def get_dependency_versions(*, local_install: Union[bool, str]) -> tuple[tuple[s
                         print(f'!! unable to get setuptools_scm version from {url}', file=sys.stderr)
                         raise RuntimeError from e  # abort
 
-            if grizzly_version == '0.0.0':
-                grizzly_version = '(development)'
-
             try:
                 with Path.joinpath(repo_destination, 'requirements.txt').open(encoding='utf-8') as fd:
                     version_raw = [line.strip() for line in fd.readlines() if line.strip().startswith('locust')]

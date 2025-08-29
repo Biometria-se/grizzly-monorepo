@@ -194,7 +194,7 @@ def test__create_parser() -> None:  # noqa: PLR0915
         assert sorted([action.dest for action in run_parser._actions if len(action.option_strings) == 0]) == ['file']
 
 
-def test__parse_argument(capsys: CaptureFixture, mocker: MockerFixture, tmp_path_factory: TempPathFactory) -> None:  # noqa: PLR0915
+def test__parse_argument_version(capsys: CaptureFixture, mocker: MockerFixture, tmp_path_factory: TempPathFactory) -> None:  # noqa: PLR0915
     test_context = tmp_path_factory.mktemp('test_context')
     (test_context / 'test.feature').write_text('Feature:')
 
@@ -203,35 +203,28 @@ def test__parse_argument(capsys: CaptureFixture, mocker: MockerFixture, tmp_path
     try:
         mocker.patch('grizzly_cli.EXECUTION_CONTEXT', test_context.as_posix())
         with cwd(test_context):
-            sys.argv = ['grizzly-cli']
-
-            with pytest.raises(SystemExit) as se:
-                _parse_arguments()
-            assert se.type is SystemExit
-            assert se.value.code == 2
-            capture = capsys.readouterr()
-            assert capture.out == ''
-            assert 'usage: grizzly-cli' in capture.err
-            assert 'grizzly-cli: error: no command specified' in capture.err
-
             sys.argv = ['grizzly-cli', '--version']
 
-            mocker.patch('grizzly_cli.__main__.__version__', '0.0.0')
+            expected_version = '0.0.0'
+            expected_common_version = '1.2.3'
+
+            mocker.patch('grizzly_cli.__main__.__version__', expected_version)
+            mocker.patch('grizzly_cli.__main__.__common_version__', expected_common_version)
 
             with pytest.raises(SystemExit) as se:
                 _parse_arguments()
-            assert se.type is SystemExit
             assert se.value.code == 0
+
             capture = capsys.readouterr()
             assert capture.err == ''
-            assert capture.out == 'grizzly-cli (development)\n'
+            assert capture.out == f'grizzly-cli {expected_version}\n└── grizzly-common {expected_common_version}\n'
 
             sys.argv = ['grizzly-cli', '--version', 'foo']
 
             with pytest.raises(SystemExit) as se:
                 _parse_arguments()
-            assert se.type is SystemExit
             assert se.value.code == 2
+
             capture = capsys.readouterr()
             err = capture.err.split('\n')
             assert len(err) == 4
@@ -250,11 +243,11 @@ def test__parse_argument(capsys: CaptureFixture, mocker: MockerFixture, tmp_path
 
             with pytest.raises(SystemExit) as se:
                 _parse_arguments()
-            assert se.type is SystemExit
             assert se.value.code == 0
+
             capture = capsys.readouterr()
             assert capture.err == ''
-            assert capture.out == ('grizzly-cli (development)\n└── grizzly 1.5.3\n    └── locust 2.2.1\n')
+            assert capture.out == f'grizzly-cli {expected_version}\n├── grizzly-common {expected_common_version}\n└── grizzly 1.5.3\n    └── locust 2.2.1\n'
 
             requirements_file.write_text('grizzly-loadtester[mq]==1.5.3\n')
 
@@ -262,11 +255,10 @@ def test__parse_argument(capsys: CaptureFixture, mocker: MockerFixture, tmp_path
 
             with pytest.raises(SystemExit) as se:
                 _parse_arguments()
-            assert se.type is SystemExit
             assert se.value.code == 0
             capture = capsys.readouterr()
             assert capture.err == ''
-            assert capture.out == ('grizzly-cli (development)\n└── grizzly 1.5.3 ── extras: mq\n    └── locust 2.2.1\n')
+            assert capture.out == f'grizzly-cli {expected_version}\n├── grizzly-common {expected_common_version}\n└── grizzly 1.5.3 ── extras: mq\n    └── locust 2.2.1\n'
 
             requirements_file.unlink()
             requirements_file.write_text('grizzly-loadtester[mq,dev]==1.5.3\n')
@@ -275,11 +267,10 @@ def test__parse_argument(capsys: CaptureFixture, mocker: MockerFixture, tmp_path
 
             with pytest.raises(SystemExit) as se:
                 _parse_arguments()
-            assert se.type is SystemExit
             assert se.value.code == 0
             capture = capsys.readouterr()
             assert capture.err == ''
-            assert capture.out == ('grizzly-cli (development)\n└── grizzly 1.5.3 ── extras: mq, dev\n    └── locust 2.2.1\n')
+            assert capture.out == (f'grizzly-cli {expected_version}\n├── grizzly-common {expected_common_version}\n└── grizzly 1.5.3 ── extras: mq, dev\n    └── locust 2.2.1\n')
 
             def mocked_mkdtemp(prefix: str | None = '') -> str:
                 return Path.joinpath(test_context, f'{prefix}test').as_posix()
@@ -303,12 +294,11 @@ def test__parse_argument(capsys: CaptureFixture, mocker: MockerFixture, tmp_path
 
             with pytest.raises(SystemExit) as se:
                 _parse_arguments()
-            assert se.type is SystemExit
             assert se.value.code == 0
 
             capture = capsys.readouterr()
             assert capture.err == ''
-            assert capture.out == ('grizzly-cli (development)\n└── grizzly (development)\n    └── locust 2.8.4\n')
+            assert capture.out == f'grizzly-cli {expected_version}\n├── grizzly-common {expected_common_version}\n└── grizzly 0.0.0\n    └── locust 2.8.4\n'
 
             repo = 'git+https://git@github.com/biometria-se/grizzly.git@main#egg=grizzly-loadtester[mq,dev]'
             repo_suffix = sha1(repo.encode('utf-8')).hexdigest()  # noqa: S324
@@ -325,86 +315,56 @@ def test__parse_argument(capsys: CaptureFixture, mocker: MockerFixture, tmp_path
 
             with pytest.raises(SystemExit) as se:
                 _parse_arguments()
-            assert se.type is SystemExit
             assert se.value.code == 0
 
             capture = capsys.readouterr()
             assert capture.err == ''
-            assert capture.out == ('grizzly-cli (development)\n└── grizzly (development) ── extras: mq, dev\n    └── locust 2.8.4\n')
+            assert capture.out == f'grizzly-cli {expected_version}\n├── grizzly-common {expected_common_version}\n└── grizzly 0.0.0 ── extras: mq, dev\n    └── locust 2.8.4\n'
 
             requirements_file.unlink()
             requirements_file.write_text('grizzly-loadtester==1.5.3\n')
 
             sys.argv = ['grizzly-cli', '--version', 'all']
-            mocker.patch('grizzly_cli.__main__.__version__', '2.5.0')
+            expected_version = '2.5.0'
+            expected_common_version = '2.4.0'
+            mocker.patch('grizzly_cli.__main__.__version__', expected_version)
+            mocker.patch('grizzly_cli.__main__.__common_version__', expected_common_version)
 
             with pytest.raises(SystemExit) as se:
                 _parse_arguments()
-            assert se.type is SystemExit
             assert se.value.code == 0
+
             capture = capsys.readouterr()
             assert capture.err == ''
-            assert capture.out == ('grizzly-cli 2.5.0\n└── grizzly 1.5.3\n    └── locust 2.2.1\n')
+            assert capture.out == f'grizzly-cli {expected_version}\n├── grizzly-common {expected_common_version}\n└── grizzly 1.5.3\n    └── locust 2.2.1\n'
+    finally:
+        rm_rf(test_context)
 
-            sys.argv = ['grizzly-cli', '--version', 'all']
-            mocker.patch('grizzly_cli.__main__.__version__', '2.5.0')
 
-            with pytest.raises(SystemExit) as se:
-                _parse_arguments()
-            assert se.type is SystemExit
-            assert se.value.code == 0
-            capture = capsys.readouterr()
-            assert capture.err == ''
-            assert capture.out == ('grizzly-cli 2.5.0\n└── grizzly 1.5.3\n    └── locust 2.2.1\n')
+def test__parse_argument_local(capsys: CaptureFixture, mocker: MockerFixture, tmp_path_factory: TempPathFactory) -> None:  # noqa: PLR0915
+    test_context = tmp_path_factory.mktemp('test_context')
+    (test_context / 'test.feature').write_text('Feature:')
 
+    import sys
+
+    try:
+        mocker.patch('grizzly_cli.EXECUTION_CONTEXT', test_context.as_posix())
+        with cwd(test_context):
             sys.argv = ['grizzly-cli', 'local']
 
             with pytest.raises(SystemExit) as se:
                 _parse_arguments()
-            assert se.type is SystemExit
             assert se.value.code == 2
+
             capture = capsys.readouterr()
             assert capture.out == ''
             assert capture.err == 'grizzly-cli: error: no subcommand for local specified\n'
-
-            sys.argv = ['grizzly-cli', 'dist', 'run', 'test.feature']
-
-            mocker.patch('grizzly_cli.__main__.get_distributed_system', side_effect=[None])
-
-            with pytest.raises(SystemExit) as se:
-                _parse_arguments()
-            assert se.type is SystemExit
-            assert se.value.code == 2
-            capture = capsys.readouterr()
-            assert capture.out == ''
-            assert capture.err == 'grizzly-cli: error: cannot run distributed\n'
-
-            mocker.patch('grizzly_cli.EXECUTION_CONTEXT', Path.cwd())
-            mocker.patch('grizzly_cli.__main__.get_distributed_system', side_effect=['docker'])
-            mocker.patch('grizzly_cli.distributed.do_build', side_effect=[0, 4, 0])
-
-            sys.argv = ['grizzly-cli', 'dist', '--limit-nofile', '100', '--registry', 'ghcr.io/biometria-se', 'run', 'test.feature']
-            (test_context / 'requirements.txt').write_text('grizzly-loadtester')
-            mocker.patch('grizzly_cli.__main__.get_distributed_system', side_effect=['docker'])
-            ask_yes_no = mocker.patch('grizzly_cli.__main__.ask_yes_no', autospec=True)
-
-            arguments = _parse_arguments()
-            capture = capsys.readouterr()
-            assert arguments.limit_nofile == 100
-            assert not arguments.yes
-            assert arguments.registry == 'ghcr.io/biometria-se/'
-            assert capture.out == '!! this will cause warning messages from locust later on\n'
-            assert capture.err == ''
-            assert ask_yes_no.call_count == 1
-            args, _ = ask_yes_no.call_args_list[-1]
-            assert args[0] == 'are you sure you know what you are doing?'
 
             sys.argv = ['grizzly-cli', 'local', 'run', 'test.feature']
             mocker.patch('grizzly_cli.__main__.which', side_effect=[None])
 
             with pytest.raises(SystemExit) as se:
                 _parse_arguments()
-            assert se.type is SystemExit
             assert se.value.code == 2
 
             capture = capsys.readouterr()
@@ -417,24 +377,11 @@ def test__parse_argument(capsys: CaptureFixture, mocker: MockerFixture, tmp_path
 
             with pytest.raises(SystemExit) as se:
                 _parse_arguments()
-            assert se.type is SystemExit
             assert se.value.code == 2
 
             capture = capsys.readouterr()
             assert capture.out == ''
             assert capture.err == 'grizzly-cli: error: --csv-interval can only be used in combination with --csv-prefix\n'
-
-            sys.argv = ['grizzly-cli', 'dist', 'run', '--csv-flush-interval', '60', 'test.feature']
-            mocker.patch('grizzly_cli.__main__.get_distributed_system', side_effect=['docker'])
-
-            with pytest.raises(SystemExit) as se:
-                _parse_arguments()
-            assert se.type is SystemExit
-            assert se.value.code == 2
-
-            capture = capsys.readouterr()
-            assert capture.out == ''
-            assert capture.err == 'grizzly-cli: error: --csv-flush-interval can only be used in combination with --csv-prefix\n'
 
             sys.argv = ['grizzly-cli', 'local', 'run', '--csv-prefix', '--csv-interval', '20', '--csv-flush-interval', '60', 'test.feature']
             mocker.patch('grizzly_cli.__main__.which', side_effect=['behave'])
@@ -461,7 +408,6 @@ def test__parse_argument(capsys: CaptureFixture, mocker: MockerFixture, tmp_path
 
             with pytest.raises(SystemExit) as se:
                 _parse_arguments()
-            assert se.type is SystemExit
             assert se.value.code == 2
 
             capture = capsys.readouterr()
@@ -480,10 +426,64 @@ def test__parse_argument(capsys: CaptureFixture, mocker: MockerFixture, tmp_path
 
             assert environ.get('TESTDATA_VARIABLE_key', None) == 'value'  # noqa: SIM112
             # // -T/--testdata-variable
+    finally:
+        rm_rf(test_context)
 
-            mocker.patch('grizzly_cli.__main__.get_distributed_system', side_effect=['docker'] * 3)
+
+def test__parse_argument_dist(capsys: CaptureFixture, mocker: MockerFixture, tmp_path_factory: TempPathFactory) -> None:  # noqa: PLR0915
+    test_context = tmp_path_factory.mktemp('test_context')
+    (test_context / 'test.feature').write_text('Feature:')
+
+    import sys
+
+    try:
+        mocker.patch('grizzly_cli.EXECUTION_CONTEXT', test_context.as_posix())
+        with cwd(test_context):
+            sys.argv = ['grizzly-cli', 'dist', 'run', 'test.feature']
+
+            mocker.patch('grizzly_cli.__main__.get_distributed_system', side_effect=[None])
+
+            with pytest.raises(SystemExit) as se:
+                _parse_arguments()
+            assert se.value.code == 2
+
+            capture = capsys.readouterr()
+            assert capture.out == ''
+            assert capture.err == 'grizzly-cli: error: cannot run distributed\n'
+
+            mocker.patch('grizzly_cli.EXECUTION_CONTEXT', Path.cwd())
+            mocker.patch('grizzly_cli.__main__.get_distributed_system', side_effect=['docker'])
+            mocker.patch('grizzly_cli.distributed.do_build', side_effect=[0, 4, 0])
+
+            sys.argv = ['grizzly-cli', 'dist', '--limit-nofile', '100', '--registry', 'ghcr.io/biometria-se', 'run', 'test.feature']
+            (test_context / 'requirements.txt').write_text('grizzly-loadtester')
+            mocker.patch('grizzly_cli.__main__.get_distributed_system', side_effect=['docker'])
+            ask_yes_no = mocker.patch('grizzly_cli.__main__.ask_yes_no', autospec=True)
+
+            arguments = _parse_arguments()
+            capture = capsys.readouterr()
+            assert arguments.limit_nofile == 100
+            assert not arguments.yes
+            assert arguments.registry == 'ghcr.io/biometria-se/'
+            assert capture.out == '!! this will cause warning messages from locust later on\n'
+            assert capture.err == ''
+            assert ask_yes_no.call_count == 1
+            args, _ = ask_yes_no.call_args_list[-1]
+            assert args[0] == 'are you sure you know what you are doing?'
+
+            sys.argv = ['grizzly-cli', 'dist', 'run', '--csv-flush-interval', '60', 'test.feature']
+            mocker.patch('grizzly_cli.__main__.get_distributed_system', side_effect=['docker'])
+
+            with pytest.raises(SystemExit) as se:
+                _parse_arguments()
+            assert se.value.code == 2
+
+            capture = capsys.readouterr()
+            assert capture.out == ''
+            assert capture.err == 'grizzly-cli: error: --csv-flush-interval can only be used in combination with --csv-prefix\n'
 
             sys.argv = ['grizzly-cli', 'dist', 'build']
+            mocker.patch('grizzly_cli.__main__.get_distributed_system', side_effect=['docker'] * 3)
             arguments = _parse_arguments()
 
             assert not arguments.no_cache
@@ -498,6 +498,29 @@ def test__parse_argument(capsys: CaptureFixture, mocker: MockerFixture, tmp_path
             assert arguments.force_build
             assert not arguments.build
             assert arguments.registry == 'registry.example.com/biometria-se/'
+    finally:
+        rm_rf(test_context)
+
+
+def test__parse_argument(capsys: CaptureFixture, mocker: MockerFixture, tmp_path_factory: TempPathFactory) -> None:
+    test_context = tmp_path_factory.mktemp('test_context')
+    (test_context / 'test.feature').write_text('Feature:')
+
+    import sys
+
+    try:
+        mocker.patch('grizzly_cli.EXECUTION_CONTEXT', test_context.as_posix())
+        with cwd(test_context):
+            sys.argv = ['grizzly-cli']
+
+            with pytest.raises(SystemExit) as se:
+                _parse_arguments()
+
+            assert se.value.code == 2
+            capture = capsys.readouterr()
+            assert capture.out == ''
+            assert 'usage: grizzly-cli' in capture.err
+            assert 'grizzly-cli: error: no command specified' in capture.err
 
             sys.argv = ['grizzly-cli', 'init', 'test-project']
             arguments = _parse_arguments()
