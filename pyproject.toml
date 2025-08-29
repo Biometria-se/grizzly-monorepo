@@ -238,7 +238,7 @@ detached = true
 python = ["3.10"]
 
 [tool.hatch.envs.lint.scripts]
-install = ["uv sync --active --group dev"]
+install = ["uv sync --active --all-packages --group dev"]
 all = ["install", "types", "format"]
 types = ["install", "python -m mypy"]
 format = ["install", "ruff check .", "ruff format --check"]
