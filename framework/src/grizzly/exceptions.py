@@ -6,10 +6,9 @@ from random import uniform
 from typing import TYPE_CHECKING, Any
 
 from gevent import sleep as gsleep
+from grizzly_common.exceptions import StopScenario
 from locust.exception import StopUser
 from typing_extensions import Self
-
-from grizzly_common.exceptions import StopScenario
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable

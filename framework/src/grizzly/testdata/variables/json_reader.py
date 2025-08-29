@@ -79,9 +79,10 @@ from pathlib import Path
 from secrets import randbelow
 from typing import TYPE_CHECKING, ClassVar, cast
 
-from grizzly.types import StrDict, bool_type
 from grizzly_common.arguments import parse_arguments, split_value
 from grizzly_common.text import has_separator
+
+from grizzly.types import StrDict, bool_type
 
 from . import AtomicVariable
 

@@ -101,6 +101,9 @@ from typing import TYPE_CHECKING, Any, ClassVar, cast
 from urllib.parse import parse_qs, urlparse
 
 import zmq.green as zmq
+from grizzly_common.arguments import get_unsupported_arguments, parse_arguments
+from grizzly_common.async_message.utils import async_message_request
+from grizzly_common.text import bool_caster
 from zmq import sugar as ztypes
 
 from grizzly.tasks import RequestTask
@@ -108,17 +111,15 @@ from grizzly.types import GrizzlyResponse, RequestDirection, RequestMethod, Requ
 from grizzly.types.locust import Environment, StopUser
 from grizzly.utils import has_parameter, has_template
 from grizzly.utils.protocols import zmq_disconnect
-from grizzly_common.arguments import get_unsupported_arguments, parse_arguments
-from grizzly_common.async_message.utils import async_message_request
-from grizzly_common.text import bool_caster
 
 from . import GrizzlyUser, grizzlycontext
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Generator
 
-    from grizzly.testdata.communication import GrizzlyDependencies
     from grizzly_common.async_message import AsyncMessageContext, AsyncMessageRequest, AsyncMessageResponse
+
+    from grizzly.testdata.communication import GrizzlyDependencies
 
 MAX_LENGTH = 65
 

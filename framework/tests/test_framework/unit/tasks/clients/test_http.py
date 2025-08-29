@@ -490,7 +490,6 @@ class TestHttpClientTask:
         task_factory.response.add_status_code(-500)
 
         # make sure b64encode filter is loaded
-        from grizzly.testdata import filters
 
         task_factory = test_cls(
             RequestDirection.TO,

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from grizzly.types import RequestDirection, RequestMethod, RequestType, bool_type, int_rounded_float_type, list_type, optional_str_lower_type
 
 

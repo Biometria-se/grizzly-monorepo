@@ -106,21 +106,22 @@ from typing import TYPE_CHECKING, ClassVar, cast
 from urllib.parse import parse_qs, quote_plus, unquote_plus, urlparse
 
 import zmq.green as zmq
+from grizzly_common.arguments import parse_arguments
+from grizzly_common.text import bool_caster
+from grizzly_common.transformer import TransformerContentType
 from zmq import sugar as ztypes
 
 from grizzly.tasks import template
 from grizzly.types import GrizzlyResponse, RequestDirection, RequestMethod, RequestType
 from grizzly.utils.protocols import async_message_request_wrapper, zmq_disconnect
-from grizzly_common.arguments import parse_arguments
-from grizzly_common.text import bool_caster
-from grizzly_common.transformer import TransformerContentType
 
 from . import ClientTask, client
 
 if TYPE_CHECKING:  # pragma: no cover
+    from grizzly_common.async_message import AsyncMessageContext, AsyncMessageRequest, AsyncMessageResponse
+
     from grizzly.scenarios import GrizzlyScenario
     from grizzly.testdata.communication import GrizzlyDependencies
-    from grizzly_common.async_message import AsyncMessageContext, AsyncMessageRequest, AsyncMessageResponse
 
 
 @dataclass

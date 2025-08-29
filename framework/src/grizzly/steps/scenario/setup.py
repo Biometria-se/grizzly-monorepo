@@ -6,6 +6,7 @@ from contextlib import suppress
 from typing import TYPE_CHECKING, Any, cast
 
 import parse
+from grizzly_common.text import permutation
 
 from grizzly.auth import GrizzlyHttpAuthClient
 from grizzly.tasks import GrizzlyTask, RequestTask
@@ -13,7 +14,6 @@ from grizzly.testdata.utils import resolve_variable
 from grizzly.types import FailureAction
 from grizzly.types.behave import Context, given, register_type, then, when
 from grizzly.utils import ModuleLoader, has_template
-from grizzly_common.text import permutation
 
 if TYPE_CHECKING:  # pragma: no cover
     from grizzly.context import GrizzlyContext

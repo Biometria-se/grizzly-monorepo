@@ -7,11 +7,11 @@ from enum import Enum, auto
 from typing import Any, Concatenate, TypeVar, cast
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from grizzly_common.text import PermutationEnum
 from locust.rpc.protocol import Message
 from typing_extensions import ParamSpec
 
 from grizzly.exceptions import RestartIteration, RestartScenario, RetryTask, StopUser
-from grizzly_common.text import PermutationEnum
 
 from .locust import Environment
 

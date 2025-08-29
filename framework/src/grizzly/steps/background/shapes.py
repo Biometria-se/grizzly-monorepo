@@ -5,12 +5,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import parse
+from grizzly_common.text import permutation
 from locust.dispatch import UsersDispatcher as WeightedUsersDispatcher
 
 from grizzly.testdata.utils import resolve_variable
 from grizzly.types.behave import Context, given, register_type
 from grizzly.utils import has_template
-from grizzly_common.text import permutation
 
 if TYPE_CHECKING:  # pragma: no cover
     from grizzly.context import GrizzlyContext

@@ -53,6 +53,7 @@ from time import time
 from typing import TYPE_CHECKING, ClassVar, cast
 
 from geventhttpclient import Session
+from grizzly_common.transformer import TransformerContentType
 from locust.exception import CatchResponseError
 
 from grizzly.auth import AAD, GrizzlyHttpAuthClient, RefreshTokenDistributor, refresh_token
@@ -61,7 +62,6 @@ from grizzly.testdata.utils import read_file
 from grizzly.types import GrizzlyResponse, RequestDirection, RequestMethod, StrDict, bool_type
 from grizzly.utils import has_template, is_file, merge_dicts
 from grizzly.utils.protocols import http_populate_cookiejar, ssl_context_factory
-from grizzly_common.transformer import TransformerContentType
 
 from . import ClientTask, client
 

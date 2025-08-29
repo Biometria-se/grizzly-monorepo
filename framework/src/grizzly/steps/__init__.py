@@ -39,10 +39,10 @@ When writing step expressions, the following should be taken into consideration,
 from __future__ import annotations
 
 import parse
+from grizzly_common.text import permutation
 
 from grizzly.types import RequestDirection, RequestMethod
 from grizzly.types.behave import register_type
-from grizzly_common.text import permutation
 
 
 @parse.with_pattern(r'(user[s]?)')

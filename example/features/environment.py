@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Any, cast
 
 from behave.model import Scenario
 from behave.runner import Context
-
 from grizzly.behave import (
     after_feature,
     after_scenario,

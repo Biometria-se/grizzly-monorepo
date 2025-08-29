@@ -100,7 +100,7 @@ def test_register() -> None:
         return {}
 
     try:
-        from grizzly_common.async_message.mq import handlers  # noqa: PLC0415
+        from grizzly_common.async_message.mq import handlers
 
         actual = list(handlers.keys())
         actual.sort()
@@ -113,7 +113,7 @@ def test_register() -> None:
         register(handlers, 'TEST')(handler_a)
         register(handlers, 'TEST')(handler_b)
 
-        from grizzly_common.async_message.mq import handlers  # noqa: PLC0415
+        from grizzly_common.async_message.mq import handlers
 
         assert handlers['TEST'] is not handler_b
         assert handlers['TEST'] is handler_a

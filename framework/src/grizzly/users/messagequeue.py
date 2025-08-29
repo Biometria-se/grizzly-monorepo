@@ -133,24 +133,25 @@ from typing import TYPE_CHECKING, Any, ClassVar, cast
 from urllib.parse import parse_qs, unquote, urlparse
 
 import zmq.green as zmq
+from grizzly_common.arguments import get_unsupported_arguments, parse_arguments
+from grizzly_common.async_message.utils import async_message_request
 from zmq import sugar as ztypes
 
 from grizzly.exceptions import StopScenario
 from grizzly.types import GrizzlyResponse, RequestDirection, RequestType, StrDict
 from grizzly.utils import merge_dicts
 from grizzly.utils.protocols import zmq_disconnect
-from grizzly_common.arguments import get_unsupported_arguments, parse_arguments
-from grizzly_common.async_message.utils import async_message_request
 
 from . import GrizzlyUser, grizzlycontext
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Generator
 
+    from grizzly_common.async_message import AsyncMessageContext, AsyncMessageRequest, AsyncMessageResponse
+
     from grizzly.tasks import RequestTask
     from grizzly.testdata.communication import GrizzlyDependencies
     from grizzly.types.locust import Environment
-    from grizzly_common.async_message import AsyncMessageContext, AsyncMessageRequest, AsyncMessageResponse
 
 # no used here, but needed for sanity check
 try:

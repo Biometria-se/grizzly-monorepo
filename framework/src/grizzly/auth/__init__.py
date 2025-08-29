@@ -14,12 +14,12 @@ from typing import TYPE_CHECKING, ClassVar, Generic, ParamSpec, TypeVar, cast
 from urllib.parse import urlparse
 
 from azure.core.credentials import AccessToken
+from grizzly_common.azure.aad import AuthMethod, AuthType, AzureAadCredential
 
 from grizzly.testdata.communication import GrizzlyMessageHandler, GrizzlyMessageMapping
 from grizzly.types import GrizzlyResponse, StrDict
 from grizzly.types.locust import StopUser
 from grizzly.utils import ModuleLoader, merge_dicts
-from grizzly_common.azure.aad import AuthMethod, AuthType, AzureAadCredential
 
 if TYPE_CHECKING:  # pragma: no cover
     from grizzly.context import GrizzlyContext, GrizzlyContextScenario

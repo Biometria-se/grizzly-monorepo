@@ -44,9 +44,10 @@ from string import ascii_letters
 from typing import TYPE_CHECKING, ClassVar, cast
 from uuid import uuid4
 
-from grizzly.types import StrDict, bool_type, int_rounded_float_type
 from grizzly_common.arguments import parse_arguments, split_value
 from grizzly_common.text import has_separator
+
+from grizzly.types import StrDict, bool_type, int_rounded_float_type
 
 from . import AtomicVariable
 

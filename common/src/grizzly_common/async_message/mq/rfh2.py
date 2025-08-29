@@ -15,7 +15,7 @@ except (ModuleNotFoundError, ImportError):
 # Basic MQ RFH2 support with gzip compression
 # See https://www.ibm.com/docs/en/ibm-mq/9.1?topic=mqi-mqrfh2-rules-formatting-header-2
 
-RFH2_STRUC_ID = "RFH "
+RFH2_STRUC_ID = 'RFH '
 RFH2_VERSION = 2
 RFH2_HEADER_LENGTH = 36
 
@@ -24,8 +24,8 @@ class Rfh2Decoder:
     @classmethod
     def is_rfh2(cls, message: bytes) -> bool:
         try:
-            parts = unpack("<4c l", message[0:8])
-            struc_id = b"".join(list(parts[0:4])).decode("ascii")
+            parts = unpack('<4c l', message[0:8])
+            struc_id = b''.join(list(parts[0:4])).decode('ascii')
             version = parts[4]
         except Exception:
             return False
@@ -38,7 +38,7 @@ class Rfh2Decoder:
 
     def _parse_header(self, message: bytes) -> None:
         try:
-            parts = unpack("<4c l l l l 8c l l", message[0:RFH2_HEADER_LENGTH])
+            parts = unpack('<4c l l l l 8c l l', message[0:RFH2_HEADER_LENGTH])
             """
             Only "struc_length" is needed/used right now, the rest is
             kept commented out, for any future need :)
@@ -57,7 +57,7 @@ class Rfh2Decoder:
             self.name_values = message[RFH2_HEADER_LENGTH:struc_length]
             self.payload = message[RFH2_HEADER_LENGTH + len(self.name_values) :]
         except Exception as e:
-            msg = "Failed to parse RFH2 header"
+            msg = 'Failed to parse RFH2 header'
             raise ValueError(msg) from e
 
     def _parse_name_values(self) -> None:
@@ -68,21 +68,21 @@ class Rfh2Decoder:
             return
         try:
             while pos <= maxpos:
-                part_length = unpack("<l", self.name_values[pos : pos + 4])[0]
+                part_length = unpack('<l', self.name_values[pos : pos + 4])[0]
                 pos += 4
-                part = self.name_values[pos : pos + part_length].decode("utf-8")
+                part = self.name_values[pos : pos + part_length].decode('utf-8')
                 self.name_value_parts.append(ET.fromstring(part))
                 pos += part_length
         except Exception as e:
-            msg = "Failed to parse RFH2 name values"
+            msg = 'Failed to parse RFH2 name values'
             raise ValueError(msg) from e
 
     def _get_usr_encoding(self) -> str | None:
         if len(self.name_value_parts) == 0:
             return None
         for part in self.name_value_parts:
-            if part.tag == "usr":
-                encoding_element = part.find("ContentEncoding")
+            if part.tag == 'usr':
+                encoding_element = part.find('ContentEncoding')
                 if encoding_element is None:
                     return None
                 return encoding_element.text
@@ -90,7 +90,7 @@ class Rfh2Decoder:
 
     def get_payload(self) -> bytes:
         content_encoding = self._get_usr_encoding()
-        if content_encoding == "gzip":
+        if content_encoding == 'gzip':
             return gzip.decompress(self.payload)
         return self.payload
 
@@ -99,13 +99,13 @@ class Rfh2Encoder:
     CCSID = 1208
     ENCODING = 546
     PADDING_MULTIPLE = 4
-    FMT_NONE = " " * 8
+    FMT_NONE = ' ' * 8
     FLAGS = 0
 
     @classmethod
     def create_md(cls) -> pymqi.MD:
         md = pymqi.MD()
-        md.Format = b"MQHRF2  "
+        md.Format = b'MQHRF2  '
         md.CodedCharSetId = Rfh2Encoder.CCSID
         md.Encoding = Rfh2Encoder.ENCODING
         return md
@@ -114,12 +114,12 @@ class Rfh2Encoder:
         self,
         payload: bytes,
         queue_name: str,
-        encoding: str = "gzip",
+        encoding: str = 'gzip',
         tstamp: str | None = None,
         metadata: dict[str, str] | None = None,
     ) -> None:
-        if encoding != "gzip":
-            msg = "Only gzip encoding is implemented"
+        if encoding != 'gzip':
+            msg = 'Only gzip encoding is implemented'
             raise NotImplementedError(msg)
         self.queue_name = queue_name
         self.content_encoding = encoding
@@ -139,12 +139,10 @@ class Rfh2Encoder:
         self.name_values = bytearray()
         content_length = len(self.payload)
         tstamp = str(round(time.time() * 1000)) if self.tstamp is None else self.tstamp
-        metadata_headers = "".join(
-            [f"<{key}>{value}</{key}>" for key, value in (self.metadata or {}).items()]
-        )
+        metadata_headers = ''.join([f'<{key}>{value}</{key}>' for key, value in (self.metadata or {}).items()])
         name_values_txt = [
-            "<mcd><Msd>jms_bytes</Msd></mcd>",
-            f"<jms><Dst>queue:///{self.queue_name}</Dst><Tms>{tstamp}</Tms><Dlv>2</Dlv></jms>",
+            '<mcd><Msd>jms_bytes</Msd></mcd>',
+            f'<jms><Dst>queue:///{self.queue_name}</Dst><Tms>{tstamp}</Tms><Dlv>2</Dlv></jms>',
             f"<usr>{metadata_headers}<ContentEncoding>{self.content_encoding}</ContentEncoding><ContentLength dt='i8'>{content_length}</ContentLength></usr>",
         ]
         for value in name_values_txt:
@@ -153,11 +151,11 @@ class Rfh2Encoder:
             # pad with spaces to get length to a multiple of 4
             if value_len % padding_multiple != 0:
                 padding_length = padding_multiple - value_len % padding_multiple
-                value = value + " " * padding_length  # noqa: PLW2901
+                value = value + ' ' * padding_length  # noqa: PLW2901
 
             name_value = value.encode()
             name_value_length = len(name_value)
-            self.name_values.extend(pack("<l", name_value_length))
+            self.name_values.extend(pack('<l', name_value_length))
             self.name_values.extend(name_value)
 
     def _build_header(self) -> None:
@@ -168,7 +166,7 @@ class Rfh2Encoder:
         flags = Rfh2Encoder.FLAGS
         name_value_ccsid = Rfh2Encoder.CCSID
         self.header = pack(
-            "<4s l l l l 8s l l",
+            '<4s l l l l 8s l l',
             RFH2_STRUC_ID.encode(),
             RFH2_VERSION,
             struc_length,

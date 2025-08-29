@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from grizzly_common.transformer import TransformerContentType
+
 from grizzly.tasks import TransformerTask
 from grizzly.types.behave import Context, register_type, then
-from grizzly_common.transformer import TransformerContentType
 
 if TYPE_CHECKING:  # pragma: no cover
     from grizzly.context import GrizzlyContext

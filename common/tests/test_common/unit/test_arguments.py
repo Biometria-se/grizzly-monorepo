@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from grizzly_common.arguments import get_unsupported_arguments, parse_arguments, split_value, unquote
 
 

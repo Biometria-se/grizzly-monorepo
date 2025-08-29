@@ -7,12 +7,12 @@ from typing import TYPE_CHECKING, cast, get_type_hints
 from urllib.parse import urlparse
 
 import parse
+from grizzly_common.text import permutation
 
 from grizzly.testdata.utils import resolve_variable
 from grizzly.types import MessageDirection
 from grizzly.types.behave import Context, given, register_type
 from grizzly.types.locust import Environment, Message
-from grizzly_common.text import permutation
 
 if TYPE_CHECKING:  # pragma: no cover
     from grizzly.context import GrizzlyContext

@@ -7,7 +7,7 @@ from argparse import ArgumentTypeError
 from fnmatch import filter as fnmatch_filter
 from os.path import sep as path_sep
 from pathlib import Path
-from typing import Optional, cast
+from typing import cast
 
 __all__ = [
     'BashCompletionTypes',

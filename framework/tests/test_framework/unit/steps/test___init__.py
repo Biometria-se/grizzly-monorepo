@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from parse import compile as parse_compile
-
 from grizzly.steps import parse_user_gramatical_number
+from parse import compile as parse_compile
 
 
 def test_parse_user_gramatical_number() -> None:

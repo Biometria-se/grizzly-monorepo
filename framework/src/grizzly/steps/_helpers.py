@@ -9,6 +9,9 @@ from typing import TYPE_CHECKING, cast
 from urllib.parse import urlparse
 
 import jinja2 as j2
+from grizzly_common.arguments import get_unsupported_arguments, parse_arguments, split_value
+from grizzly_common.text import has_separator
+from grizzly_common.transformer import TransformerContentType
 
 from grizzly.events.response_handler import ResponseHandlerAction, SaveHandlerAction, ValidationHandlerAction
 from grizzly.tasks import RequestTask
@@ -16,9 +19,6 @@ from grizzly.tasks.clients import ClientTask, HttpClientTask, client
 from grizzly.testdata.utils import resolve_variable
 from grizzly.types import RequestMethod, ResponseAction, ResponseTarget
 from grizzly.utils import has_template
-from grizzly_common.arguments import get_unsupported_arguments, parse_arguments, split_value
-from grizzly_common.text import has_separator
-from grizzly_common.transformer import TransformerContentType
 
 if TYPE_CHECKING:  # pragma: no cover
     from grizzly.context import GrizzlyContext

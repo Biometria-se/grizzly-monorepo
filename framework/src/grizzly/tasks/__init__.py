@@ -65,11 +65,12 @@ from typing import TYPE_CHECKING, Any, ClassVar, cast, overload
 from grizzly.utils import has_template
 
 if TYPE_CHECKING:  # pragma: no cover
+    from grizzly_common.transformer import TransformerContentType
+
     from grizzly.context import GrizzlyContext
     from grizzly.scenarios import GrizzlyScenario
     from grizzly.testdata.communication import GrizzlyDependencies
     from grizzly.types import GrizzlyResponse
-    from grizzly_common.transformer import TransformerContentType
 
 GrizzlyTaskType = Callable[['GrizzlyScenario'], Any]
 GrizzlyTaskOnType = Callable[['GrizzlyScenario'], None]

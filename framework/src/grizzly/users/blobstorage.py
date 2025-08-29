@@ -53,10 +53,10 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import parse_qs, urlparse
 
 from azure.storage.blob import BlobServiceClient
+from grizzly_common.azure.aad import AuthMethod, AzureAadCredential
 
 from grizzly.types import GrizzlyResponse, RequestDirection, RequestMethod
 from grizzly.utils import normalize
-from grizzly_common.azure.aad import AuthMethod, AzureAadCredential
 
 from . import GrizzlyUser, grizzlycontext
 

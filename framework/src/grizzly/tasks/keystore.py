@@ -56,10 +56,11 @@ from json import dumps as jsondumps
 from json import loads as jsonloads
 from typing import TYPE_CHECKING, Any, Literal, cast, get_args
 
-from grizzly.testdata import GrizzlyVariables
-from grizzly.testdata.utils import resolve_variable
 from grizzly_common.arguments import parse_arguments, split_value
 from grizzly_common.text import has_separator
+
+from grizzly.testdata import GrizzlyVariables
+from grizzly.testdata.utils import resolve_variable
 
 from . import GrizzlyTask, grizzlytask, template
 

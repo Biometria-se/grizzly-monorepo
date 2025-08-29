@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 from contextlib import contextmanager, suppress
 from os import environ
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest

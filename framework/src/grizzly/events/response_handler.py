@@ -7,11 +7,11 @@ from contextlib import suppress
 from json import dumps as jsondumps
 from typing import TYPE_CHECKING, Any
 
+from grizzly_common.transformer import PlainTransformer, TransformerContentType, TransformerError, transformer
 from locust.exception import ResponseError
 
 from grizzly.events import GrizzlyEventHandlerClass
 from grizzly.exceptions import ResponseHandlerError
-from grizzly_common.transformer import PlainTransformer, TransformerContentType, TransformerError, transformer
 
 if TYPE_CHECKING:  # pragma: no cover
     from grizzly.tasks import RequestTask

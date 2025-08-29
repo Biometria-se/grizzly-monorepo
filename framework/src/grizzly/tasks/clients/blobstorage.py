@@ -69,9 +69,9 @@ from typing import TYPE_CHECKING, cast
 from urllib.parse import parse_qs, quote, urlparse
 
 from azure.storage.blob import BlobServiceClient, ContentSettings
+from grizzly_common.azure.aad import AuthMethod, AzureAadCredential
 
 from grizzly.types import GrizzlyResponse, RequestDirection, RequestMethod, bool_type
-from grizzly_common.azure.aad import AuthMethod, AzureAadCredential
 
 from . import ClientTask, client
 

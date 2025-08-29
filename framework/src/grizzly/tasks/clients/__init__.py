@@ -31,14 +31,15 @@ from time import perf_counter as time
 from typing import TYPE_CHECKING, ClassVar, cast, final
 from urllib.parse import unquote, urlparse
 
+from grizzly_common.arguments import parse_arguments, split_value
+from grizzly_common.text import has_separator
+from grizzly_common.transformer import TransformerContentType
+
 from grizzly.exceptions import StopScenario
 from grizzly.tasks import GrizzlyMetaRequestTask, grizzlytask, template
 from grizzly.testdata.utils import resolve_variable
 from grizzly.types import GrizzlyResponse, RequestDirection, RequestMethod, RequestType, StrDict
 from grizzly.utils import merge_dicts, normalize
-from grizzly_common.arguments import parse_arguments, split_value
-from grizzly_common.text import has_separator
-from grizzly_common.transformer import TransformerContentType
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Generator

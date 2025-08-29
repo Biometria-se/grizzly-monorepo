@@ -22,14 +22,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 import parse
+from grizzly_common.text import permutation
+from grizzly_common.transformer import TransformerContentType
 
 from grizzly.steps._helpers import add_request_response_status_codes, add_save_handler, add_validation_handler
 from grizzly.tasks import RequestTask
 from grizzly.tasks.clients import HttpClientTask
 from grizzly.types import ResponseTarget
 from grizzly.types.behave import Context, register_type, then, when
-from grizzly_common.text import permutation
-from grizzly_common.transformer import TransformerContentType
 
 if TYPE_CHECKING:  # pragma: no cover
     from grizzly.context import GrizzlyContext

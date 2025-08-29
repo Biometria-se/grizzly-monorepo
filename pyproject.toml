@@ -73,8 +73,10 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"docs/src/**" = ["G004"]
+"docs/**" = ["G004", "D104"]
 "**/tests/**/*.py" = ["S106", "PLC0415"]
+"**/__version__.py" = ["ALL"]
+"example/features/environment.py" = ["F401"]
 "framework/tests/test_framework/unit/test_locust_dispatch.py" = ["PT009", "PT027"]
 "command-line-interface/src/**/*.py" = ["S607"]
 "command-line-interface/tests/test_cli/unit/utils/test___init__.py" = ["W291"]
@@ -228,3 +230,16 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "progress.*"
 ignore_missing_imports = true
+
+[tool.hatch.envs.lint]
+detached = true
+
+[[tool.hatch.envs.lint.matrix]]
+python = ["3.10"]
+
+[tool.hatch.envs.lint.scripts]
+install = ["uv sync --active --group dev"]
+all = ["install", "types", "format"]
+types = ["install", "python -m mypy"]
+format = ["install", "ruff check .", "ruff format --check"]
+format-fix = ["install", "ruff check . --fix", "ruff format"]

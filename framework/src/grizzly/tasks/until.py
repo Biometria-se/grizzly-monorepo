@@ -48,15 +48,15 @@ from time import perf_counter
 from typing import TYPE_CHECKING, Any, cast
 
 from gevent import sleep as gsleep
+from grizzly_common.arguments import get_unsupported_arguments, parse_arguments, split_value
+from grizzly_common.text import has_separator
+from grizzly_common.transformer import Transformer, TransformerContentType, TransformerError, transformer
 
 from grizzly.exceptions import StopScenario
 from grizzly.testdata.utils import resolve_variable
 from grizzly.types import RequestType
 from grizzly.types.locust import StopUser
 from grizzly.utils import safe_del
-from grizzly_common.arguments import get_unsupported_arguments, parse_arguments, split_value
-from grizzly_common.text import has_separator
-from grizzly_common.transformer import Transformer, TransformerContentType, TransformerError, transformer
 
 from . import GrizzlyMetaRequestTask, GrizzlyTask, grizzlytask, template
 

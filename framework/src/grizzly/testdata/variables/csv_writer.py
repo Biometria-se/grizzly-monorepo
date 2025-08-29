@@ -35,11 +35,11 @@ from typing import TYPE_CHECKING, Any, ClassVar, cast
 from uuid import uuid4
 
 from gevent.fileobject import FileObjectThread
+from grizzly_common.arguments import parse_arguments, split_value
 
 from grizzly.events import GrizzlyEventDecoder, event, events
 from grizzly.types import StrDict, bool_type, list_type
 from grizzly.types.locust import Environment, MasterRunner, Message
-from grizzly_common.arguments import parse_arguments, split_value
 
 from . import AtomicVariable, AtomicVariableSettable
 

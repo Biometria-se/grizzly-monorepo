@@ -15,19 +15,19 @@ from urllib.parse import urlparse
 from dateutil.parser import ParserError
 from dateutil.parser import parse as dateparser
 from gevent.ssl import SSLContext, create_default_context
+from grizzly_common.async_message.utils import async_message_request
 
 from grizzly.utils import _print_table
-from grizzly_common.async_message.utils import async_message_request
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
     from http.cookiejar import CookieJar
 
+    from grizzly_common.async_message import AsyncMessageRequest, AsyncMessageResponse
     from zmq import sugar as ztypes
 
     from grizzly.scenarios import GrizzlyScenario
     from grizzly.types.behave import Context
-    from grizzly_common.async_message import AsyncMessageRequest, AsyncMessageResponse
 
 
 ALPN_PROTOCOLS = ['http/1.1']

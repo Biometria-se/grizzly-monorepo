@@ -11,9 +11,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse, urlunparse
 
+from grizzly_common.transformer import JsonBytesEncoder
+
 from grizzly.events import GrizzlyEventHandlerClass
 from grizzly.utils import normalize
-from grizzly_common.transformer import JsonBytesEncoder
 
 if TYPE_CHECKING:  # pragma: no cover
     from grizzly.tasks import RequestTask

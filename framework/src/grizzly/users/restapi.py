@@ -104,6 +104,7 @@ from html.parser import HTMLParser
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import requests
+from grizzly_common.transformer import TransformerContentType
 from locust.contrib.fasthttp import FastHttpSession
 from locust.contrib.fasthttp import ResponseContextManager as FastResponseContextManager
 from locust.exception import ResponseError
@@ -112,7 +113,6 @@ from grizzly.auth import AAD, GrizzlyHttpAuthClient, RefreshTokenDistributor, re
 from grizzly.types import GrizzlyResponse, RequestDirection, RequestMethod, StrDict
 from grizzly.utils import merge_dicts, safe_del
 from grizzly.utils.protocols import http_populate_cookiejar, ssl_context_factory
-from grizzly_common.transformer import TransformerContentType
 
 from . import AsyncRequests, GrizzlyUser, GrizzlyUserMeta, grizzlycontext
 

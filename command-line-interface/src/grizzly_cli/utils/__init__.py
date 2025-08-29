@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from functools import wraps
 from hashlib import sha1
+from importlib.util import find_spec
 from json import loads as jsonloads
 from math import ceil
 from os import environ
@@ -370,9 +371,7 @@ def get_dependency_versions(*, local_install: Union[bool, str]) -> tuple[tuple[s
 
                     _, grizzly_version = version_raw[-1].split(' = ')
                 except FileNotFoundError:
-                    try:
-                        import setuptools_scm  # type: ignore[import-not-found]  # noqa: PLC0415
-                    except ModuleNotFoundError:  # pragma: no cover
+                    if find_spec('setuptools_scm') is None:
                         rc = subprocess.check_call(
                             [
                                 sys.executable,
