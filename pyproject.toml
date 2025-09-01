@@ -24,7 +24,7 @@ dependencies = ["virtualenv"]
 python = ["3.10", "3.11", "3.12", "3.13"]
 
 [tool.hatch.envs.test.scripts]
-install = ["uv sync -p {matrix:python} --active --all-packages --group dev"]
+install = ["uv sync --locked -p {matrix:python} --active --all-packages --group dev"]
 
 framework = ["install", "python -m pytest framework/tests/ --ignore=framework/tests/test_framework/e2e"]
 framework-e2e = ["install", "python -m pytest framework/tests/ --ignore=framework/tests/test_framework/unit"]
@@ -51,7 +51,7 @@ python = "{matrix:python}"
 python = ["3.10", "3.13"]
 
 [tool.hatch.envs.lint.scripts]
-install = ["uv sync -p {matrix:python} --active --all-packages --group dev"]
+install = ["uv sync --locked -p {matrix:python} --active --all-packages --group dev"]
 all = ["types", "format"]
 types = ["install", "python -m mypy"]
 format = ["install", "ruff check .", "ruff format --check"]

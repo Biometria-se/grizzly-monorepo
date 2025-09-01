@@ -97,5 +97,5 @@ export LD_LIBRARY_PATH="/opt/mqm/lib64:${LD_LIBRARY_PATH}"
 cd ~/
 git clone https://github.com/Biometria-se/grizzly.git
 cd grizzly/
-uv sync --all-packages --all-extras
+uv sync --locked --all-packages --all-extras
 ```

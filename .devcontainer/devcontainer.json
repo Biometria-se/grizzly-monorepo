@@ -84,7 +84,7 @@
     ],
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [],
-    "postCreateCommand": "ssh-add -l; uv sync --all-packages --all-extras",
+    "postCreateCommand": "ssh-add -l; uv sync --locked --all-packages --all-extras",
     // Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
     "remoteUser": "vscode",
     "features": {

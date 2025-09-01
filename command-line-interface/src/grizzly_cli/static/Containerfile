@@ -99,14 +99,14 @@ WORKDIR /build
 FROM python-venv AS python-venv-base-local
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --active --frozen --no-editable --package grizzly-loadtester
+    uv sync --locked --active --frozen --no-editable --package grizzly-loadtester
 # python-venv-base-local (no mq extras, local install) -->
 
 # <!-- python-venv-mq-local (mq extras, local install)
 FROM python-venv AS python-venv-mq-local
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --active --frozen --no-editable --package grizzly-loadtester --extra mq
+    uv sync --locked --active --frozen --no-editable --package grizzly-loadtester --extra mq
 # python-venv-mq-local (mq extras, local install) -->
 
 # <!-- python-venv-base-remote (no mq extras, remote install)
