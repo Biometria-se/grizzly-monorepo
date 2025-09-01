@@ -633,29 +633,34 @@ def step_start_webserver(context: Context, port: int) -> None:
             self.profile.enable()
 
         project_name = 'test-project'
+        virtual_env = environ.get('VIRTUAL_ENV')
+
         test_context = self._tmp_path_factory.mktemp('test_context')
 
-        virtual_env_path = test_context / 'grizzly-venv'
+        if virtual_env is None or '/hatch/env/virtual' not in virtual_env:
+            virtual_env_path = test_context / 'grizzly-venv'
 
-        # create virtualenv
-        rc, output = run_command(
-            ['python3', '-m', 'venv', virtual_env_path.name],
-            cwd=test_context,
-        )
+            # create virtualenv
+            rc, output = run_command(
+                ['python', '-m', 'venv', virtual_env_path.name],
+                cwd=test_context,
+            )
 
-        try:
-            assert rc == 0
-        except AssertionError:
-            print(''.join(output))
+            try:
+                assert rc == 0
+            except AssertionError:
+                print(''.join(output))
 
-            raise
+                raise
+        else:
+            virtual_env_path = Path(virtual_env)
 
         path = environ.get('PATH', '')
 
         self._env.update(
             {
-                'PATH': f'{virtual_env_path!s}/bin:{path}',
-                'VIRTUAL_ENV': str(virtual_env_path),
+                'PATH': f'{virtual_env_path.as_posix()}/bin:{path}',
+                'VIRTUAL_ENV': virtual_env_path.as_posix(),
                 'PYTHONPATH': environ.get('PYTHONPATH', '.'),
                 'HOME': environ.get('HOME', '/'),
             },
@@ -667,9 +672,12 @@ def step_start_webserver(context: Context, port: int) -> None:
                 self._env.update({env_key: env_value})
 
         # create grizzly project
-        extra_args = '--with-mq' if pymqi.__name__ != 'grizzly_common.dummy_pymqi' else ''
+        cmd = ['grizzly-cli', 'init', '--yes', project_name]
+        if pymqi.__name__ != 'grizzly_common.dummy_pymqi':
+            cmd.append('--with-mq')
+
         rc, output = run_command(
-            ['grizzly-cli', 'init', '--yes', project_name, extra_args],
+            cmd,
             cwd=test_context,
             env=self._env,
         )

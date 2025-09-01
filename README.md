@@ -38,7 +38,8 @@
 
 [Locust](https://en.wikipedia.org/wiki/Locust) are a group of certain species of short-horned grasshoppers in the family Arcididae that have a swarming phase.
 
-The name grizzly was chosen based on the grasshopper [Melanoplus punctulatus](https://en.wikipedia.org/wiki/Melanoplus_punctulatus), also known as __grizzly__ spur-throat grasshopper. This species [prefers living in trees](https://www.sciencedaily.com/releases/2005/07/050718234418.htm) over grass, which is a hint to [Biometria](https://www.biometria.se/)<sup>1</sup>, where `grizzly` originally was created.
+The name grizzly was chosen based on the grasshopper [Melanoplus punctulatus](https://en.wikipedia.org/wiki/Melanoplus_punctulatus), also known as __grizzly__ spur-throat grasshopper. This species [prefers living in trees](https://www.sciencedaily.com/releases/2005/07/050718234418.htm) over grass, which is a hint to
+[Biometria](https://www.biometria.se/)<sup>1</sup>, where `grizzly` originally was created.
 
 <sup>1</sup> _Biometria is a member owned and central actor within the swedish forestry that performs unbiased measurement of lumber flowing between forest and industry so that all of Swedens forest owners can feel confident selling their lumber._
 
@@ -55,13 +56,14 @@ A number of features that we thought `locust` was missing out-of-the-box has bee
 
 Support for synchronous handling of test data (variables). This is extra important when running `locust` distributed and there is a need for each worker and user to have unique test data, that cannot be re-used.
 
-The solution is heavily inspired by [Karol Brejnas locust experiments - feeding the locust](https://medium.com/locust-io-experiments/locust-experiments-feeding-the-locusts-cf09e0f65897). A producer is running on the master (or local) node and keeps track of what has been sent to the consumer running on a worker (or local) node. The two communicates over a dedicated [ZeroMQ](https://zeromq.org) connection.
+The solution is heavily inspired by [Karol Brejnas locust experiments - feeding the locust](https://medium.com/locust-io-experiments/locust-experiments-feeding-the-locusts-cf09e0f65897). A producer is running on the master (or local) node and keeps track of what has been sent to the consumer running on a worker (or local) node.
+Communication is done with asynchronous custom locust messages, over it's [ZeroMQ](https://zeromq.org/) based RPC connection between nodes.
 
 When the consumer wants new test data, it sends a message to the server that it is available and for which scenario it is going to run. The producer then responds with unique test data that can be used.
 
 ### Load users
 
-`locust` comes with a simple user for loading an HTTP(S) endpoint and due to the nature of how the integration between `behave` and `locust` works in `grizzly`, it is not possible to directly use `locust.user.users` provided users, even for HTTP(S) targets.
+`locust` comes with a range of different [load users](https://docs.locust.io/en/stable/api.html). Grizzly has it's own though, and it is **not** possible to use pure locust user implementations.
 
 * `RestApiUser`: send requests to REST API endpoinds, supports authentication with username+password or client secret
 * `ServiceBusUser`: send to and receive from Azure Service Bus queues and topics
@@ -72,8 +74,8 @@ When the consumer wants new test data, it sends a message to the server that it 
 ## Installation
 
 ```bash
-pip3 install grizzly-loadtester
-pip3 install grizzly-loadtester-cli
+python -m pip install grizzly-loadtester
+python -m pip install grizzly-loadtester-cli
 ```
 
 Do not forget to try the [example](https://biometria-se.github.io/grizzly/example/) which also serves as a boilerplate scenario project, or create a new grizzly project with:
@@ -89,12 +91,11 @@ The easiest way to start contributing to this project is to have [Visual Studio 
 It is also possible to use a python virtual environment, but then you would have to manually download and install IBM MQ libraries, and install `grizzly` dependencies.
 
 ```bash
+wget -qO- https://astral.sh/uv/install.sh | sh
 sudo mkdir /opt/mqm && cd /opt/mqm && wget https://ibm.biz/IBM-MQC-Redist-LinuxX64targz -O - | tar xzf -
 export LD_LIBRARY_PATH="/opt/mqm/lib64:${LD_LIBRARY_PATH}"
 cd ~/
 git clone https://github.com/Biometria-se/grizzly.git
 cd grizzly/
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -e .[dev,ci,mq,docs]
+uv sync --all-packages --all-extras
 ```

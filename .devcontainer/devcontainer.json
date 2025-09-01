@@ -61,7 +61,8 @@
                 "ms-vscode.live-server",
                 "charliermarsh.ruff",
                 "oderwat.indent-rainbow",
-                "SanjulaGanepola.github-local-actions"
+                "SanjulaGanepola.github-local-actions",
+                "tamasfe.even-better-toml"
             ]
         }
     },

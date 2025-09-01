@@ -2,7 +2,8 @@
 name = "grizzly-loadtester"
 dynamic = ["version"]
 description = "Traffic generator based on locust and behave"
-readme = "README.md"
+readme = "../README.md"
+license = "MIT"
 authors = [
     { name = "biometria", email="opensource@biometria.se" },
     { name = "Mikael Göransson", email = "github@mgor.se" }
@@ -39,7 +40,7 @@ keywords = [
 ]
 
 [project.urls]
-Documentation = 'https://biometria-se.github.io/grizzly/'
+Documentation = 'https://biometria-se.github.io/grizzly/framework'
 Code = 'https://github.com/biometria-se/grizzly/'
 Tracker = 'https://github.com/Biometria-se/grizzly/issues'
 

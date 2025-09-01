@@ -1278,7 +1278,7 @@ def test_get_dependency_versions_git(mocker: MockerFixture, tmp_path_factory: Te
                     mock_open(read_data='').return_value,
                 ],
             ) as open_mock:
-                assert get_dependency_versions(local_install=False) == (('(development)', []), '(unknown)')
+                assert get_dependency_versions(local_install=False) == (('0.0.0', []), '(unknown)')
 
                 capture = capsys.readouterr()
                 assert capture.err == '!! unable to find "locust" dependency in requirements.txt from https://github.com/Biometria-se/grizzly.git\n'

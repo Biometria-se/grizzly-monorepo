@@ -2,7 +2,7 @@
 name = "grizzly-loadtester-common"
 dynamic = ["version"]
 description = "Common functionality for grizzly-loadtester packages"
-readme = "README.md"
+license = "MIT"
 authors = [
     { name = "biometria", email="opensource@biometria.se" },
     { name = "Mikael Göransson", email = "github@mgor.se" }
@@ -19,6 +19,26 @@ dependencies = [
     "python-dateutil>=2.9.0.post0",
     "pyyaml>=6.0.2",
     "setproctitle>=1.3.6",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython"
+]
+keywords = [
+    "locust",
+    "behave",
+    "load",
+    "loadtest",
+    "performance",
+    "traffic generator"
 ]
 
 [project.scripts]

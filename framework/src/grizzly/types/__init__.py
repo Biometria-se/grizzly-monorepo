@@ -9,16 +9,10 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from grizzly_common.text import PermutationEnum
 from locust.rpc.protocol import Message
-from typing_extensions import ParamSpec
+from typing_extensions import ParamSpec, Self
 
 from grizzly.exceptions import RestartIteration, RestartScenario, RetryTask, StopUser
-
-from .locust import Environment
-
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
+from grizzly.types.locust import Environment
 
 try:
     import pymqi

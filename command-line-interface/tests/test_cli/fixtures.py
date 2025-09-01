@@ -178,20 +178,25 @@ def step_start_webserver(context: Context) -> None:
 
         self._root = self._tmp_path_factory.mktemp('test_context')
 
-        virtual_env_path = self.root / 'venv'
+        virtual_env = environ.get('VIRTUAL_ENV')
 
-        # create virtualenv
-        rc, output = run_command(
-            [sys.executable, '-m', 'venv', virtual_env_path.name],
-            cwd=self.root,
-        )
+        if virtual_env is None or '/hatch/env/virtual' not in virtual_env:
+            virtual_env_path = self.root / 'venv'
 
-        try:
-            assert rc == 0
-        except AssertionError:
-            print(''.join(output))
+            # create virtualenv
+            rc, output = run_command(
+                [sys.executable, '-m', 'venv', virtual_env_path.name],
+                cwd=self.root,
+            )
 
-            raise
+            try:
+                assert rc == 0
+            except AssertionError:
+                print(''.join(output))
+
+                raise
+        else:
+            virtual_env_path = Path(virtual_env)
 
         path = environ.get('PATH', '')
 
@@ -203,7 +208,7 @@ def step_start_webserver(context: Context) -> None:
         self._env.update(
             {
                 'PATH': Path.joinpath(virtual_env_path, virtual_env_bin_dir, path).as_posix(),
-                'VIRTUAL_ENV': str(virtual_env_path),
+                'VIRTUAL_ENV': virtual_env_path.as_posix(),
                 'PYTHONPATH': environ.get('PYTHONPATH', '.'),
                 'HOME': environ.get('HOME', '/'),
             }
@@ -224,12 +229,6 @@ def step_start_webserver(context: Context) -> None:
             env_value = environ.get(env_key, None)
             if env_value is not None:
                 self._env.update({env_key: env_value})
-
-        try:
-            assert rc == 0
-        except AssertionError:
-            print(''.join(output))
-            raise
 
         package_path = (Path(__file__).parent / '..' / '..').resolve()
         rc, output = run_command(

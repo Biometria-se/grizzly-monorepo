@@ -5,10 +5,57 @@
 [project]
 name = "grizzly-loadtester-monorepo"
 version = "0.1.0"
-description = "Add your description here"
+description = "Monorepo containing all grizzly related packages"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.10"
-dependencies = []
+
+[tool.uv.pip]
+link-mode = "copy"
+
+[tool.hatch.envs.test]
+detached = true
+type = "virtual"
+installer = "uv"
+python = "{matrix:python}"
+dependencies = ["virtualenv"]
+
+[[tool.hatch.envs.test.matrix]]
+python = ["3.10", "3.11", "3.12", "3.13"]
+
+[tool.hatch.envs.test.scripts]
+install = ["uv sync -p {matrix:python} --active --all-packages --group dev"]
+
+framework = ["install", "python -m pytest framework/tests/ --ignore=framework/tests/test_framework/e2e"]
+framework-e2e = ["install", "python -m pytest framework/tests/ --ignore=framework/tests/test_framework/unit"]
+framework-e2e-dist = ["install", "E2E_DIST_MODE=dist python -m pytest framework/tests/ --ignore=framework/tests/test_framework/unit"]
+framework-e2e-example = ["install", "python -m pytest -s framework/tests/test_framework/e2e/test_example.py::test_e2e_example"]
+
+cli = ["install", "python -m pytest command-line-interface/tests --ignore=command-line-interface/tests/test_cli/e2e"]
+cli-e2e = ["install", "python -m pytest command-line-interface/tests --ignore=command-line-interface/tests/test_cli/unit"]
+cli-e2e-example = ["install", "python -m pytest command-line-interface/tests/test_cli/e2e/test_run.py"]
+
+common = ["install", "python -m pytest common/tests"]
+
+all = ["framework", "cli", "common", "framework-e2e", "cli-e2e", "framework-e2e-dist"]
+framework-all = ["framework", "framework-e2e", "framework-e2e-dist"]
+cli-all = ["cli", "cli-e2e"]
+
+[tool.hatch.envs.lint]
+detached = true
+type = "virtual"
+installer = "uv"
+python = "{matrix:python}"
+
+[[tool.hatch.envs.lint.matrix]]
+python = ["3.10", "3.13"]
+
+[tool.hatch.envs.lint.scripts]
+install = ["uv sync -p {matrix:python} --active --all-packages --group dev"]
+all = ["types", "format"]
+types = ["install", "python -m mypy"]
+format = ["install", "ruff check .", "ruff format --check"]
+format-fix = ["install", "ruff check . --fix", "ruff format"]
 
 [tool.uv.workspace]
 members = [
@@ -122,13 +169,17 @@ filterwarnings = [
     "ignore:'locale\\.getdefaultlocale' is deprecated"
 ]
 
-[tool.coverage.run]
+[tool.coverage.paths]
 source = [
     "framework/src",
     "common/src",
     "docs/src",
     "command-line-interface/src"
 ]
+
+[tool.coverage.report]
+skip_covered = true
+skip_empty = true
 
 [tool.mypy]
 explicit_package_bases = true
@@ -192,23 +243,7 @@ module = "parse.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = "opencensus.ext.azure.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "azure.iot.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
 module = "geventhttpclient.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "piplicenses.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "frontmatter.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
@@ -230,16 +265,3 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "progress.*"
 ignore_missing_imports = true
-
-[tool.hatch.envs.lint]
-detached = true
-
-[[tool.hatch.envs.lint.matrix]]
-python = ["3.10"]
-
-[tool.hatch.envs.lint.scripts]
-install = ["uv sync --active --all-packages --group dev"]
-all = ["install", "types", "format"]
-types = ["install", "python -m mypy"]
-format = ["install", "ruff check .", "ruff format --check"]
-format-fix = ["install", "ruff check . --fix", "ruff format"]
