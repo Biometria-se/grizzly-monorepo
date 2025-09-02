@@ -8,6 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
+node_modules
 
 # Caches
 .mypy_cache
@@ -20,6 +21,7 @@ coverage.xml
 **/.pytest_tmp
 **/*.lock.feature
 **/*.lock.yaml
+**/*.log
 
 # docs/
 docs/build
@@ -32,3 +34,7 @@ example/environments/*.yaml
 command-line-interface/tests/test_cli/e2e/example
 command-line-interface/tests/test_cli/tmp
 
+# editor-support
+editor-support/**/.vscode-test
+editor-support/**/out
+editor-support/**/*.vsix
