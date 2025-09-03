@@ -1,7 +1,8 @@
-from colorama import Fore
-from lsprotocol import types as lsp
+from __future__ import annotations
 
+from colorama import Fore
 from grizzly_ls.cli import _get_severity_color, diagnostic_to_text
+from lsprotocol import types as lsp
 
 
 def test__get_severity_color() -> None:

@@ -1,9 +1,14 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest.mock import ANY
 
 from grizzly_ls.server.progress import Progress
-from pytest_mock import MockerFixture
 
-from tests.fixtures import LspFixture
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
+    from test_ls.fixtures import LspFixture
 
 
 def test_progress(lsp_fixture: LspFixture, mocker: MockerFixture) -> None:

@@ -41,7 +41,7 @@ def load_step_registry(step_paths: list[Path]) -> dict[str, list[ParseMatcher]]:
 def create_step_normalizer(ls: GrizzlyLanguageServer) -> Normalizer:
     custom_type_permutations: dict[str, NormalizeHolder] = {}
 
-    for custom_type, func in ParseMatcher.custom_types.items():
+    for custom_type, func in ParseMatcher.TYPE_REGISTRY.items():
         func_code = [line for line in inspect.getsource(func).strip().split('\n') if not line.strip().startswith('@classmethod')]
 
         if func_code[0].startswith('@parse.with_pattern'):
@@ -213,6 +213,10 @@ def compile_keyword_inventory(ls: GrizzlyLanguageServer) -> None:
     if ls.localizations == {}:
         message = f'unknown language "{ls.language}"'
         raise ValueError(message)
+
+    # make sure that all keywords doesn't have any whitespace
+    for key, values in {**ls.localizations}.items():
+        ls.localizations.update({key: [v.strip() for v in values] if isinstance(values, list) else values.strip()})
 
     # localized any keywords
     ls.__class__.keywords_any = list(

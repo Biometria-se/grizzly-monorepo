@@ -1,15 +1,20 @@
+from __future__ import annotations
+
 import logging
-from typing import Any
 from itertools import product
+from typing import TYPE_CHECKING, Any
 
-from pygls.workspace import TextDocument
-from lsprotocol import types as lsp
-from _pytest.logging import LogCaptureFixture  # type: ignore
-
-from grizzly_ls.server.features.diagnostics import validate_gherkin
 from grizzly_ls.model import Step
+from grizzly_ls.server.features.diagnostics import GrizzlyDiagnostic, validate_gherkin
+from lsprotocol import types as lsp
+from pygls.workspace import TextDocument
 
-from tests.fixtures import LspFixture
+from test_ls.helpers import SOME
+
+if TYPE_CHECKING:
+    from _pytest.logging import LogCaptureFixture
+
+    from test_ls.fixtures import LspFixture
 
 
 def test_validate_gherkin(lsp_fixture: LspFixture, caplog: LogCaptureFixture) -> None:
@@ -20,10 +25,10 @@ def test_validate_gherkin(lsp_fixture: LspFixture, caplog: LogCaptureFixture) ->
     # <!-- no language yet
     text_document = TextDocument(
         'file://test.feature',
-        '''# language:
+        """# language:
 Feature:
     Scenario: test
-''',
+""",
     )
     diagnostics = validate_gherkin(ls, text_document)
 
@@ -44,37 +49,38 @@ Feature:
     )
     diagnostics = validate_gherkin(ls, text_document)
 
-    assert len(diagnostics) == 2
-
-    # invalid language
-    diagnostic = list(diagnostics)[0]
-    assert diagnostic.range == lsp.Range(
-        start=lsp.Position(line=1, character=12),
-        end=lsp.Position(line=1, character=16),
-    )
-    assert diagnostic.message == '"asdf" is not a valid language'
-    assert diagnostic.severity == lsp.DiagnosticSeverity.Error
-    assert diagnostic.code is None
-    assert diagnostic.code_description is None
-    assert diagnostic.source == ls.__class__.__name__
-    assert diagnostic.tags is None
-    assert diagnostic.related_information is None
-    assert diagnostic.data is None
-
-    # wrong line
-    diagnostic = diagnostics[1]
-    assert diagnostic.range == lsp.Range(
-        start=lsp.Position(line=1, character=0),
-        end=lsp.Position(line=1, character=16),
-    )
-    assert diagnostic.message == '"# language:" should be on the first line'
-    assert diagnostic.severity == lsp.DiagnosticSeverity.Warning
-    assert diagnostic.code is None
-    assert diagnostic.code_description is None
-    assert diagnostic.source == ls.__class__.__name__
-    assert diagnostic.tags is None
-    assert diagnostic.related_information is None
-    assert diagnostic.data is None
+    assert [
+        SOME(  # wrong language
+            lsp.Diagnostic,
+            range=lsp.Range(
+                start=lsp.Position(line=1, character=12),
+                end=lsp.Position(line=1, character=16),
+            ),
+            message='"asdf" is not a valid language',
+            severity=lsp.DiagnosticSeverity.Error,
+            code=None,
+            code_description=None,
+            source=ls.__class__.__name__,
+            tags=None,
+            related_information=None,
+            data=None,
+        ),
+        SOME(  # wrong line
+            lsp.Diagnostic,
+            range=lsp.Range(
+                start=lsp.Position(line=1, character=0),
+                end=lsp.Position(line=1, character=16),
+            ),
+            message='"# language:" should be on the first line',
+            severity=lsp.DiagnosticSeverity.Warning,
+            code=None,
+            code_description=None,
+            source=ls.__class__.__name__,
+            tags=None,
+            related_information=None,
+            data=None,
+        ),
+    ] == diagnostics
     # // -->
 
     # <!-- keyword language != specified language
@@ -89,38 +95,40 @@ Feature:
     Scenario: test
 ''',
     )
-    with caplog.at_level(logging.DEBUG):
-        diagnostics = validate_gherkin(ls, text_document)
+    diagnostics = validate_gherkin(ls, text_document)
 
-    assert len(diagnostics) == 2
-
-    diagnostic = diagnostics[0]
-    assert diagnostic.range == lsp.Range(
-        start=lsp.Position(line=1, character=0),
-        end=lsp.Position(line=1, character=7),
-    )
-    assert diagnostic.message == '"Feature" is not a valid keyword in Swedish'
-    assert diagnostic.severity == lsp.DiagnosticSeverity.Error
-    assert diagnostic.code is None
-    assert diagnostic.code_description is None
-    assert diagnostic.source == ls.__class__.__name__
-    assert diagnostic.tags is None
-    assert diagnostic.related_information is None
-    assert diagnostic.data is None
-
-    diagnostic = diagnostics[1]
-    assert diagnostic.range == lsp.Range(
-        start=lsp.Position(line=1, character=0),
-        end=lsp.Position(line=1, character=7),
-    )
-    assert diagnostic.message == 'Parser failure in state init\nNo feature found.'
-    assert diagnostic.severity == lsp.DiagnosticSeverity.Error
-    assert diagnostic.code is None
-    assert diagnostic.code_description is None
-    assert diagnostic.source == ls.__class__.__name__
-    assert diagnostic.tags is None
-    assert diagnostic.related_information is None
-    assert diagnostic.data is None
+    assert [
+        SOME(
+            lsp.Diagnostic,
+            range=lsp.Range(
+                start=lsp.Position(line=1, character=0),
+                end=lsp.Position(line=1, character=7),
+            ),
+            message='"Feature" is not a valid keyword in Swedish',
+            severity=lsp.DiagnosticSeverity.Error,
+            code=None,
+            code_description=None,
+            source=ls.__class__.__name__,
+            tags=None,
+            related_information=None,
+            data=None,
+        ),
+        SOME(
+            lsp.Diagnostic,
+            range=lsp.Range(
+                start=lsp.Position(line=2, character=0),
+                end=lsp.Position(line=2, character=7),
+            ),
+            message='Parser failure in state initial\nNo feature found.',
+            severity=lsp.DiagnosticSeverity.Error,
+            code=None,
+            code_description=None,
+            source=ls.__class__.__name__,
+            tags=None,
+            related_information=None,
+            data=None,
+        ),
+    ] == diagnostics
     # // -->
 
     # <!-- step implementation not found
@@ -140,43 +148,43 @@ Feature:
 ''',
     )
 
-    def noop(*args: Any, **kwargs: Any) -> None:
+    def noop(*_args: Any, **_kwargs: Any) -> None:
         return None
 
     ls.steps.update({'then': [Step('then', 'this step actually exists!', func=noop)]})
     diagnostics = validate_gherkin(ls, text_document)
-
-    assert len(diagnostics) == 2
-
-    diagnostic = diagnostics[0]
-
-    assert diagnostic.range == lsp.Range(
-        start=lsp.Position(line=6, character=14),
-        end=lsp.Position(line=6, character=36),
-    )
-    assert diagnostic.message == 'No step implementation found\nGiven a step in the scenario'
-    assert diagnostic.severity == lsp.DiagnosticSeverity.Warning
-    assert diagnostic.code is None
-    assert diagnostic.code_description is None
-    assert diagnostic.source == ls.__class__.__name__
-    assert diagnostic.tags is None
-    assert diagnostic.related_information is None
-    assert diagnostic.data is None
-
-    diagnostic = diagnostics[1]
-
-    assert diagnostic.range == lsp.Range(
-        start=lsp.Position(line=7, character=12),
-        end=lsp.Position(line=7, character=48),
-    )
-    assert diagnostic.message == 'No step implementation found\nAnd another expression with a "variable"'
-    assert diagnostic.severity == lsp.DiagnosticSeverity.Warning
-    assert diagnostic.code is None
-    assert diagnostic.code_description is None
-    assert diagnostic.source == ls.__class__.__name__
-    assert diagnostic.tags is None
-    assert diagnostic.related_information is None
-    assert diagnostic.data is None
+    assert [
+        SOME(
+            lsp.Diagnostic,
+            range=lsp.Range(
+                start=lsp.Position(line=6, character=14),
+                end=lsp.Position(line=6, character=36),
+            ),
+            message='No step implementation found\nGiven a step in the scenario',
+            severity=lsp.DiagnosticSeverity.Warning,
+            code=None,
+            code_description=None,
+            source=ls.__class__.__name__,
+            tags=None,
+            related_information=None,
+            data=None,
+        ),
+        SOME(
+            lsp.Diagnostic,
+            range=lsp.Range(
+                start=lsp.Position(line=7, character=12),
+                end=lsp.Position(line=7, character=48),
+            ),
+            message='No step implementation found\nAnd another expression with a "variable"',
+            severity=lsp.DiagnosticSeverity.Warning,
+            code=None,
+            code_description=None,
+            source=ls.__class__.__name__,
+            tags=None,
+            related_information=None,
+            data=None,
+        ),
+    ] == diagnostics
     # // -->
 
     # <!-- freetext marker not closed
@@ -194,10 +202,7 @@ Feature:
 
     diagnostics = validate_gherkin(ls, text_document)
 
-    diagnostic = next(iter(diagnostics))
-
-    assert diagnostic.message == 'Freetext marker is not closed'
-    assert diagnostic.severity == lsp.DiagnosticSeverity.Error
+    assert [SOME(lsp.Diagnostic, message='Freetext marker is not closed', severity=lsp.DiagnosticSeverity.Error)] == diagnostics
     # // -->
 
     # <!-- "complex" document with no errors
@@ -249,7 +254,7 @@ Feature:
     )
 
     included_feature_file_1.write_text(
-        '''# language: sv
+        """# language: sv
 Egenskap: hello
     Scenario: hello
         Så producera ett dokument i formatet "xml"
@@ -262,19 +267,19 @@ Egenskap: hello
 
     Scenario: bar
         Så producera en bild i formatet "png"
-    ''',
+    """,
         encoding='utf-8',
     )
 
     included_feature_file_2.write_text(
-        '''# language: sv
+        """# language: sv
 Egenskap: hello
     Scenario: hello
         Så producera ett dokument i formatet "xml"
 
     Scenario: world
         Så producera ett dokument i formatet "yaml"
-    ''',
+    """,
         encoding='utf-8',
     )
 
@@ -304,7 +309,7 @@ Egenskap: hello
     # // -->
 
 
-def test_validate_gherkin_scenario_tag(lsp_fixture: LspFixture, caplog: LogCaptureFixture) -> None:
+def test_validate_gherkin_scenario_tag(lsp_fixture: LspFixture) -> None:
     ls = lsp_fixture.server
 
     feature_file = lsp_fixture.datadir / 'features' / 'test_validate_gherkin_scenario_tag.feature'
@@ -313,82 +318,88 @@ def test_validate_gherkin_scenario_tag(lsp_fixture: LspFixture, caplog: LogCaptu
     try:
         # <!-- jinja2 expression, not scenario tag -- ignored
         feature_file.write_text(
-            '''Feature: test scenario tag
+            """Feature: test scenario tag
     Scenario: included
         {% hello %}
-    ''',
+    """,
             encoding='utf-8',
         )
         text_document = TextDocument(feature_file.as_posix())
 
-        diagnostics = validate_gherkin(ls, text_document)
-        assert diagnostics == []
+        assert validate_gherkin(ls, text_document) == []
         # // -->
 
         # <!-- scenario tag, no arguments
         feature_file.write_text(
-            '''Feature: test scenario tag
+            """Feature: test scenario tag
     Scenario: included
         {% scenario %}
-    ''',
+    """,
             encoding='utf-8',
         )
         text_document = TextDocument(feature_file.as_posix())
 
-        diagnostics = validate_gherkin(ls, text_document)
-        assert len(diagnostics) == 2
-        diagnostic = diagnostics[0]
-        assert diagnostic.message == 'Scenario tag is invalid, could not find scenario argument'
-        assert str(diagnostic.range) == '2:8-2:22'
-        assert diagnostic.severity == lsp.DiagnosticSeverity.Error
-
-        diagnostic = diagnostics[1]
-        assert diagnostic.message == 'Scenario tag is invalid, could not find feature argument'
-        assert str(diagnostic.range) == '2:8-2:22'
-        assert diagnostic.severity == lsp.DiagnosticSeverity.Error
+        assert [
+            SOME(
+                GrizzlyDiagnostic,
+                message='Scenario tag is invalid, could not find scenario argument',
+                range=lsp.Range(start=lsp.Position(line=2, character=8), end=lsp.Position(line=2, character=22)),
+                severity=lsp.DiagnosticSeverity.Error,
+            ),
+            SOME(
+                GrizzlyDiagnostic,
+                message='Scenario tag is invalid, could not find feature argument',
+                range=lsp.Range(start=lsp.Position(line=2, character=8), end=lsp.Position(line=2, character=22)),
+                severity=lsp.DiagnosticSeverity.Error,
+            ),
+        ] == validate_gherkin(ls, text_document)
         # // -->
 
         # <!-- empty scenario and feature arguments
         feature_file.write_text(
-            '''Feature: test scenario tag
+            """Feature: test scenario tag
     Scenario: included
         {% scenario "", feature="" %}
-    ''',
+    """,
             encoding='utf-8',
         )
         text_document = TextDocument(feature_file.as_posix())
 
-        diagnostics = validate_gherkin(ls, text_document)
-        assert len(diagnostics) == 2
-        diagnostic = diagnostics[0]
-        assert diagnostic.message == 'Feature argument is empty'
-        assert str(diagnostic.range) == '2:33-2:33'
-        assert diagnostic.severity == lsp.DiagnosticSeverity.Warning
-
-        diagnostic = diagnostics[1]
-        assert diagnostic.message == 'Scenario argument is empty'
-        assert str(diagnostic.range) == '2:21-2:21'
-        assert diagnostic.severity == lsp.DiagnosticSeverity.Warning
+        assert [
+            SOME(
+                GrizzlyDiagnostic,
+                message='Feature argument is empty',
+                range=lsp.Range(start=lsp.Position(line=2, character=33), end=lsp.Position(line=2, character=33)),
+                severity=lsp.DiagnosticSeverity.Warning,
+            ),
+            SOME(
+                GrizzlyDiagnostic,
+                message='Scenario argument is empty',
+                range=lsp.Range(start=lsp.Position(line=2, character=21), end=lsp.Position(line=2, character=21)),
+                severity=lsp.DiagnosticSeverity.Warning,
+            ),
+        ] == validate_gherkin(ls, text_document)
         # // -->
 
         # <!-- missing feature argument, scenario argument both as positional and named
         for argument in ['"foo"', 'scenario="foo"']:
             feature_file.write_text(
-                f'''Feature: test scenario tag
+                f"""Feature: test scenario tag
     Scenario: included
         {{% scenario {argument} %}}
-    ''',
+    """,
                 encoding='utf-8',
             )
             text_document = TextDocument(feature_file.as_posix())
 
-            diagnostics = validate_gherkin(ls, text_document)
-            assert len(diagnostics) == 1
-            diagnostic = diagnostics[0]
-            assert diagnostic.message == 'Scenario tag is invalid, could not find feature argument'
-            end = len(argument) + 21 + 2
-            assert str(diagnostic.range) == f'2:8-2:{end}'
-            assert diagnostic.severity == lsp.DiagnosticSeverity.Error
+            assert [
+                SOME(
+                    lsp.Diagnostic,
+                    message='Scenario tag is invalid, could not find feature argument',
+                    range=lsp.Range(start=lsp.Position(line=2, character=8), end=lsp.Position(line=2, character=len(argument) + 21 + 2)),
+                    severity=lsp.DiagnosticSeverity.Error,
+                ),
+            ] == validate_gherkin(ls, text_document)
         # // -->
 
         # <!-- specified feature file that does not exist
@@ -401,72 +412,50 @@ def test_validate_gherkin_scenario_tag(lsp_fixture: LspFixture, caplog: LogCaptu
         ):
             for prefix in [None, (lsp_fixture.datadir / 'features').as_posix()]:
                 if prefix is not None:
-                    arg_feature = arg_feature.replace('./', f'{prefix}/')
+                    arg_feature = arg_feature.replace('./', f'{prefix}/')  # noqa: PLW2901
 
                 feature_file.write_text(
-                    f'''Feature: test scenario tag
+                    f"""Feature: test scenario tag
         Scenario: included
             {{% scenario {arg_scenario}, {arg_feature} %}}
-        ''',
+        """,
                     encoding='utf-8',
                 )
                 text_document = TextDocument(feature_file.as_posix())
 
                 included_feature_file.unlink(missing_ok=True)
-
-                diagnostics = validate_gherkin(ls, text_document)
-
-                assert len(diagnostics) == 1
-
-                diagnostic = diagnostics[0]
-
                 _, feature_file_name, _ = arg_feature.split('"', 3)
 
-                assert diagnostic.message == f'Included feature file "{feature_file_name}" does not exist'
+                assert [SOME(lsp.Diagnostic, message=f'Included feature file "{feature_file_name}" does not exist')] == validate_gherkin(ls, text_document)
 
                 included_feature_file.touch()
 
-                diagnostics = validate_gherkin(ls, text_document)
-                diagnostic = next(iter(diagnostics))
+                assert [SOME(lsp.Diagnostic, message=f'Included feature file "{feature_file_name}" does not have any scenarios')] == validate_gherkin(ls, text_document)
 
-                assert diagnostic.message == f'Included feature file "{feature_file_name}" does not have any scenarios'
+                included_feature_file.write_text("""Egenskap: test""", encoding='utf-8')
 
-                included_feature_file.write_text('''Egenskap: test''', encoding='utf-8')
+                assert [SOME(lsp.Diagnostic, message='Parser failure in state initial\nNo feature found.')] == validate_gherkin(ls, text_document)
 
-                diagnostics = validate_gherkin(ls, text_document)
-                diagnostic = next(iter(diagnostics))
+                included_feature_file.write_text("""Feature: test""", encoding='utf-8')
 
-                assert diagnostic.message == 'Parser failure in state init\nNo feature found.'
-
-                included_feature_file.write_text('''Feature: test''', encoding='utf-8')
-
-                diagnostics = validate_gherkin(ls, text_document)
-                diagnostic = next(iter(diagnostics))
-
-                assert diagnostic.message == f'Scenario "foo" does not exist in included feature "{feature_file_name}"'
+                assert [SOME(lsp.Diagnostic, message=f'Scenario "foo" does not exist in included feature "{feature_file_name}"')] == validate_gherkin(ls, text_document)
 
                 included_feature_file.write_text(
-                    '''Feature: test
-Scenario: foo''',
+                    """Feature: test
+Scenario: foo""",
                     encoding='utf-8',
                 )
 
-                diagnostics = validate_gherkin(ls, text_document)
-                diagnostic = next(iter(diagnostics))
-
-                assert diagnostic.message == f'Scenario "foo" in "{feature_file_name}" does not have any steps'
+                assert [SOME(lsp.Diagnostic, message=f'Scenario "foo" in "{feature_file_name}" does not have any steps')] == validate_gherkin(ls, text_document)
 
                 included_feature_file.write_text(
-                    '''Feature: test
+                    """Feature: test
 Scenario: foo
-    Given a step expression''',
+    Given a step expression""",
                     encoding='utf-8',
                 )
 
-                with caplog.at_level(logging.DEBUG):
-                    diagnostics = validate_gherkin(ls, text_document)
-
-                assert diagnostics == []
+                assert validate_gherkin(ls, text_document) == []
         # // -->
 
         # <!-- scenario tag values argument
@@ -488,19 +477,20 @@ Scenario: foo
         )
         text_document = TextDocument(feature_file.as_posix())
 
-        diagnostics = validate_gherkin(ls, text_document)
-
-        assert len(diagnostics) == 2
-
-        diagnostic = diagnostics[0]
-        assert diagnostic.message == 'Declared variable "foo" is not used in included scenario steps'
-        assert str(diagnostic.range) == '2:95-2:104'
-        assert diagnostic.severity == lsp.DiagnosticSeverity.Error
-
-        diagnostic = diagnostics[1]
-        assert diagnostic.message == 'Declared variable "bar" is not used in included scenario steps'
-        assert str(diagnostic.range) == '2:106-2:115'
-        assert diagnostic.severity == lsp.DiagnosticSeverity.Error
+        assert [
+            SOME(
+                lsp.Diagnostic,
+                message='Declared variable "foo" is not used in included scenario steps',
+                range=lsp.Range(start=lsp.Position(line=2, character=95), end=lsp.Position(line=2, character=104)),
+                severity=lsp.DiagnosticSeverity.Error,
+            ),
+            SOME(
+                lsp.Diagnostic,
+                message='Declared variable "bar" is not used in included scenario steps',
+                range=lsp.Range(start=lsp.Position(line=2, character=106), end=lsp.Position(line=2, character=115)),
+                severity=lsp.DiagnosticSeverity.Error,
+            ),
+        ] == validate_gherkin(ls, text_document)
 
         included_feature_file.write_text(
             """Feature:
@@ -513,19 +503,20 @@ Scenario: foo
         )
         text_document = TextDocument(feature_file.as_posix())
 
-        diagnostics = validate_gherkin(ls, text_document)
-
-        assert len(diagnostics) == 2
-
-        diagnostic = diagnostics[0]
-        assert diagnostic.message == 'Declared variable "bar" is not used in included scenario steps'
-        assert str(diagnostic.range) == '2:106-2:115'
-        assert diagnostic.severity == lsp.DiagnosticSeverity.Error
-
-        diagnostic = diagnostics[1]
-        assert diagnostic.message == 'Scenario tag is missing variable "baz"'
-        assert str(diagnostic.range) == '2:8-2:118'
-        assert diagnostic.severity == lsp.DiagnosticSeverity.Warning
+        assert [
+            SOME(
+                lsp.Diagnostic,
+                message='Declared variable "bar" is not used in included scenario steps',
+                range=lsp.Range(start=lsp.Position(line=2, character=106), end=lsp.Position(line=2, character=115)),
+                severity=lsp.DiagnosticSeverity.Error,
+            ),
+            SOME(
+                lsp.Diagnostic,
+                message='Scenario tag is missing variable "baz"',
+                range=lsp.Range(start=lsp.Position(line=2, character=8), end=lsp.Position(line=2, character=118)),
+                severity=lsp.DiagnosticSeverity.Warning,
+            ),
+        ] == validate_gherkin(ls, text_document)
 
         included_feature_file.write_text(
             """Feature:
@@ -538,8 +529,7 @@ Scenario: foo
         )
         text_document = TextDocument(feature_file.as_posix())
 
-        diagnostics = validate_gherkin(ls, text_document)
-        assert diagnostics == []
+        assert validate_gherkin(ls, text_document) == []
         # // -->
     finally:
         included_feature_file.unlink(missing_ok=True)

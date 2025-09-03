@@ -121,7 +121,7 @@ class GrizzlyLanguageServer(LanguageServer):
         if not hasattr(self, '_language') or self._language != value:
             self._language = value
             compile_keyword_inventory(self)
-            name = self.localizations.get('name', ['unknown'])[0]
+            name = self.localizations.get('name', 'unknown')
             self.logger.info(f'language detected: {name} ({value})')
 
     def get_language_key(self, keyword: str) -> str:
@@ -131,7 +131,7 @@ class GrizzlyLanguageServer(LanguageServer):
             if keyword in values:
                 return key
 
-        message = f'"{keyword}" is not a valid keyword for "{self.language}"'
+        message = f'"{keyword}" is not a valid keyword for language "{self.language}"'
         raise ValueError(message)
 
     def get_base_keyword(self, position: lsp.Position, text_document: TextDocument) -> str:

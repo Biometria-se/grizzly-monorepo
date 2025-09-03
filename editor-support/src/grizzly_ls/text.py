@@ -134,7 +134,7 @@ class RegexPermutationResolver:
 
         values: list[Generator[list[str], None, None]] = []
 
-        for sub_token, sub_value in subpattern:
+        for sub_token, sub_value in subpattern:  # type: ignore[attr-defined,unused-ignore]
             options = self.handle_token(cast('SreNamedIntConstant', sub_token), cast('SreParseValue', sub_value))
 
             for x in range(minimum, maximum + 1):
@@ -157,8 +157,7 @@ class RegexPermutationResolver:
 
     def permute_tokens(self, tokens: SreParseTokens) -> list[str]:
         lists: list[list[str]] = [self.handle_token(token, cast('SreParseValue', value)) for token, value in tokens]
-
-        return [''.join(nested_list) for nested_list in lists]
+        return [''.join(cartesian_list) for cartesian_list in self.cartesian_join(lists)]
 
     def cartesian_join(self, value: list[list[str]]) -> Generator[list[str], None, None]:
         def rloop(
@@ -180,7 +179,7 @@ class RegexPermutationResolver:
                 token,
                 value,
             )
-            for token, value in sre_parse(self.pattern)
+            for token, value in sre_parse(self.pattern)  # type: ignore[attr-defined,unused-ignore]
         ]
 
         return self.permute_tokens(tokens)
@@ -222,7 +221,7 @@ class Normalizer:
 
     def _round1(self, variable_pattern: str, normalize: dict[str, NormalizeHolder]) -> list[str]:
         normalize_variations_y = {key: value for key, value in normalize.items() if value.permutations.y}
-        variation_patterns: set[str]
+        variation_patterns: set[str] = set()
         patterns: list[str] = []
 
         if len(normalize_variations_y) > 0:

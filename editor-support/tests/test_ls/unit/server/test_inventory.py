@@ -1,45 +1,43 @@
+from __future__ import annotations
+
 import logging
 from pathlib import Path
-from typing import List
+from typing import TYPE_CHECKING
 
 import pytest
-
-from pytest_mock import MockerFixture
-from _pytest.logging import LogCaptureFixture
-
 from grizzly_ls.server.inventory import (
     _filter_source_directories,
     compile_inventory,
     create_step_normalizer,
 )
 
-from tests.fixtures import LspFixture
-from tests.conftest import GRIZZLY_PROJECT
-from tests.helpers import (
-    parse_with_pattern_and_vector,
-    parse_with_pattern,
-    parse_enum_indirect,
-    parse_with_pattern_error,
+from test_ls.conftest import GRIZZLY_PROJECT
+from test_ls.helpers import (
     DummyEnum,
     DummyEnumNoFromString,
     DummyEnumNoFromStringType,
+    parse_enum_indirect,
+    parse_with_pattern,
+    parse_with_pattern_and_vector,
+    parse_with_pattern_error,
 )
+
+if TYPE_CHECKING:
+    from _pytest.logging import LogCaptureFixture
+    from pytest_mock import MockerFixture
+
+    from test_ls.fixtures import LspFixture
 
 
 def test_create_normalizer(lsp_fixture: LspFixture, mocker: MockerFixture) -> None:
     ls = lsp_fixture.server
     namespace = 'grizzly_ls.server.inventory'
 
-    mocker.patch(
-        f'{namespace}.ParseMatcher.custom_types',
-        {},  # pyright: ignore[reportUnknownArgumentType]
-    )
-
     normalizer = create_step_normalizer(ls)
     assert normalizer.custom_types == {}
 
     mocker.patch(
-        f'{namespace}.ParseMatcher.custom_types',
+        f'{namespace}.ParseMatcher.TYPE_REGISTRY',
         {
             'WithPatternAndVector': parse_with_pattern_and_vector,
             'WithPattern': parse_with_pattern,
@@ -49,7 +47,7 @@ def test_create_normalizer(lsp_fixture: LspFixture, mocker: MockerFixture) -> No
     )
     normalizer = create_step_normalizer(ls)
 
-    assert list(sorted(normalizer.custom_types.keys())) == sorted(
+    assert sorted(normalizer.custom_types.keys()) == sorted(
         [
             'WithPatternAndVector',
             'WithPattern',
@@ -61,38 +59,41 @@ def test_create_normalizer(lsp_fixture: LspFixture, mocker: MockerFixture) -> No
     with_pattern_and_vector = normalizer.custom_types.get('WithPatternAndVector', None)
 
     assert with_pattern_and_vector is not None
-    assert not with_pattern_and_vector.permutations.x and with_pattern_and_vector.permutations.y
+    assert not with_pattern_and_vector.permutations.x
+    assert with_pattern_and_vector.permutations.y
     assert sorted(with_pattern_and_vector.replacements) == sorted(['bar', 'hello', 'foo', 'world'])
 
     with_pattern = normalizer.custom_types.get('WithPattern', None)
 
     assert with_pattern is not None
-    assert not with_pattern.permutations.x and not with_pattern.permutations.y
+    assert not with_pattern.permutations.x
+    assert not with_pattern.permutations.y
     assert sorted(with_pattern.replacements) == sorted(['alice', 'bob'])
 
     enum_indirect = normalizer.custom_types.get('EnumIndirect', None)
     assert enum_indirect is not None
-    assert enum_indirect.permutations.x and enum_indirect.permutations.y
+    assert enum_indirect.permutations.x
+    assert enum_indirect.permutations.y
     assert sorted(enum_indirect.replacements) == sorted(['client_server', 'server_client'])
 
     enum_direct = normalizer.custom_types.get('EnumDirect', None)
     assert enum_direct is not None
-    assert not enum_direct.permutations.x and not enum_direct.permutations.y
+    assert not enum_direct.permutations.x
+    assert not enum_direct.permutations.y
     assert sorted(enum_direct.replacements) == sorted(['hello', 'world', 'foo', 'bar'])
 
     mocker.patch(
-        f'{namespace}.ParseMatcher.custom_types',
+        f'{namespace}.ParseMatcher.TYPE_REGISTRY',
         {
             'WithPattern': parse_with_pattern_error,
         },
     )
 
-    with pytest.raises(ValueError) as ve:
+    with pytest.raises(ValueError, match=r'could not extract pattern from "@parse.with_pattern\(\'\'\)" for custom type WithPattern'):
         create_step_normalizer(ls)
-    assert str(ve.value) == 'could not extract pattern from "@parse.with_pattern(\'\')" for custom type WithPattern'
 
     mocker.patch(
-        f'{namespace}.ParseMatcher.custom_types',
+        f'{namespace}.ParseMatcher.TYPE_REGISTRY',
         {
             'EnumError': DummyEnumNoFromString.magic,
         },
@@ -101,15 +102,14 @@ def test_create_normalizer(lsp_fixture: LspFixture, mocker: MockerFixture) -> No
     create_step_normalizer(ls)
 
     mocker.patch(
-        f'{namespace}.ParseMatcher.custom_types',
+        f'{namespace}.ParseMatcher.TYPE_REGISTRY',
         {
             'EnumError': DummyEnumNoFromStringType.from_string,
         },
     )
 
-    with pytest.raises(ValueError) as ve:
+    with pytest.raises(ValueError, match='could not find the type that from_string method for custom type EnumError returns'):
         create_step_normalizer(ls)
-    assert str(ve.value) == 'could not find the type that from_string method for custom type EnumError returns'
 
 
 def test__filter_source_paths(mocker: MockerFixture) -> None:
@@ -129,7 +129,7 @@ def test__filter_source_paths(mocker: MockerFixture) -> None:
 
     # Default, subdirectories under .venv and node_modules should be ignored,
     # and bin directory
-    file_ignore_patterns: List[str] = []
+    file_ignore_patterns: list[str] = []
     filtered = _filter_source_directories(file_ignore_patterns, test_paths)
     assert m.call_count == 9
     assert len(filtered) == 3
@@ -157,7 +157,7 @@ def test__filter_source_paths(mocker: MockerFixture) -> None:
     assert Path('/my/directory/bin') in filtered
 
 
-def test_compile_inventory(lsp_fixture: LspFixture, caplog: LogCaptureFixture, mocker: MockerFixture) -> None:
+def test_compile_inventory(lsp_fixture: LspFixture, caplog: LogCaptureFixture) -> None:
     ls = lsp_fixture.server
 
     ls.steps.clear()
@@ -171,7 +171,7 @@ def test_compile_inventory(lsp_fixture: LspFixture, caplog: LogCaptureFixture, m
 
     assert len(caplog.messages) == 1
 
-    assert not ls.steps == {}
+    assert ls.steps != {}
     assert len(ls.normalizer.custom_types.keys()) >= 8
 
     keywords = list(ls.steps.keys())

@@ -1,22 +1,27 @@
-import sys
-import logging
+from __future__ import annotations
 
+import logging
+import sys
+from inspect import getsourcelines
 from pathlib import Path
 from shutil import rmtree
-from inspect import getsourcelines
+from typing import TYPE_CHECKING
 
+from grizzly_ls.model import Step
+from grizzly_ls.server.features.definition import (
+    get_file_url_definition,
+    get_step_definition,
+)
 from lsprotocol import types as lsp
 from pygls.workspace import Workspace
 
-from _pytest.logging import LogCaptureFixture
+from test_ls.conftest import GRIZZLY_PROJECT
+from test_ls.helpers import SOME
 
-from grizzly_ls.server.features.definition import (
-    get_step_definition,
-    get_file_url_definition,
-)
-from grizzly_ls.model import Step
-from tests.fixtures import LspFixture
-from tests.conftest import GRIZZLY_PROJECT
+if TYPE_CHECKING:
+    from _pytest.logging import LogCaptureFixture
+
+    from test_ls.fixtures import LspFixture
 
 
 def test_get_step_definition(lsp_fixture: LspFixture) -> None:
@@ -79,10 +84,27 @@ def test_get_file_url_definition(lsp_fixture: LspFixture, caplog: LogCaptureFixt
 """
     )
 
-    def get_platform_uri(uri: str) -> str:
-        # windows is case-insensitive, and drive letter can be different case...
-        # and drive latters in uri's from LSP seems to be in lower-case...
-        return uri.lower() if sys.platform == 'win32' else uri
+    def get_platform_uri(uri: str) -> object:
+        class WrappedPlatformUri:
+            def __hash__(self) -> int:
+                return hash(self)
+
+            def __eq__(self, other: object) -> bool:
+                # windows is case-insensitive, and drive letter can be different case...
+                # and drive latters in uri's from LSP seems to be in lower-case...
+                if not isinstance(other, str):
+                    return False
+
+                if sys.platform == 'win32':
+                    uri = uri.lower()  # noqa: F823
+                    other = other.lower()
+
+                return uri == other
+
+            def __ne__(self, other: object) -> bool:
+                return not self.__eq__(other)
+
+        return WrappedPlatformUri()
 
     try:
         text_document = lsp.TextDocumentIdentifier(test_feature_file.as_uri())
@@ -108,19 +130,21 @@ def test_get_file_url_definition(lsp_fixture: LspFixture, caplog: LogCaptureFixt
         )  # .character =               ^- 26                    ^- 51
 
         assert len(actual_definitions) == 1
-        actual_definition = actual_definitions[0]
-        assert get_platform_uri(actual_definition.target_uri) == get_platform_uri(test_file.as_uri())
-        assert actual_definition.target_range == lsp.Range(
-            start=lsp.Position(line=0, character=0),
-            end=lsp.Position(line=0, character=0),
-        )
-        assert actual_definition.target_selection_range == lsp.Range(
-            start=lsp.Position(line=0, character=0),
-            end=lsp.Position(line=0, character=0),
-        )
-        assert actual_definition.origin_selection_range == lsp.Range(
-            start=lsp.Position(line=0, character=25),
-            end=lsp.Position(line=0, character=51),
+        assert actual_definitions[0] == SOME(
+            lsp.LocationLink,
+            target_uri=get_platform_uri(test_file.as_uri()),
+            target_range=lsp.Range(
+                start=lsp.Position(line=0, character=0),
+                end=lsp.Position(line=0, character=0),
+            ),
+            target_selection_range=lsp.Range(
+                start=lsp.Position(line=0, character=0),
+                end=lsp.Position(line=0, character=0),
+            ),
+            origin_selection_range=lsp.Range(
+                start=lsp.Position(line=0, character=25),
+                end=lsp.Position(line=0, character=51),
+            ),
         )
 
         # `$include::file://..$` in a "variable"
@@ -133,19 +157,21 @@ def test_get_file_url_definition(lsp_fixture: LspFixture, caplog: LogCaptureFixt
         )
 
         assert len(actual_definitions) == 1
-        actual_definition = actual_definitions[0]
-        assert get_platform_uri(actual_definition.target_uri) == get_platform_uri(test_file.as_uri())
-        assert actual_definition.target_range == lsp.Range(
-            start=lsp.Position(line=0, character=0),
-            end=lsp.Position(line=0, character=0),
-        )
-        assert actual_definition.target_selection_range == lsp.Range(
-            start=lsp.Position(line=0, character=0),
-            end=lsp.Position(line=0, character=0),
-        )
-        assert actual_definition.origin_selection_range == lsp.Range(
-            start=lsp.Position(line=0, character=92),
-            end=lsp.Position(line=0, character=92 + len(test_file.as_uri())),
+        assert actual_definitions[0] == SOME(
+            lsp.LocationLink,
+            target_uri=get_platform_uri(test_file.as_uri()),
+            target_range=lsp.Range(
+                start=lsp.Position(line=0, character=0),
+                end=lsp.Position(line=0, character=0),
+            ),
+            target_selection_range=lsp.Range(
+                start=lsp.Position(line=0, character=0),
+                end=lsp.Position(line=0, character=0),
+            ),
+            origin_selection_range=lsp.Range(
+                start=lsp.Position(line=0, character=92),
+                end=lsp.Position(line=0, character=92 + len(test_file.as_uri())),
+            ),
         )
 
         # classic (relative to grizzly requests directory)
@@ -153,19 +179,21 @@ def test_get_file_url_definition(lsp_fixture: LspFixture, caplog: LogCaptureFixt
         actual_definitions = get_file_url_definition(ls, params, 'Then send file "test.txt"')  # .character =                ^- 16   ^- 24
 
         assert len(actual_definitions) == 1
-        actual_definition = actual_definitions[0]
-        assert get_platform_uri(actual_definition.target_uri) == get_platform_uri(test_file.as_uri())
-        assert actual_definition.target_range == lsp.Range(
-            start=lsp.Position(line=0, character=0),
-            end=lsp.Position(line=0, character=0),
-        )
-        assert actual_definition.target_selection_range == lsp.Range(
-            start=lsp.Position(line=0, character=0),
-            end=lsp.Position(line=0, character=0),
-        )
-        assert actual_definition.origin_selection_range == lsp.Range(
-            start=lsp.Position(line=0, character=16),
-            end=lsp.Position(line=0, character=24),
+        assert actual_definitions[0] == SOME(
+            lsp.LocationLink,
+            target_uri=get_platform_uri(test_file.as_uri()),
+            target_range=lsp.Range(
+                start=lsp.Position(line=0, character=0),
+                end=lsp.Position(line=0, character=0),
+            ),
+            target_selection_range=lsp.Range(
+                start=lsp.Position(line=0, character=0),
+                end=lsp.Position(line=0, character=0),
+            ),
+            origin_selection_range=lsp.Range(
+                start=lsp.Position(line=0, character=16),
+                end=lsp.Position(line=0, character=24),
+            ),
         )
 
         # {% scenario ... %}
@@ -178,20 +206,21 @@ def test_get_file_url_definition(lsp_fixture: LspFixture, caplog: LogCaptureFixt
                 actual_definitions = get_file_url_definition(ls, params, f'{{% scenario "hello", feature="{feature_argument}" %}}')
 
             assert len(actual_definitions) == 1
-            actual_definition = actual_definitions[0]
-            assert get_platform_uri(actual_definition.target_uri) == get_platform_uri(test_feature_file_included.as_uri())
-
-            assert actual_definition.target_range == lsp.Range(
-                start=lsp.Position(line=6, character=19),
-                end=lsp.Position(line=6, character=19),
-            )
-            assert actual_definition.target_selection_range == lsp.Range(
-                start=lsp.Position(line=6, character=19),
-                end=lsp.Position(line=6, character=19),
-            )
-            assert actual_definition.origin_selection_range == lsp.Range(
-                start=lsp.Position(line=0, character=30),
-                end=lsp.Position(line=0, character=30 + len(feature_argument)),
+            assert actual_definitions[0] == SOME(
+                lsp.LocationLink,
+                target_uri=get_platform_uri(test_feature_file_included.as_uri()),
+                target_range=lsp.Range(
+                    start=lsp.Position(line=6, character=19),
+                    end=lsp.Position(line=6, character=19),
+                ),
+                target_selection_range=lsp.Range(
+                    start=lsp.Position(line=6, character=19),
+                    end=lsp.Position(line=6, character=19),
+                ),
+                origin_selection_range=lsp.Range(
+                    start=lsp.Position(line=0, character=30),
+                    end=lsp.Position(line=0, character=30 + len(feature_argument)),
+                ),
             )
     finally:
         test_feature_file_included.unlink()

@@ -1,23 +1,29 @@
-from typing import Optional, cast
-from pathlib import Path
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from lsprotocol import types as lsp
-from pygls.server import LanguageServer
 
-from tests.fixtures import LspFixture
-from tests.e2e.server.features import initialize, open
+from test_ls.e2e.server.features import initialize, open_text_document
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from pygls.server import LanguageServer
+
+    from test_ls.fixtures import LspFixture
 
 
 def hover(
     client: LanguageServer,
     path: Path,
     position: lsp.Position,
-    content: Optional[str] = None,
-) -> Optional[lsp.Hover]:
+    content: str | None = None,
+) -> lsp.Hover | None:
     path = path / 'features' / 'project.feature'
 
     initialize(client, path, options=None)
-    open(client, path, content)
+    open_text_document(client, path, content)
 
     params = lsp.HoverParams(
         text_document=lsp.TextDocumentIdentifier(
@@ -26,11 +32,11 @@ def hover(
         position=position,
     )
 
-    response = client.lsp.send_request(lsp.TEXT_DOCUMENT_HOVER, params).result(timeout=3)  # type: ignore
+    response = client.lsp.send_request(lsp.TEXT_DOCUMENT_HOVER, params).result(timeout=3)
 
     assert response is None or isinstance(response, lsp.Hover)
 
-    return cast(Optional[lsp.Hover], response)
+    return response
 
 
 def test_hover(lsp_fixture: LspFixture) -> None:
@@ -49,7 +55,7 @@ def test_hover(lsp_fixture: LspFixture) -> None:
     assert response.contents.kind == lsp.MarkupKind.Markdown
     assert (
         response.contents.value
-        == '''Set which type of users the scenario should use and which `host` is the target,
+        == """Set which type of users the scenario should use and which `host` is the target,
 together with `weight` of the user (how many instances of this user should spawn relative to others).
 
 Example:
@@ -65,7 +71,7 @@ Args:
 * user_class_name `str`: name of an implementation of users, with or without `User`-suffix
 * weight_value `str`: weight value for the user, default is `1` (see [writing a locustfile](http://docs.locust.io/en/stable/writing-a-locustfile.html#weight-attribute))
 * host `str`: an URL for the target host, format depends on which users is specified
-'''
+"""
     )
 
     response = hover(client, lsp_fixture.datadir, lsp.Position(line=0, character=1))

@@ -1,11 +1,15 @@
+from __future__ import annotations
+
 import re
-
 from pathlib import Path
-from tempfile import gettempdir
 from shutil import rmtree
+from tempfile import gettempdir
+from typing import TYPE_CHECKING
 
-from tests.fixtures import LspFixture
-from tests.e2e.server.features import initialize
+from test_ls.e2e.server.features import initialize
+
+if TYPE_CHECKING:
+    from test_ls.fixtures import LspFixture
 
 
 def test_initialize(lsp_fixture: LspFixture) -> None:
@@ -37,7 +41,8 @@ def test_initialize(lsp_fixture: LspFixture) -> None:
             },
         )
 
-        assert not server.steps == {}
+        assert server.steps != {}
+
         assert isinstance(server.variable_pattern, re.Pattern)
         assert '^.*hello "([^"]*)"!$' in server.variable_pattern.pattern
         assert '^.*foo bar is a (nice|bad) word$' in server.variable_pattern.pattern

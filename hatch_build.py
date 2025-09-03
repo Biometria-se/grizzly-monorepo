@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 import subprocess
-from contextlib import suppress
 from os import environ
-from pathlib import Path
 from typing import Any
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
-from hatchling.metadata.plugin.interface import MetadataHookInterface
 
 
 class BuildGrizzly(BuildHookInterface):

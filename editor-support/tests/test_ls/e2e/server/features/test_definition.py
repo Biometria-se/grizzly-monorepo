@@ -1,26 +1,30 @@
-import inspect
+from __future__ import annotations
 
-from typing import Optional, List, cast
+import inspect
 from pathlib import Path
 from shutil import rmtree
+from typing import TYPE_CHECKING, cast
 
 from lsprotocol import types as lsp
-from pygls.server import LanguageServer
 
-from tests.fixtures import LspFixture
-from tests.e2e.server.features import initialize, open
+from test_ls.e2e.server.features import initialize, open_text_document
+
+if TYPE_CHECKING:
+    from pygls.server import LanguageServer
+
+    from test_ls.fixtures import LspFixture
 
 
 def definition(
     client: LanguageServer,
     path: Path,
     position: lsp.Position,
-    content: Optional[str] = None,
-) -> Optional[List[lsp.LocationLink]]:
+    content: str | None = None,
+) -> list[lsp.LocationLink] | None:
     path = path / 'features' / 'project.feature'
 
     initialize(client, path, options=None)
-    open(client, path, content)
+    open_text_document(client, path, content)
 
     params = lsp.DefinitionParams(
         text_document=lsp.TextDocumentIdentifier(
@@ -29,21 +33,21 @@ def definition(
         position=position,
     )
 
-    response = client.lsp.send_request(lsp.TEXT_DOCUMENT_DEFINITION, params).result(timeout=3)  # type: ignore
+    response = client.lsp.send_request(lsp.TEXT_DOCUMENT_DEFINITION, params).result(timeout=3)
 
     assert response is None or isinstance(response, list)
 
-    return cast(Optional[List[lsp.LocationLink]], response)
+    return cast('list[lsp.LocationLink] | None', response)
 
 
 def test_definition(lsp_fixture: LspFixture) -> None:
     client = lsp_fixture.client
 
-    content = '''Feature:
+    content = """Feature:
     Scenario: test
         Given a user of type "RestApi" load testing "http://localhost"
         Then post request "test/test.txt" with name "test request" to endpoint "/api/test"
-'''
+"""
     # <!-- hover "Scenario", no definition
     response = definition(
         client,
@@ -69,7 +73,7 @@ def test_definition(lsp_fixture: LspFixture) -> None:
 
     from grizzly.steps.scenario.user import step_user_type
 
-    file_location = Path(inspect.getfile(getattr(step_user_type, '__wrapped__')))
+    file_location = Path(inspect.getfile(step_user_type.__wrapped__))
     _, lineno = inspect.getsourcelines(step_user_type)
 
     assert actual_definition.target_uri == file_location.as_uri()

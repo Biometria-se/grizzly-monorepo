@@ -1,32 +1,36 @@
-import logging
+from __future__ import annotations
 
-from typing import Dict, List
+import logging
 from contextlib import suppress
 
+import gevent.monkey
 import pytest
-import gevent.monkey  # type: ignore
 
 # monkey patch functions to short-circuit them (causes problems in this context)
 gevent.monkey.patch_all = lambda: None
 
-from _pytest.logging import LogCaptureFixture  # type: ignore
-from pytest_mock import MockerFixture
+from typing import TYPE_CHECKING
 
-from lsprotocol import types as lsp
 from behave.matchers import ParseMatcher
-from pygls.workspace import TextDocument
-
-from tests.fixtures import LspFixture
-from tests.conftest import GRIZZLY_PROJECT
 from grizzly_ls import __version__
-from grizzly_ls.server import Step
+from grizzly_ls.model import Step
 from grizzly_ls.server.inventory import compile_inventory
 from grizzly_ls.utils import LogOutputChannelLogger
+from lsprotocol import types as lsp
+from pygls.workspace import TextDocument
+
+from test_ls.conftest import GRIZZLY_PROJECT
+
+if TYPE_CHECKING:
+    from _pytest.logging import LogCaptureFixture
+    from pytest_mock import MockerFixture
+
+    from test_ls.fixtures import LspFixture
 
 
 class TestGrizzlyLanguageServer:
     @pytest.mark.parametrize(
-        'language,words',
+        ('language', 'words'),
         [
             (
                 'en',
@@ -35,13 +39,14 @@ class TestGrizzlyLanguageServer:
                         'Scenario',
                         'Scenario Outline',
                         'Scenario Template',
+                        'Example',
                         'Examples',
                         'Scenarios',
                         'And',
                         'But',
                     ],
                     'keywords_any': ['*', 'But', 'And'],
-                    'keywords_once': ['Feature', 'Background'],
+                    'keywords_once': ['Feature', 'Background', 'Ability', 'Business Need'],
                 },
             ),
             (
@@ -64,25 +69,25 @@ class TestGrizzlyLanguageServer:
                 {
                     'keywords': [
                         'Szenario',
+                        'Szenarien',
                         'Szenariogrundriss',
+                        'Beispiel',
                         'Beispiele',
                         'Und',
                         'Aber',
                     ],
                     'keywords_any': ['*', 'Und', 'Aber'],
-                    'keywords_once': ['Grundlage', u'Funktionalit\xe4t'],
+                    'keywords_once': ['Grundlage', 'Funktionalit\xe4t', 'Funktion', 'Hintergrund', 'Voraussetzungen', 'Vorbedingungen'],
                 },
             ),
         ],
     )
-    def test___init__(self, language: str, words: Dict[str, List[str]], lsp_fixture: LspFixture) -> None:
+    def test___init__(self, language: str, words: dict[str, list[str]], lsp_fixture: LspFixture) -> None:
         ls = lsp_fixture.server
         try:
             ls.steps.clear()
-            try:
+            with suppress(ValueError):
                 ls.language = 'dummy'
-            except ValueError:
-                pass
 
             ls.language = language
 
@@ -303,9 +308,8 @@ class TestGrizzlyLanguageServer:
             assert ls.get_language_key('Exempel') == 'examples'
             assert ls.get_language_key('Bakgrund') == 'background'
             assert ls.get_language_key('Men') == 'but'
-            with pytest.raises(ValueError) as ve:
+            with pytest.raises(ValueError, match='"Feature" is not a valid keyword for language "sv"'):
                 ls.get_language_key('Feature')
-            assert str(ve.value) == '"Feature" is not a valid keyword for "sv"'
 
             ls.language = 'en'
             assert ls.get_language_key('Feature') == 'feature'
@@ -317,9 +321,8 @@ class TestGrizzlyLanguageServer:
             assert ls.get_language_key('Examples') == 'examples'
             assert ls.get_language_key('Background') == 'background'
             assert ls.get_language_key('But') == 'but'
-            with pytest.raises(ValueError) as ve:
+            with pytest.raises(ValueError, match='"Egenskap" is not a valid keyword for language "en"'):
                 ls.get_language_key('Egenskap')
-            assert str(ve.value) == '"Egenskap" is not a valid keyword for "en"'
         finally:
             ls.language = 'en'
 

@@ -1,45 +1,44 @@
-# pyright: reportGeneralTypeIssues=false, reportUnknownVariableType=false, reportUnknownParameterType=false, reportUnknownArgumentType=false
-import sys
-
-from typing import cast
+from __future__ import annotations
 
 import string
+import sys
+from typing import cast
 
 if sys.version_info >= (3, 11):
-    from re._constants import ANY, BRANCH, LITERAL, MAX_REPEAT, SUBPATTERN, IN  # type: ignore [reportAttributeAccessIssue]
-    from re._constants import _NamedIntConstant as SreNamedIntConstant  # type: ignore [reportMissingStubs]
+    from re._constants import ANY, BRANCH, IN, LITERAL, MAX_REPEAT, SUBPATTERN
+    from re._constants import _NamedIntConstant as SreNamedIntConstant
 else:
     from sre_constants import (
-        _NamedIntConstant as SreNamedIntConstant,
         ANY,
         BRANCH,
+        IN,
         LITERAL,
         MAX_REPEAT,
         SUBPATTERN,
-        IN,
+    )
+    from sre_constants import (
+        _NamedIntConstant as SreNamedIntConstant,
     )
 
 import pytest
-
-from lsprotocol.types import Position
-from pygls.workspace import TextDocument
-
 from grizzly_ls.text import (
     RegexPermutationResolver,
     SreParseValue,
     SreParseValueMaxRepeat,
-    get_step_parts,
+    find_language,
     format_arg_line,
     get_current_line,
-    find_language,
+    get_step_parts,
 )
+from lsprotocol.types import Position
+from pygls.workspace import TextDocument
 
 
 class TestRegexPermutationResolver:
     def test__init__(self) -> None:
         resolver = RegexPermutationResolver('(hello|world)')
 
-        assert list(sorted(resolver._handlers.keys())) == sorted(
+        assert sorted(resolver._handlers.keys()) == sorted(
             [
                 ANY,
                 BRANCH,
@@ -62,7 +61,7 @@ class TestRegexPermutationResolver:
         assert sorted(
             resolver.handle_branch(
                 cast(
-                    SreParseValue,
+                    'SreParseValue',
                     (
                         None,
                         [
@@ -125,10 +124,10 @@ class TestRegexPermutationResolver:
     def test_handle_max_repeat(self) -> None:
         resolver = RegexPermutationResolver('(world[s]?)')
 
-        with pytest.raises(ValueError) as ve:
+        with pytest.raises(ValueError, match=r'too many repetitions requested \(5001>5000\)'):
             resolver.handle_max_repeat(
                 cast(
-                    SreParseValueMaxRepeat,
+                    'SreParseValueMaxRepeat',
                     (
                         0,
                         5001,
@@ -145,11 +144,10 @@ class TestRegexPermutationResolver:
                     ),
                 )
             )
-        assert str(ve.value) == 'too many repetitions requested (5001>5000)'
 
         assert resolver.handle_max_repeat(
             cast(
-                SreParseValueMaxRepeat,
+                'SreParseValueMaxRepeat',
                 (
                     1,
                     2,
@@ -172,7 +170,7 @@ class TestRegexPermutationResolver:
 
         assert resolver.handle_subpattern(
             cast(
-                SreParseValue,
+                'SreParseValue',
                 [
                     [
                         (
@@ -203,13 +201,11 @@ class TestRegexPermutationResolver:
 
         test = SreNamedIntConstant(name='test', value=1337)
 
-        with pytest.raises(ValueError) as ve:
+        with pytest.raises(ValueError, match='unsupported regular expression construct test'):
             resolver.handle_token(test, 104)
-        assert str(ve.value) == 'unsupported regular expression construct test'
 
-        with pytest.raises(ValueError) as ve:
+        with pytest.raises(ValueError, match='unsupported regular expression construct IN'):
             resolver.handle_token(IN, 104)
-        assert str(ve.value) == 'unsupported regular expression construct IN'
 
     def test_cartesian_join(self) -> None:
         resolver = RegexPermutationResolver('(world[s]?)')
@@ -261,11 +257,11 @@ def test__format_arg_line() -> None:
 def test_get_current_line() -> None:
     text_document = TextDocument(
         'file://test.feature',
-        '''Feature:
+        """Feature:
     Scenario: test
         Then hello world!
         But foo bar
-''',
+""",
     )
 
     assert get_current_line(text_document, Position(line=0, character=0)).strip() == 'Feature:'

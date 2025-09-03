@@ -25,9 +25,9 @@ def render_gherkin(path: str, content: str, *, raw: bool = False) -> str:
             buffer_line = line
             # make any html tag characters in comments are replaced with respective html entity code
             with suppress(Exception):
-                if buffer_line.lstrip()[0] == '#':
-                    buffer_line = line.replace('<', '&lt;')
-                    buffer_line = line.replace('>', '&gt;')
+                if buffer_line.lstrip().startswith('#'):
+                    buffer_line = buffer_line.replace('<', '&lt;')
+                    buffer_line = buffer_line.replace('>', '&gt;')
 
             buffer.append(buffer_line)
         # // -->

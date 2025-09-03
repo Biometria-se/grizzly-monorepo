@@ -37,9 +37,13 @@ cli-e2e-example = ["install", "python -m pytest command-line-interface/tests/tes
 
 common = ["install", "python -m pytest common/tests"]
 
+editor-support-ls = ["install", "python -m pytest editor-support/tests"]
+editor-support-vscode = ["install", "cd editor-support/clients/vscode && npm run test"]
+
 all = ["framework", "cli", "common", "framework-e2e", "cli-e2e", "framework-e2e-dist"]
 framework-all = ["framework", "framework-e2e", "framework-e2e-dist"]
 cli-all = ["cli", "cli-e2e"]
+editor-support-all = ["editor-support-ls", "editor-support-vscode"]
 
 [tool.hatch.envs.lint]
 detached = true
@@ -129,8 +133,9 @@ ignore = [
 "framework/tests/test_framework/unit/test_locust_dispatch.py" = ["PT009", "PT027"]
 "command-line-interface/src/**/*.py" = ["S607"]
 "command-line-interface/tests/test_cli/unit/utils/test___init__.py" = ["W291"]
-"editor-support/src/**/*.py" = ["D100", "D104", "G004", "TRY401"]
+"editor-support/**/*.py" = ["D100", "D104", "G004", "TRY401"]
 "editor-support/src/grizzly_ls/__main__.py" = ["T100", "LOG015", "PLC0415"]
+"editor-support/tests/project/**" = ["ALL"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 15

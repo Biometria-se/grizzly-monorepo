@@ -80,6 +80,7 @@ debug = [
 ]
 dev = [
     "grizzly-loadtester",
+    "grizzly-loadtester-common",
     "types-colorama>=0.4.15.20250801",
 ]
 
@@ -88,3 +89,4 @@ version-file = "src/grizzly_ls/__version__.py"
 
 [tool.uv.sources]
 grizzly-loadtester = { workspace = true }
+grizzly-loadtester-common = { workspace = true }

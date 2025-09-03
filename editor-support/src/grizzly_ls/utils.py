@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-import platform
 import re
 import subprocess
 import sys
@@ -22,9 +21,6 @@ if TYPE_CHECKING:  # pragma: no cover
 
     from behave.model import Scenario
     from pygls.server import LanguageServer
-
-    from grizzly_ls.server import GrizzlyLanguageServer
-    from grizzly_ls.server.progress import Progress
 
 logger = logging.getLogger(__name__)
 

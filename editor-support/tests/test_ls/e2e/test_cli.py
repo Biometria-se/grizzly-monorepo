@@ -1,13 +1,15 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 from grizzly_ls.utils import run_command
 
 
 def test_cli_lint() -> None:
-    cwd = Path(__file__).parent.parent.parent.parent / 'tests' / 'project'
+    cwd = Path(__file__).parent.parent.parent / 'tests' / 'project'
     rc, output = run_command(
         ['grizzly-ls', 'lint', '.'],
-        cwd=cwd.as_posix(),
+        cwd=cwd,
     )
 
     try:

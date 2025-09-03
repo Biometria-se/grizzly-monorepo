@@ -74,7 +74,8 @@
         "source=grizzly-monorepo-bashhistory,target=/commandhistory,type=volume"
     ],
     "containerEnv": {
-        "E2E_RUN_MODE": "local"
+        "E2E_RUN_MODE": "local",
+        "UV_LINK_MODE": "copy"
     },
     "remoteEnv": {
         "GRIZZLY_MOUNT_CONTEXT": "${localWorkspaceFolder}"

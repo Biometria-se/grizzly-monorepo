@@ -1163,6 +1163,7 @@ debug = [
 ]
 dev = [
     { name = "grizzly-loadtester" },
+    { name = "grizzly-loadtester-common" },
     { name = "types-colorama" },
 ]
 
@@ -1181,6 +1182,7 @@ requires-dist = [
 debug = [{ name = "debugpy", specifier = ">=1.8.16" }]
 dev = [
     { name = "grizzly-loadtester", editable = "framework" },
+    { name = "grizzly-loadtester-common", editable = "common" },
     { name = "types-colorama", specifier = ">=0.4.15.20250801" },
 ]
 

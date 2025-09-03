@@ -1,25 +1,29 @@
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING
 
 import pytest
-from lsprotocol import types as lsp
-from pygls.workspace import TextDocument
-
-from _pytest.logging import LogCaptureFixture
-
+from grizzly_ls.constants import MARKER_LANGUAGE
 from grizzly_ls.server.features.completion import (
-    complete_keyword,
-    complete_step,
-    complete_metadata,
-    complete_variable_name,
     complete_expression,
+    complete_keyword,
+    complete_metadata,
+    complete_step,
+    complete_variable_name,
     get_trigger,
 )
 from grizzly_ls.server.inventory import compile_inventory
-from grizzly_ls.constants import MARKER_LANGUAGE
+from lsprotocol import types as lsp
+from pygls.workspace import TextDocument
 
-from tests.fixtures import LspFixture
-from tests.conftest import GRIZZLY_PROJECT
-from tests.helpers import normalize_completion_item, normalize_completion_text_edit
+from test_ls.conftest import GRIZZLY_PROJECT
+from test_ls.helpers import normalize_completion_item, normalize_completion_text_edit
+
+if TYPE_CHECKING:
+    from _pytest.logging import LogCaptureFixture
+
+    from test_ls.fixtures import LspFixture
 
 
 @pytest.mark.parametrize('trigger_char', ['{{', '{%'])
@@ -70,9 +74,9 @@ def test_complete_keyword(lsp_fixture: LspFixture) -> None:
 
     text_document = TextDocument(
         uri='dummy.feature',
-        source='''Feature:
+        source="""Feature:
 Scenario:
-''',
+""",
     )
 
     assert sorted(
@@ -98,11 +102,11 @@ Scenario:
 
     text_document = TextDocument(
         uri='dummy.feature',
-        source='''Feature:
+        source="""Feature:
 Background:
     Given a bunch of stuff
 Scenario:
-''',
+""",
     )
 
     assert sorted(
@@ -150,7 +154,7 @@ Scenario:
     ]
 
 
-def test_complete_step(lsp_fixture: LspFixture, caplog: LogCaptureFixture) -> None:
+def test_complete_step(lsp_fixture: LspFixture, caplog: LogCaptureFixture) -> None:  # noqa: PLR0915
     ls = lsp_fixture.server
     ls.root_path = GRIZZLY_PROJECT
     compile_inventory(ls)
@@ -188,9 +192,6 @@ def test_complete_step(lsp_fixture: LspFixture, caplog: LogCaptureFixture) -> No
             )
         )
 
-        for m in matched_steps:
-            print(f'{m=}')
-
         for expected_step in sorted(
             [
                 'save response metadata "" in variable ""',
@@ -225,11 +226,14 @@ def test_complete_step(lsp_fixture: LspFixture, caplog: LogCaptureFixture) -> No
 
         for suggested_step in suggested_steps:
             if suggested_step.label == 'save response metadata "hello" that matches "" in variable ""':
-                assert suggested_step.text_edit is not None and suggested_step.text_edit.new_text.endswith(' that matches "$1" in variable "$2"')
+                assert suggested_step.text_edit is not None
+                assert suggested_step.text_edit.new_text.endswith(' that matches "$1" in variable "$2"')
             elif suggested_step.label == 'save response metadata "hello" in variable ""':
-                assert suggested_step.text_edit is not None and suggested_step.text_edit.new_text.endswith(' in variable "$1"')
+                assert suggested_step.text_edit is not None
+                assert suggested_step.text_edit.new_text.endswith(' in variable "$1"')
             else:
-                raise AssertionError(f'"{suggested_step.label}" was an unexpected suggested step')
+                message = f'"{suggested_step.label}" was an unexpected suggested step'
+                raise AssertionError(message)
 
         matched_steps = normalize_completion_item(
             complete_step(ls, 'When', lsp.Position(line=0, character=4), None, base_keyword='When'),
@@ -384,7 +388,8 @@ def test_complete_step(lsp_fixture: LspFixture, caplog: LogCaptureFixture) -> No
         )
         assert len(actual_completed_steps) == 1
         actual_completed_step = actual_completed_steps[0]
-        assert actual_completed_step.text_edit is not None and actual_completed_step.text_edit.new_text.endswith('and save in variable "$1"')
+        assert actual_completed_step.text_edit is not None
+        assert actual_completed_step.text_edit.new_text.endswith('and save in variable "$1"')
 
         actual_completed_steps = complete_step(
             ls,
@@ -395,7 +400,8 @@ def test_complete_step(lsp_fixture: LspFixture, caplog: LogCaptureFixture) -> No
         )
         assert len(actual_completed_steps) == 1
         actual_completed_step = actual_completed_steps[0]
-        assert actual_completed_step.text_edit is not None and actual_completed_step.text_edit.new_text.endswith(' and save in variable "$1"')
+        assert actual_completed_step.text_edit is not None
+        assert actual_completed_step.text_edit.new_text.endswith(' and save in variable "$1"')
 
 
 def test_complete_metadata() -> None:
@@ -436,14 +442,14 @@ def test_complete_variable_name(lsp_fixture: LspFixture) -> None:
 
     text_document = TextDocument(
         uri='file:///test.feature',
-        source='''Feature:
+        source="""Feature:
     Scenario:
 
         Given value for variable "foo" is "bar"
         And what about it?
         And value for variable "bar" is "foo"
         And value for variable "foobar" is "barfoo"
-''',
+""",
     )
 
     position = lsp.Position(line=7, character=19)
@@ -480,10 +486,10 @@ def test_complete_expression(lsp_fixture: LspFixture) -> None:
 
     text_document = TextDocument(
         uri='file:///test.feature',
-        source='''Feature:
+        source="""Feature:
     Scenario:
         {%
-''',
+""",
     )
 
     position = lsp.Position(line=2, character=10)
@@ -505,10 +511,10 @@ def test_complete_expression(lsp_fixture: LspFixture) -> None:
 
     text_document = TextDocument(
         uri='file:///test.feature',
-        source='''Feature:
+        source="""Feature:
     Scenario:
         {% scenario
-''',
+""",
     )
 
     actual_items = complete_expression(ls, '{% scenario', text_document, position, partial='scenario')
@@ -516,10 +522,10 @@ def test_complete_expression(lsp_fixture: LspFixture) -> None:
 
     text_document = TextDocument(
         uri='file:///test.feature',
-        source='''Feature:
+        source="""Feature:
     Scenario:
         {% %}
-''',
+""",
     )
 
     actual_items = complete_expression(ls, '{% %}', text_document, position, partial=None)

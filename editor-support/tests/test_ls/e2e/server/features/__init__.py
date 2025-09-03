@@ -1,18 +1,21 @@
+from __future__ import annotations
+
 import logging
-
-from typing import Optional, Dict, Any
-from pathlib import Path
-
-from lsprotocol import types as lsp
-from pygls.server import LanguageServer
+from typing import TYPE_CHECKING, Any
 
 from grizzly_ls.constants import FEATURE_INSTALL
+from lsprotocol import types as lsp
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from pygls.server import LanguageServer
 
 
 def initialize(
     client: LanguageServer,
     root: Path,
-    options: Optional[Dict[str, Any]] = None,
+    options: dict[str, Any] | None = None,
 ) -> None:
     assert root.is_file()
 
@@ -46,21 +49,21 @@ def initialize(
         logger.setLevel(logging.DEBUG)
 
         # INITIALIZE takes time...
-        client.lsp.send_request(  # type: ignore
+        client.lsp.send_request(
             lsp.INITIALIZE,
             params,
         ).result(timeout=299)
 
-        client.lsp.send_request(FEATURE_INSTALL).result(timeout=299)  # type: ignore
+        client.lsp.send_request(FEATURE_INSTALL).result(timeout=299)
     finally:
         logger.setLevel(level)
 
 
-def open(client: LanguageServer, path: Path, text: Optional[str] = None) -> None:
+def open_text_document(client: LanguageServer, path: Path, text: str | None = None) -> None:
     if text is None:
         text = path.read_text()
 
-    client.lsp.notify(  # type: ignore
+    client.lsp.notify(
         lsp.TEXT_DOCUMENT_DID_OPEN,
         lsp.DidOpenTextDocumentParams(
             text_document=lsp.TextDocumentItem(

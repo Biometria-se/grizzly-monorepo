@@ -1,28 +1,34 @@
-import os
-import asyncio
+from __future__ import annotations
 
-from types import TracebackType
-from typing import Literal, Optional, Type, Any
-from threading import Thread
-from pathlib import Path
+import asyncio
+import os
+from contextlib import suppress
 from importlib import reload as reload_module
 from logging import DEBUG
+from pathlib import Path
+from threading import Thread
+from typing import TYPE_CHECKING, Any, Literal
 
-from pygls.server import LanguageServer
 from lsprotocol.types import EXIT
-from grizzly_ls.server import GrizzlyLanguageServer
+from pygls.server import LanguageServer
+from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from types import TracebackType
+
+    from grizzly_ls.server import GrizzlyLanguageServer
 
 
 class DummyClient(LanguageServer):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)  # type: ignore
+        super().__init__(*args, **kwargs)
 
         @self.feature('window/workDoneProgress/create')
-        def window_work_done_progress_create(*args: Any, **kwargs: Any) -> None:
+        def window_work_done_progress_create(*_args: Any, **_kwargs: Any) -> None:
             return
 
         @self.feature('textDocument/publishDiagnostics')
-        def text_document_publish_diagnostics(*args: Any, **kwargs: Any) -> None:
+        def text_document_publish_diagnostics(*_args: Any, **_kwargs: Any) -> None:
             return
 
 
@@ -44,16 +50,14 @@ class LspFixture:
 
         reload_module(parse)
 
-    def __enter__(self) -> 'LspFixture':
+    def __enter__(self) -> Self:
         self._reset_behave_runtime()
         cstdio, cstdout = os.pipe()
         sstdio, sstdout = os.pipe()
 
         def start(ls: LanguageServer, fdr: int, fdw: int) -> None:
-            try:
-                ls.start_io(os.fdopen(fdr, 'rb'), os.fdopen(fdw, 'wb'))  # type: ignore
-            except:
-                pass
+            with suppress(Exception):
+                ls.start_io(os.fdopen(fdr, 'rb'), os.fdopen(fdw, 'wb'))  # type: ignore[arg-type]
 
         from grizzly_ls.server import server
 
@@ -80,9 +84,9 @@ class LspFixture:
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc: Optional[BaseException],
-        traceback: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
     ) -> Literal[True]:
         self.server.send_notification(EXIT)
         self.client.send_notification(EXIT)

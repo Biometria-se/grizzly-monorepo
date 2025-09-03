@@ -1,33 +1,37 @@
-from typing import Optional, Dict, List, Any, cast
-from pathlib import Path
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from lsprotocol import types as lsp
-from pygls.server import LanguageServer
-from _pytest.logging import LogCaptureFixture
 
-from tests.fixtures import LspFixture
-from tests.e2e.server.features import initialize, open
+from test_ls.e2e.server.features import initialize, open_text_document
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from pygls.server import LanguageServer
+
+    from test_ls.fixtures import LspFixture
 
 
 def completion(
     client: LanguageServer,
     path: Path,
     content: str,
-    options: Optional[Dict[str, str]] = None,
-    context: Optional[lsp.CompletionContext] = None,
-    position: Optional[lsp.Position] = None,
-) -> Optional[lsp.CompletionList]:
+    options: dict[str, str] | None = None,
+    context: lsp.CompletionContext | None = None,
+    position: lsp.Position | None = None,
+) -> lsp.CompletionList | None:
     path = path / 'features' / 'project.feature'
 
     initialize(client, path, options)
-    open(client, path, content)
+    open_text_document(client, path, content)
 
     lines = content.split('\n')
     line = len(lines) - 1
     character = len(lines[-1])
 
-    if character < 0:
-        character = 0
+    character = max(character, 0)
 
     if position is None:
         position = lsp.Position(line=line, character=character)
@@ -42,19 +46,19 @@ def completion(
         work_done_token=None,
     )
 
-    response = client.lsp.send_request(lsp.TEXT_DOCUMENT_COMPLETION, params).result(timeout=3)  # type: ignore
+    response = client.lsp.send_request(lsp.TEXT_DOCUMENT_COMPLETION, params).result(timeout=3)
 
     assert response is None or isinstance(response, lsp.CompletionList)
 
-    return cast(Optional[lsp.CompletionList], response)
+    return response
 
 
 def test_completion_keywords(lsp_fixture: LspFixture) -> None:
     client = lsp_fixture.client
 
     def filter_keyword_properties(
-        items: List[lsp.CompletionItem],
-    ) -> List[Dict[str, Any]]:
+        items: list[lsp.CompletionItem],
+    ) -> list[dict[str, Any]]:
         return [
             {
                 'label': item.label,
@@ -68,9 +72,9 @@ def test_completion_keywords(lsp_fixture: LspFixture) -> None:
     response = completion(
         client,
         lsp_fixture.datadir,
-        ''''Feature:
+        """'Feature:
     Scenario:
-        B''',
+        B""",
         options=None,
     )
 
@@ -89,9 +93,9 @@ def test_completion_keywords(lsp_fixture: LspFixture) -> None:
     response = completion(
         client,
         lsp_fixture.datadir,
-        '''Feature:
+        """Feature:
     Scenario:
-        en''',
+        en""",
         options=None,
     )
     assert response is not None
@@ -142,7 +146,7 @@ def test_completion_keywords(lsp_fixture: LspFixture) -> None:
     assert len(unexpected_kinds) == 0
     labels = [k.label for k in response.items]
     text_edits = [k.text_edit.new_text for k in response.items if k.text_edit is not None]
-    assert all([True if label is not None else False for label in labels])
+    assert all(label is not None for label in labels)
     assert labels == ['Feature']
     assert text_edits == ['Feature: ']
 
@@ -167,14 +171,13 @@ def test_completion_steps(lsp_fixture: LspFixture) -> None:
         unexpected_kinds = list(
             filter(
                 lambda s: s != 3,
-                map(lambda s: s.kind, response.items),
+                (s.kind for s in response.items),
             )
         )
         assert len(unexpected_kinds) == 0
 
         labels = [s.text_edit.new_text for s in response.items if s.text_edit is not None]
-        assert len(labels) > 0
-        assert all([True if label is not None else False for label in labels])
+        assert all(label is not None for label in labels)
 
         assert ' ask for value of variable "$1"' in labels
         assert ' spawn rate is "$1" user per second' in labels
@@ -196,14 +199,13 @@ def test_completion_steps(lsp_fixture: LspFixture) -> None:
         unexpected_kinds = list(
             filter(
                 lambda s: s != 3,
-                map(lambda s: s.kind, response.items),
+                (s.kind for s in response.items),
             )
         )
         assert len(unexpected_kinds) == 0
 
         labels = [s.text_edit.new_text for s in response.items if s.text_edit is not None]
-        assert len(labels) > 0
-        assert all([True if label is not None else False for label in labels])
+        assert all(label is not None for label in labels)
 
         assert 'ask for value of variable "$1"' in labels
         assert 'spawn rate is "$1" user per second' in labels
@@ -216,16 +218,13 @@ def test_completion_steps(lsp_fixture: LspFixture) -> None:
     unexpected_kinds = list(
         filter(
             lambda s: s != 3,
-            map(lambda s: s.kind, response.items),
+            (s.kind for s in response.items),
         )
     )
     assert len(unexpected_kinds) == 0
 
-    labels = list(
-        map(lambda s: s.label, response.items),
-    )
-    assert len(labels) > 0
-    assert all([True if label is not None else False for label in labels])
+    labels = [s.label for s in response.items]
+    assert all(label is not None for label in labels)
 
     assert 'ask for value of variable ""' in labels
     assert 'value for variable "" is ""' in labels
@@ -236,16 +235,13 @@ def test_completion_steps(lsp_fixture: LspFixture) -> None:
     unexpected_kinds = list(
         filter(
             lambda s: s != 3,
-            map(lambda s: s.kind, response.items),
+            (s.kind for s in response.items),
         )
     )
     assert len(unexpected_kinds) == 0
 
-    labels = list(
-        map(lambda s: s.label, response.items),
-    )
-    assert len(labels) > 0
-    assert all([True if label is not None else False for label in labels])
+    labels = [s.label for s in response.items]
+    assert all(label is not None for label in labels)
 
     assert sorted(labels) == sorted(
         [
@@ -258,19 +254,17 @@ def test_completion_steps(lsp_fixture: LspFixture) -> None:
     assert response is not None
     assert not response.is_incomplete
 
-    labels = list(
-        map(lambda s: s.label, response.items),
-    )
+    labels = [s.label for s in response.items]
     new_texts = [s.text_edit.new_text for s in response.items if s.text_edit is not None]
 
     assert labels == ['parse date "{{ datetime.now() }}" and save in variable ""']
     assert new_texts == ['parse date "{{ datetime.now() }}" and save in variable "$1"']
 
 
-def test_completion_variable_names(lsp_fixture: LspFixture, caplog: LogCaptureFixture) -> None:
+def test_completion_variable_names(lsp_fixture: LspFixture) -> None:  # noqa: PLR0915
     client = lsp_fixture.client
 
-    content = '''Feature: test
+    content = """Feature: test
     Scenario: test
         Given a user of type "Dummy" load testing "dummy://test"
         And value for variable "price" is "200"
@@ -278,15 +272,13 @@ def test_completion_variable_names(lsp_fixture: LspFixture, caplog: LogCaptureFi
         And value for variable "test" is "False"
         And ask for value of variable "bar"
 
-        Then parse date "{{'''
+        Then parse date "{{"""
     response = completion(client, lsp_fixture.datadir, content)
 
     assert response is not None
 
-    labels = list(
-        map(lambda s: s.label, response.items),
-    )
-    text_edits = list([s.text_edit.new_text for s in response.items if s.text_edit is not None])
+    labels = [s.label for s in response.items]
+    text_edits = [s.text_edit.new_text for s in response.items if s.text_edit is not None]
 
     assert sorted(text_edits) == sorted([' price }}"', ' foo }}"', ' test }}"', ' bar }}"'])
     assert sorted(labels) == sorted(['price', 'foo', 'test', 'bar'])
@@ -331,10 +323,8 @@ def test_completion_variable_names(lsp_fixture: LspFixture, caplog: LogCaptureFi
 
     assert response is not None
 
-    labels = list(
-        map(lambda s: s.label, response.items),
-    )
-    text_edits = list([s.text_edit.new_text for s in response.items if s.text_edit is not None])
+    labels = [s.label for s in response.items]
+    text_edits = [s.text_edit.new_text for s in response.items if s.text_edit is not None]
 
     assert sorted(text_edits) == sorted([' price }}"', ' foo }}"', ' test }}"', ' bar }}"'])
     assert sorted(labels) == sorted(['price', 'foo', 'test', 'bar'])
@@ -350,10 +340,8 @@ def test_completion_variable_names(lsp_fixture: LspFixture, caplog: LogCaptureFi
 
     assert response is not None
 
-    labels = list(
-        map(lambda s: s.label, response.items),
-    )
-    text_edits = list([s.text_edit.new_text for s in response.items if s.text_edit is not None])
+    labels = [s.label for s in response.items]
+    text_edits = [s.text_edit.new_text for s in response.items if s.text_edit is not None]
 
     assert sorted(text_edits) == sorted([' weight1 }}', ' hello1 }}', ' test1 }}', ' world1 }}'])
     assert sorted(labels) == sorted(['weight1', 'hello1', 'test1', 'world1'])
@@ -368,10 +356,8 @@ def test_completion_variable_names(lsp_fixture: LspFixture, caplog: LogCaptureFi
 
     assert response is not None
 
-    labels = list(
-        map(lambda s: s.label, response.items),
-    )
-    text_edits = list([s.text_edit.new_text for s in response.items if s.text_edit is not None])
+    labels = [s.label for s in response.items]
+    text_edits = [s.text_edit.new_text for s in response.items if s.text_edit is not None]
 
     assert sorted(text_edits) == sorted(['weight1 }}', 'world1 }}'])
     assert sorted(labels) == sorted(['weight1', 'world1'])
@@ -387,10 +373,8 @@ def test_completion_variable_names(lsp_fixture: LspFixture, caplog: LogCaptureFi
 
     assert response is not None
 
-    labels = list(
-        map(lambda s: s.label, response.items),
-    )
-    text_edits = list([s.text_edit.new_text for s in response.items if s.text_edit is not None])
+    labels = [s.label for s in response.items]
+    text_edits = [s.text_edit.new_text for s in response.items if s.text_edit is not None]
 
     assert sorted(text_edits) == sorted([' weight2', ' hello2', ' test2', ' world2'])
     assert sorted(labels) == sorted(['weight2', 'hello2', 'test2', 'world2'])
@@ -405,10 +389,8 @@ def test_completion_variable_names(lsp_fixture: LspFixture, caplog: LogCaptureFi
 
     assert response is not None
 
-    labels = list(
-        map(lambda s: s.label, response.items),
-    )
-    text_edits = list([s.text_edit.new_text for s in response.items if s.text_edit is not None])
+    labels = [s.label for s in response.items]
+    text_edits = [s.text_edit.new_text for s in response.items if s.text_edit is not None]
 
     assert sorted(text_edits) == sorted(['weight2 ', 'world2 '])
     assert sorted(labels) == sorted(['weight2', 'world2'])
@@ -433,10 +415,8 @@ def test_completion_variable_names(lsp_fixture: LspFixture, caplog: LogCaptureFi
 
     assert response is not None
 
-    labels = list(
-        map(lambda s: s.label, response.items),
-    )
-    text_edits = list([s.text_edit.new_text for s in response.items if s.text_edit is not None])
+    labels = [s.label for s in response.items]
+    text_edits = [s.text_edit.new_text for s in response.items if s.text_edit is not None]
 
     assert sorted(text_edits) == sorted([' price }}', ' foo }}', ' test }}', ' bar }}'])
     assert sorted(labels) == sorted(['price', 'foo', 'test', 'bar'])
@@ -461,10 +441,8 @@ def test_completion_variable_names(lsp_fixture: LspFixture, caplog: LogCaptureFi
 
     assert response is not None
 
-    labels = list(
-        map(lambda s: s.label, response.items),
-    )
-    text_edits = list([s.text_edit.new_text for s in response.items if s.text_edit is not None])
+    labels = [s.label for s in response.items]
+    text_edits = [s.text_edit.new_text for s in response.items if s.text_edit is not None]
 
     assert sorted(text_edits) == sorted([' price }}', ' foo }}', ' test }}', ' bar }}'])
     assert sorted(labels) == sorted(['price', 'foo', 'test', 'bar'])
@@ -478,10 +456,8 @@ def test_completion_variable_names(lsp_fixture: LspFixture, caplog: LogCaptureFi
 
     assert response is not None
 
-    labels = list(
-        map(lambda s: s.label, response.items),
-    )
-    text_edits = list([s.text_edit.new_text for s in response.items if s.text_edit is not None])
+    labels = [s.label for s in response.items]
+    text_edits = [s.text_edit.new_text for s in response.items if s.text_edit is not None]
 
     assert sorted(text_edits) == sorted(
         [
