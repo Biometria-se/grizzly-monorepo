@@ -113,9 +113,9 @@ def step_user_type_with_weight(context: Context, user_class_name: str, weight_va
     ```
 
     Args:
-        user_class_name: name of an implementation of [load user][grizzly.users], with or without `User`-suffix
-        weight_value: weight value for the user, default is `1` (see [writing a locustfile](http://docs.locust.io/en/stable/writing-a-locustfile.html#weight-attribute))
-        host: an URL for the target host, format depends on which [load user][grizzly.users] is specified
+        user_class_name (str): name of an implementation of [load user][grizzly.users], with or without `User`-suffix
+        weight_value (int): weight value for the user, default is `1` (see [writing a locustfile](http://docs.locust.io/en/stable/writing-a-locustfile.html#weight-attribute))
+        host (str): an URL for the target host, format depends on which [load user][grizzly.users] is specified
 
     """
     _setup_user(context, user_class_name, host, weight=weight_value)

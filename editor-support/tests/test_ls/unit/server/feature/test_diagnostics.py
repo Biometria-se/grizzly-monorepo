@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from test_ls.fixtures import LspFixture
 
 
-def test_validate_gherkin(lsp_fixture: LspFixture, caplog: LogCaptureFixture) -> None:
+def test_validate_gherkin(lsp_fixture: LspFixture) -> None:
     ls = lsp_fixture.server
 
     ls.language = 'en'

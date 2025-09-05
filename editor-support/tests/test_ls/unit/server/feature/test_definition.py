@@ -85,18 +85,21 @@ def test_get_file_url_definition(lsp_fixture: LspFixture, caplog: LogCaptureFixt
     )
 
     def get_platform_uri(uri: str) -> object:
-        class WrappedPlatformUri:
+        class WrappedPlatformUri(str):
+            __slots__: list[str] = []
+
             def __hash__(self) -> int:
                 return hash(self)
 
             def __eq__(self, other: object) -> bool:
+                nonlocal uri
                 # windows is case-insensitive, and drive letter can be different case...
                 # and drive latters in uri's from LSP seems to be in lower-case...
                 if not isinstance(other, str):
                     return False
 
                 if sys.platform == 'win32':
-                    uri = uri.lower()  # noqa: F823
+                    uri = uri.lower()
                     other = other.lower()
 
                 return uri == other

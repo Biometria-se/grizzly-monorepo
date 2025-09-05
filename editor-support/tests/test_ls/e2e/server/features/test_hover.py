@@ -55,7 +55,7 @@ def test_hover(lsp_fixture: LspFixture) -> None:
     assert response.contents.kind == lsp.MarkupKind.Markdown
     assert (
         response.contents.value
-        == """Set which type of users the scenario should use and which `host` is the target,
+        == """Set which type of load user the scenario should use and which `host` is the target,
 together with `weight` of the user (how many instances of this user should spawn relative to others).
 
 Example:
@@ -68,9 +68,9 @@ Given a user of type "BlobStorage" with weight "4" load testing "..."
 
 Args:
 
-* user_class_name `str`: name of an implementation of users, with or without `User`-suffix
-* weight_value `str`: weight value for the user, default is `1` (see [writing a locustfile](http://docs.locust.io/en/stable/writing-a-locustfile.html#weight-attribute))
-* host `str`: an URL for the target host, format depends on which users is specified
+* user_class_name `str`: name of an implementation of load user, with or without `User`-suffix
+* weight_value `int`: weight value for the user, default is `1` (see [writing a locustfile](http://docs.locust.io/en/stable/writing-a-locustfile.html#weight-attribute))
+* host `str`: an URL for the target host, format depends on which load user is specified
 """
     )
 

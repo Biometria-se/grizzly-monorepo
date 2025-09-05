@@ -195,79 +195,81 @@ def step_impl(context: Context, book: str, foobar: str) -> None:
 def test_quick_fix_lang_not_valid() -> None:
     text_document = TextDocument(uri='file:///test.feature', source='')
 
-    def assert_quick_fix(quick_fix: list[lsp.CodeAction] | None, new_text: str) -> None:
-        assert quick_fix is not None
-        assert len(quick_fix) == 1
-        actual_edit = quick_fix[0].edit
-        assert actual_edit is not None
-        actual_changes = actual_edit.changes
-        assert actual_changes is not None
-        assert len(actual_changes) == 1
-        actual_text_edits = actual_changes.get('file:///test.feature', None)
-        assert actual_text_edits is not None
-        assert len(actual_text_edits) == 1
-        assert actual_text_edits[0].new_text == new_text
+    def create_diagnostic(message: str) -> lsp.Diagnostic:
+        return lsp.Diagnostic(
+            range=lsp.Range(
+                start=lsp.Position(line=0, character=0),
+                end=lsp.Position(line=0, character=0),
+            ),
+            message=message,
+            severity=lsp.DiagnosticSeverity.Warning,
+            source='Dummy',
+        )
 
     # <!-- default to 'en'
-    diagnostic = lsp.Diagnostic(
-        range=lsp.Range(
-            start=lsp.Position(line=0, character=0),
-            end=lsp.Position(line=0, character=0),
-        ),
-        message=f'"huggabugga" {MARKER_LANG_NOT_VALID}',
-        severity=lsp.DiagnosticSeverity.Warning,
-        source='Dummy',
-    )
+    diagnostic = create_diagnostic(f'"huggabugga" {MARKER_LANG_NOT_VALID}')
 
     quick_fix = quick_fix_lang_not_valid(text_document, diagnostic)
 
-    assert_quick_fix(quick_fix, 'en')
+    assert [
+        SOME(
+            lsp.CodeAction,
+            title='Change language to "en"',
+            kind=lsp.CodeActionKind.QuickFix,
+            edit=SOME(lsp.WorkspaceEdit, changes={'file:///test.feature': [SOME(lsp.TextEdit, new_text='en')]}),
+        )
+    ] == quick_fix
     # // -->
 
     # <!-- long typed name to short
-    diagnostic = lsp.Diagnostic(
-        range=lsp.Range(
-            start=lsp.Position(line=0, character=0),
-            end=lsp.Position(line=0, character=0),
-        ),
-        message=f'"swedish" {MARKER_LANG_NOT_VALID}',
-        severity=lsp.DiagnosticSeverity.Warning,
-        source='Dummy',
-    )
+    diagnostic = create_diagnostic(f'"swedish" {MARKER_LANG_NOT_VALID}')
 
     quick_fix = quick_fix_lang_not_valid(text_document, diagnostic)
 
-    assert_quick_fix(quick_fix, 'sv')
+    assert [
+        SOME(
+            lsp.CodeAction,
+            title='Change language to "sv"',
+            kind=lsp.CodeActionKind.QuickFix,
+            edit=SOME(lsp.WorkspaceEdit, changes={'file:///test.feature': [SOME(lsp.TextEdit, new_text='sv')]}),
+        )
+    ] == quick_fix
     # // -->
 
     # <!-- long typed native to short
-    diagnostic = lsp.Diagnostic(
-        range=lsp.Range(
-            start=lsp.Position(line=0, character=0),
-            end=lsp.Position(line=0, character=0),
-        ),
-        message=f'"Svenska" {MARKER_LANG_NOT_VALID}',
-        severity=lsp.DiagnosticSeverity.Warning,
-        source='Dummy',
-    )
+    diagnostic = create_diagnostic(f'"Svenska" {MARKER_LANG_NOT_VALID}')
 
     quick_fix = quick_fix_lang_not_valid(text_document, diagnostic)
-    assert_quick_fix(quick_fix, 'sv')
+
+    assert [
+        SOME(
+            lsp.CodeAction,
+            title='Change language to "sv"',
+            kind=lsp.CodeActionKind.QuickFix,
+            edit=SOME(lsp.WorkspaceEdit, changes={'file:///test.feature': [SOME(lsp.TextEdit, new_text='sv')]}),
+        )
+    ] == quick_fix
     # // -->
 
     # <!-- closes match
-    diagnostic = lsp.Diagnostic(
-        range=lsp.Range(
-            start=lsp.Position(line=0, character=0),
-            end=lsp.Position(line=0, character=0),
-        ),
-        message=f'"Cyrl" {MARKER_LANG_NOT_VALID}',
-        severity=lsp.DiagnosticSeverity.Warning,
-        source='Dummy',
-    )
+    diagnostic = create_diagnostic(f'"Cyrl" {MARKER_LANG_NOT_VALID}')
 
     quick_fix = quick_fix_lang_not_valid(text_document, diagnostic)
-    assert_quick_fix(quick_fix, 'sr-Cyrl')
+
+    assert [
+        SOME(
+            lsp.CodeAction,
+            title='Change language to "sr-Cyrl"',
+            kind=lsp.CodeActionKind.QuickFix,
+            edit=SOME(lsp.WorkspaceEdit, changes={'file:///test.feature': [SOME(lsp.TextEdit, new_text='sr-Cyrl')]}),
+        ),
+        SOME(
+            lsp.CodeAction,
+            title='Change language to "mk-Cyrl"',
+            kind=lsp.CodeActionKind.QuickFix,
+            edit=SOME(lsp.WorkspaceEdit, changes={'file:///test.feature': [SOME(lsp.TextEdit, new_text='mk-Cyrl')]}),
+        ),
+    ] == quick_fix
     # // -->
 
 

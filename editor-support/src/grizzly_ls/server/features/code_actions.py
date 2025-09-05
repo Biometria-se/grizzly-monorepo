@@ -121,7 +121,7 @@ def quick_fix_lang_not_valid(text_document: TextDocument, diagnostic: lsp.Diagno
 
     # check if typed language is a long version
     for lang, localization in languages.items():
-        if language.lower() in localization.get('name', ['___12341234__asdf'])[0].lower() or language.lower() in localization.get('native', ['___12341234_asdf'])[0].lower():
+        if language.lower() in localization.get('name', ['___12341234__asdf']).lower() or language.lower() in localization.get('native', ['___12341234_asdf']).lower():
             actions.append(_code_action_lang_not_valid(lang, text_document.uri, diagnostic.range))
 
     # check if typed language has any close matches to available languages

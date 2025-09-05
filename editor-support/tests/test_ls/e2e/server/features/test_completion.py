@@ -72,7 +72,7 @@ def test_completion_keywords(lsp_fixture: LspFixture) -> None:
     response = completion(
         client,
         lsp_fixture.datadir,
-        """'Feature:
+        """Feature:
     Scenario:
         B""",
         options=None,
@@ -81,12 +81,10 @@ def test_completion_keywords(lsp_fixture: LspFixture) -> None:
     assert response is not None
     assert not response.is_incomplete
     assert filter_keyword_properties(response.items) == [
-        {'label': 'Background', 'kind': 14, 'text_edit': 'Background: '},
-        {
-            'label': 'But',
-            'kind': 14,
-            'text_edit': 'But ',
-        },
+        {'label': 'Ability', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'Ability: '},
+        {'label': 'Background', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'Background: '},
+        {'label': 'Business Need', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'Business Need: '},
+        {'label': 'But', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'But '},
     ]
 
     # partial match, keyword containing 'en'
@@ -101,54 +99,24 @@ def test_completion_keywords(lsp_fixture: LspFixture) -> None:
     assert response is not None
     assert not response.is_incomplete
     assert filter_keyword_properties(response.items) == [
-        {
-            'label': 'Given',
-            'kind': 14,
-            'text_edit': 'Given ',
-        },
-        {
-            'label': 'Scenario',
-            'kind': 14,
-            'text_edit': 'Scenario: ',
-        },
-        {
-            'label': 'Scenario Outline',
-            'kind': 14,
-            'text_edit': 'Scenario Outline: ',
-        },
-        {
-            'label': 'Scenario Template',
-            'kind': 14,
-            'text_edit': 'Scenario Template: ',
-        },
-        {
-            'label': 'Scenarios',
-            'kind': 14,
-            'text_edit': 'Scenarios: ',
-        },
-        {
-            'label': 'Then',
-            'kind': 14,
-            'text_edit': 'Then ',
-        },
-        {
-            'label': 'When',
-            'kind': 14,
-            'text_edit': 'When ',
-        },
+        {'label': 'Given', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'Given '},
+        {'label': 'Scenario', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'Scenario: '},
+        {'label': 'Scenario Outline', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'Scenario Outline: '},
+        {'label': 'Scenario Template', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'Scenario Template: '},
+        {'label': 'Scenarios', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'Scenarios: '},
+        {'label': 'Then', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'Then '},
+        {'label': 'When', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'When '},
     ]
 
     # all keywords
     response = completion(client, lsp_fixture.datadir, '', options=None)
     assert response is not None
     assert not response.is_incomplete
-    unexpected_kinds = [k.kind for k in response.items if k.kind != 14]
-    assert len(unexpected_kinds) == 0
-    labels = [k.label for k in response.items]
-    text_edits = [k.text_edit.new_text for k in response.items if k.text_edit is not None]
-    assert all(label is not None for label in labels)
-    assert labels == ['Feature']
-    assert text_edits == ['Feature: ']
+    assert filter_keyword_properties(response.items) == [
+        {'label': 'Ability', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'Ability: '},
+        {'label': 'Business Need', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'Business Need: '},
+        {'label': 'Feature', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'Feature: '},
+    ]
 
 
 def test_completion_steps(lsp_fixture: LspFixture) -> None:

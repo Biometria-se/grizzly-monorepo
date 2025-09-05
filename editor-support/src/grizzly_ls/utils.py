@@ -30,7 +30,6 @@ def run_command(
     env: dict[str, str] | None = None,
     cwd: Path | None = None,
 ) -> tuple[int, list[str]]:
-    logger.debug('executing command: %s', ' '.join(command))
     output: list[str] = []
 
     if env is None:
@@ -38,6 +37,8 @@ def run_command(
 
     if cwd is None:
         cwd = Path.cwd()
+
+    logger.debug('executing command: "%s" in %s', ' '.join(command), cwd.as_posix())
 
     process = subprocess.Popen(
         command,

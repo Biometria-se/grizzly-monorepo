@@ -3,19 +3,20 @@ from __future__ import annotations
 import platform
 import re
 import signal
+import subprocess
 import sys
 from collections import deque
 from contextlib import suppress
 from logging import ERROR
-from os import environ
+from os import environ, fsdecode
 from os.path import pathsep, sep
 from pathlib import Path
+from subprocess import CalledProcessError
 from tempfile import gettempdir
 from time import sleep
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 from urllib.parse import unquote, urlparse
 from urllib.request import url2pathname
-from venv import create as venv_create
 
 from behave.matchers import ParseMatcher
 from lsprotocol import types as lsp
@@ -195,27 +196,65 @@ class GrizzlyLanguageServer(LanguageServer):
 
 
 class InstallError(Exception):
-    pass
+    def __init__(self, *args: Any, backend: str | None = None, stdout: bytes | None = None, stderr: bytes | None = None) -> None:
+        super().__init__(*args)
+
+        self.stdout = stdout
+        self.stderr = stderr
+        self.backend = backend
 
 
 class ConfigurationError(Exception):
     pass
 
 
+def _create_virtual_environment(path: Path, python_version: str) -> None:
+    # prefer uv over virtualenv
+    try:
+        from uv import find_uv_bin  # noqa: PLC0415
+
+        uv = fsdecode(find_uv_bin())
+        env = environ.copy()
+        env.update({'UV_INTERNAL__PARENT_INTERPRETER': sys.executable})
+
+        rc = subprocess.run([uv, 'venv', '--managed-python', '--python', python_version, path.as_posix()], check=False)
+
+        if rc.returncode != 0:
+            raise InstallError(backend='uv', stdout=rc.stdout, stderr=rc.stderr)
+    except ModuleNotFoundError:
+        try:
+            from venv import create as venv_create  # noqa: PLC0415
+
+            venv_create(path.as_posix(), with_pip=True)
+        except CalledProcessError as e:
+            raise InstallError(backend='virtualenv', stdout=e.stdout, stderr=e.stderr) from None
+
+
 def use_virtual_environment(ls: GrizzlyLanguageServer, progress: Progress, project_name: str, env: dict[str, str]) -> Path | None:
     virtual_environment = Path(gettempdir()) / f'grizzly-ls-{project_name}'
     has_venv = virtual_environment.exists()
+    python_version = '.'.join(str(v) for v in sys.version_info[:2])
 
     ls.logger.debug(f'looking for venv at {virtual_environment}, {has_venv=}')
 
     if not has_venv:
-        ls.logger.logger.debug(f'creating virtual environment: {virtual_environment}')
-        ls.logger.info('creating virtual environment for language server, this could take a while', notify=True)
+        progress.report('creating venv', 33)
+
         try:
-            progress.report('creating venv', 33)
-            venv_create(str(virtual_environment), with_pip=True)
-        except:
-            ls.logger.exception('failed to create virtual environment', notify=True)
+            _create_virtual_environment(virtual_environment, python_version)
+        except InstallError as e:
+            ls.logger.error(f'failed to create virtual environment with {e.backend}', notify=True)  # noqa: TRY400
+
+            error: list[str] = []
+            if e.stderr is not None:
+                error.append(f'stderr={e.stderr.decode()}')
+
+            if e.stdout is not None:
+                error.append(f'stdout={e.stdout.decode()}')
+
+            if error:
+                ls.logger.error(''.join(error))  # noqa: TRY400
+
             raise InstallError from None
 
     bin_dir = 'Scripts' if platform.system() == 'Windows' else 'bin'
@@ -232,6 +271,14 @@ def use_virtual_environment(ls: GrizzlyLanguageServer, progress: Progress, proje
         }
     )
 
+    rc, output = run_command(['python', '-m', 'ensurepip'], env=env)
+
+    if rc != 0:
+        ls.logger.error(f'failed to ensure pip is installed for venv {virtual_environment.name}', notify=True)
+        ls.logger.error(f'ensurepip error:\n{"".join(output)}')
+
+        raise InstallError
+
     if ls.index_url is not None:
         index_url_parsed = urlparse(ls.index_url)
         if index_url_parsed.username is None or index_url_parsed.password is None:
@@ -247,11 +294,16 @@ def use_virtual_environment(ls: GrizzlyLanguageServer, progress: Progress, proje
             }
         )
 
+    # modify sys.path to use modules from virtual environment when compiling inventory
+    venv_sys_path = virtual_environment / 'lib' / f'python{python_version}/site-packages'
+    sys.path.append(venv_sys_path.as_posix())
+
     return virtual_environment
 
 
 def pip_install_upgrade(ls: GrizzlyLanguageServer, progress: Progress, project_name: str, executable: str, requirements_file: Path, env: dict[str, str]) -> None:
-    project_age_file = Path(gettempdir()) / f'grizzly-ls-{project_name}' / '.age'
+    project_path = Path(gettempdir()) / f'grizzly-ls-{project_name}'
+    project_age_file = project_path / '.age'
 
     if not (not project_age_file.exists() or (requirements_file.lstat().st_mtime > project_age_file.lstat().st_mtime)):
         return
@@ -274,6 +326,7 @@ def pip_install_upgrade(ls: GrizzlyLanguageServer, progress: Progress, project_n
             requirements_file.as_posix(),
         ],
         env=env,
+        cwd=project_path,
     )
 
     for line in output:
@@ -325,7 +378,7 @@ def install(ls: GrizzlyLanguageServer, *_args: Any) -> None:
             executable = 'python' if use_venv else sys.executable
             # // -->
 
-            ls.logger.debug(f'workspace root: {ls.root_path}')
+            ls.logger.debug(f'workspace root: {ls.root_path} (use virtual environment: {use_venv})')
 
             env = environ.copy()
             project_name = ls.root_path.stem
@@ -344,11 +397,6 @@ def install(ls: GrizzlyLanguageServer, *_args: Any) -> None:
             # - age file does not exist
             # - requirements file has been modified since age file was last touched
             pip_install_upgrade(ls, progress, project_name, executable, requirements_file, env)
-
-            if use_venv and virtual_environment is not None:
-                # modify sys.path to use modules from virtual environment when compiling inventory
-                venv_sys_path = virtual_environment / 'lib' / f'python{sys.version_info.major}.{sys.version_info.minor}/site-packages'
-                sys.path.append(venv_sys_path.as_posix())
 
             try:
                 # <!-- compile inventory

@@ -32,7 +32,7 @@ def initialize(
         ),
         client_info=None,
         locale=None,
-        root_path=str(root),
+        root_path=root.as_posix(),
         initialization_options=options,
         trace=None,
         workspace_folders=None,

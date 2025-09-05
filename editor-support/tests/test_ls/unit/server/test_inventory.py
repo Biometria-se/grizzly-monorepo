@@ -33,6 +33,11 @@ def test_create_normalizer(lsp_fixture: LspFixture, mocker: MockerFixture) -> No
     ls = lsp_fixture.server
     namespace = 'grizzly_ls.server.inventory'
 
+    mocker.patch(
+        f'{namespace}.ParseMatcher.TYPE_REGISTRY',
+        {},
+    )
+
     normalizer = create_step_normalizer(ls)
     assert normalizer.custom_types == {}
 

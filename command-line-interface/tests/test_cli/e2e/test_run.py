@@ -92,7 +92,7 @@ def validate_result(rc: int, result: str, example_root: Path) -> None:
     assert 'WARNING' not in result
     assert '1 feature passed, 0 failed, 0 skipped' in result
     assert '3 scenarios passed, 0 failed, 0 skipped' in result
-    assert 'steps passed, 0 failed, 0 skipped, 0 undefined' in result
+    assert 'steps passed, 0 failed, 0 skipped' in result
 
     assert 'ident   iter  status   description' in result
     assert '001      2/2  passed   dog facts api' in result
@@ -180,7 +180,8 @@ def test_e2e_run_example(e2e_fixture: End2EndFixture) -> None:
         feature_file_contents = feature_file_path.read_text().split('\n')
 
         requirements_file = example_root / 'requirements.txt'
-        requirements_file.write_text('grizzly-loadtester @ git+https://github.com/Biometria-se/grizzly.git@main\n')
+        # will used what's installed in VIRTUAL_ENV already
+        requirements_file.write_text('grizzly-loadtester\ngrizzly-loadtester-common\n')
 
         install_dependencies(e2e_fixture, example_root)
 

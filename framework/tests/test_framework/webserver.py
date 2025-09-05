@@ -48,7 +48,7 @@ logger.info('webserver_path=%s', webserver_path.as_posix())
 
 root_dir = (
     Path.joinpath(webserver_path, '..').resolve() if webserver_path.is_relative_to('/srv/grizzly') else Path.joinpath(webserver_path, '..', '..', '..', 'example', 'features')
-)
+).resolve()
 
 logger.info('root_dir=%s', root_dir.as_posix())
 

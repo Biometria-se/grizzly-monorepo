@@ -50,6 +50,8 @@ def test_complete_keyword(lsp_fixture: LspFixture) -> None:
         complete_keyword(ls, None, null_position, text_document),
         lsp.CompletionItemKind.Keyword,
     ) == [
+        'Ability',
+        'Business Need',
         'Feature',
     ]
 
@@ -65,7 +67,10 @@ def test_complete_keyword(lsp_fixture: LspFixture) -> None:
         )
     ) == sorted(
         [
+            'Ability',
+            'Business Need',
             'Background',
+            'Example',
             'Scenario',
             'Scenario Outline',
             'Scenario Template',
@@ -86,17 +91,20 @@ Scenario:
         )
     ) == sorted(
         [
+            'Ability',
             'And',
             'Background',
+            'Business Need',
             'But',
+            'Example',
+            'Examples',
             'Given',
             'Scenario',
             'Scenario Outline',
             'Scenario Template',
+            'Scenarios',
             'Then',
             'When',
-            'Examples',
-            'Scenarios',
         ]
     )
 
@@ -116,13 +124,16 @@ Scenario:
         )
     ) == sorted(
         [
+            'Ability',
             'And',
+            'Business Need',
             'But',
+            'Example',
+            'Examples',
             'Given',
             'Scenario',
             'Scenario Outline',
             'Scenario Template',
-            'Examples',
             'Scenarios',
             'Then',
             'When',
@@ -423,12 +434,13 @@ def test_complete_metadata() -> None:
     position = lsp.Position(line=0, character=12)
     actual_items = complete_metadata('# language: ', position)
 
+    # Asturian is the 6th language in behave.i18n.languages
     assert len(actual_items) > 10
     actual_item = actual_items[5]
-    assert actual_item.label == 'da'
+    assert actual_item.label == 'ast'
     assert actual_item.kind == lsp.CompletionItemKind.Property
     assert isinstance(actual_item.text_edit, lsp.TextEdit)
-    assert actual_item.text_edit.new_text == 'da'
+    assert actual_item.text_edit.new_text == 'ast'
     assert actual_item.text_edit.range == lsp.Range(
         start=position,
         end=position,

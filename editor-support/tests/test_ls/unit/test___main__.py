@@ -222,54 +222,57 @@ def test_setup_debugging(mocker: MockerFixture) -> None:
     finally:
         sys.path = prev_path
 
-    debugpy_listen_mock = mocker.patch('debugpy.listen')
-    debugby_wait_for_client_mock = mocker.patch('debugpy.wait_for_client')
+    try:
+        debugpy_listen_mock = mocker.patch('debugpy.listen')
+        debugby_wait_for_client_mock = mocker.patch('debugpy.wait_for_client')
 
-    # <no args>
-    arguments = Namespace(
-        socket=False,
-        verbose=False,
-        no_verbose=None,
-        debug=False,
-        debug_port=5678,
-        debug_wait=False,
-    )
+        # <no args>
+        arguments = Namespace(
+            socket=False,
+            verbose=False,
+            no_verbose=None,
+            debug=False,
+            debug_port=5678,
+            debug_wait=False,
+        )
 
-    setup_debugging(arguments)
-    debugpy_listen_mock.assert_not_called()
-    debugby_wait_for_client_mock.assert_not_called()
-    debugpy_listen_mock.reset_mock()
-    debugby_wait_for_client_mock.reset_mock()
+        setup_debugging(arguments)
+        debugpy_listen_mock.assert_not_called()
+        debugby_wait_for_client_mock.assert_not_called()
+        debugpy_listen_mock.reset_mock()
+        debugby_wait_for_client_mock.reset_mock()
 
-    # debug enabled
-    arguments = Namespace(
-        socket=False,
-        verbose=False,
-        no_verbose=None,
-        debug=True,
-        debug_port=5678,
-        debug_wait=False,
-    )
+        # debug enabled
+        arguments = Namespace(
+            socket=False,
+            verbose=False,
+            no_verbose=None,
+            debug=True,
+            debug_port=5678,
+            debug_wait=False,
+        )
 
-    setup_debugging(arguments)
-    debugpy_listen_mock.assert_called_once_with(5678)
-    debugby_wait_for_client_mock.assert_not_called()
-    debugpy_listen_mock.reset_mock()
-    debugby_wait_for_client_mock.reset_mock()
+        setup_debugging(arguments)
+        debugpy_listen_mock.assert_called_once_with(5678)
+        debugby_wait_for_client_mock.assert_not_called()
+        debugpy_listen_mock.reset_mock()
+        debugby_wait_for_client_mock.reset_mock()
 
-    # debug enabled + wait for client
-    arguments = Namespace(
-        socket=False,
-        verbose=False,
-        no_verbose=None,
-        debug=True,
-        debug_port=6789,
-        debug_wait=True,
-    )
+        # debug enabled + wait for client
+        arguments = Namespace(
+            socket=False,
+            verbose=False,
+            no_verbose=None,
+            debug=True,
+            debug_port=6789,
+            debug_wait=True,
+        )
 
-    setup_debugging(arguments)
-    debugpy_listen_mock.assert_called_once_with(6789)
-    debugby_wait_for_client_mock.assert_called_once()
+        setup_debugging(arguments)
+        debugpy_listen_mock.assert_called_once_with(6789)
+        debugby_wait_for_client_mock.assert_called_once()
+    except ModuleNotFoundError:
+        pytest.skip(reason='grizzly-ls not installed with extra group "debug"')
 
 
 def test_main(mocker: MockerFixture) -> None:

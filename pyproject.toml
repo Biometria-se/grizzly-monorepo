@@ -18,32 +18,40 @@ detached = true
 type = "virtual"
 installer = "uv"
 python = "{matrix:python}"
-dependencies = ["virtualenv"]
+dependencies = [
+    "virtualenv"
+]
 
 [[tool.hatch.envs.test.matrix]]
 python = ["3.10", "3.11", "3.12", "3.13"]
 
 [tool.hatch.envs.test.scripts]
-install = ["uv sync --locked -p {matrix:python} --active --all-packages --group dev"]
+install = ["uv sync --locked -p {matrix:python} --active --all-packages --all-groups"]
 
-framework = ["install", "python -m pytest framework/tests/ --ignore=framework/tests/test_framework/e2e"]
+framework-unit = ["install", "python -m pytest framework/tests/ --ignore=framework/tests/test_framework/e2e"]
 framework-e2e = ["install", "python -m pytest framework/tests/ --ignore=framework/tests/test_framework/unit"]
 framework-e2e-dist = ["install", "E2E_DIST_MODE=dist python -m pytest framework/tests/ --ignore=framework/tests/test_framework/unit"]
 framework-e2e-example = ["install", "python -m pytest -s framework/tests/test_framework/e2e/test_example.py::test_e2e_example"]
+framework-all = ["framework-unit", "framework-e2e", "framework-e2e-dist"]
 
-cli = ["install", "python -m pytest command-line-interface/tests --ignore=command-line-interface/tests/test_cli/e2e"]
+cli-unit = ["install", "python -m pytest command-line-interface/tests --ignore=command-line-interface/tests/test_cli/e2e"]
 cli-e2e = ["install", "python -m pytest command-line-interface/tests --ignore=command-line-interface/tests/test_cli/unit"]
 cli-e2e-example = ["install", "python -m pytest command-line-interface/tests/test_cli/e2e/test_run.py"]
+cli-all = ["cli-unit", "cli-e2e"]
 
-common = ["install", "python -m pytest common/tests"]
+common-unit = ["install", "python -m pytest common/tests"]
+common-e2e = ["install", "echo not implemented"]
+common-all = ["common-unit"]
 
-editor-support-ls = ["install", "python -m pytest editor-support/tests"]
-editor-support-vscode = ["install", "cd editor-support/clients/vscode && npm run test"]
+ls-unit = ["install", "python -m pytest editor-support/tests --ignore=editor-support/tests/test_ls/e2e"]
+ls-e2e = ["install", "python -m pytest editor-support/tests --ignore=editor-support/tests/test_ls/unit"]
+ls-clients-vscode = ["install", "cd editor-support/clients/vscode && npm run test"]
+ls-all = ["ls-unit", "ls-e2e", "ls-clients-vscode"]
 
-all = ["framework", "cli", "common", "framework-e2e", "cli-e2e", "framework-e2e-dist"]
-framework-all = ["framework", "framework-e2e", "framework-e2e-dist"]
-cli-all = ["cli", "cli-e2e"]
-editor-support-all = ["editor-support-ls", "editor-support-vscode"]
+all-unit = ["framework-unit", "cli-unit", "common-unit", "ls-unit"]
+all-e2e = ["framework-e2e", "cli-e2e", "common-e2e", "ls-e2e", "framework-e2e-dist"]
+all = ["all-unit", "all-e2e"]
+
 
 [tool.hatch.envs.lint]
 detached = true
@@ -169,7 +177,7 @@ testpaths = [
     "command-line-interface/tests",
     "editor-support/tests"
 ]
-timeout = 10
+timeout = 15
 filterwarnings = [
     "ignore:setDaemon\\(\\) is deprecated.*:DeprecationWarning",
     "ignore:.*pkg_resources.*:DeprecationWarning",

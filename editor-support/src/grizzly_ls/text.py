@@ -360,11 +360,10 @@ def get_step_parts(line: str) -> tuple[str | None, str | None]:
 
 
 def clean_help(text: str) -> str:
-    matches = re.finditer(r'\{@pylink ([^\}]*)}', text, re.MULTILINE)
-
+    # clean up markdown references
+    matches = re.finditer(r'\[([^\]]+)\]\[([^\]]+)\]', text, re.MULTILINE)
     for match in matches:
-        _, replacement_text = match.group(1).rsplit('.', 1)
-        text = text.replace(match.group(), replacement_text)
+        text = text.replace(match.group(), match.group(1))
 
     return '\n'.join([line.lstrip() for line in text.split('\n')])
 
