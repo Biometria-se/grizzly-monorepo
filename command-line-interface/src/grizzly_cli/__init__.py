@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
+from importlib.metadata import PackageNotFoundError, version
 from os import environ
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
-from grizzly_common.__version__ import __version__ as __common_version__
+try:
+    __version__ = version('grizzly-loadtester-cli')
+except PackageNotFoundError:
+    __version__ = 'unkown'
 
-from grizzly_cli.__version__ import __version__
+try:
+    __common_version__ = version('grizzly-loadtester-common')
+except PackageNotFoundError:
+    __common_version__ = 'unknown'
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable

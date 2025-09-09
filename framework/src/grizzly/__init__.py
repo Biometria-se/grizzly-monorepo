@@ -6,13 +6,17 @@ monkey.patch_all()
 
 from importlib.metadata import PackageNotFoundError, version
 
-from grizzly_common.__version__ import __version__ as __common_version__
+try:
+    __version__ = version('grizzly-loadtester')
+except PackageNotFoundError:
+    __version__ = 'unknown'
 
-from grizzly.__version__ import __version__
+try:
+    __common_version__ = version('grizzly-loadtester-common')
+except PackageNotFoundError:
+    __common_version__ = 'unknown'
 
 try:
     __locust_version__ = version('locust')
 except PackageNotFoundError:  # pragma: no cover
-    __locust_version__ = '<unknown>'
-
-__all__ = ['__common_version__', '__version__']
+    __locust_version__ = 'unknown'

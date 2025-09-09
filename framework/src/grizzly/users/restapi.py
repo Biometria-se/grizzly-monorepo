@@ -219,7 +219,7 @@ class RestApiUser(GrizzlyUser, AsyncRequests, GrizzlyHttpAuthClient, metaclass=R
             _ssl_context_factory = None
 
         self.client = FastHttpSession(
-            environment=self.environment,
+            request_event=self.environment.events.request,
             base_url=self.host,
             user=self,
             insecure=not self._context.get('verify_certificates', True),
@@ -263,7 +263,7 @@ class RestApiUser(GrizzlyUser, AsyncRequests, GrizzlyHttpAuthClient, metaclass=R
     def async_request_impl(self, request: RequestTask) -> GrizzlyResponse:
         """Use FastHttpSession instance for each asynchronous requests."""
         client = FastHttpSession(
-            environment=self.environment,
+            request_event=self.environment.events.request,
             base_url=self.host,
             user=self,
             insecure=not self._context.get('verify_certificates', True),

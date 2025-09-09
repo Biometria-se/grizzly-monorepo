@@ -1054,7 +1054,7 @@ requires-dist = [
     { name = "grizzly-loadtester-common", extras = ["mq"], marker = "extra == 'mq'", editable = "common" },
     { name = "influxdb", specifier = ">=5.3.2" },
     { name = "influxdb-client", specifier = ">=1.49.0" },
-    { name = "locust", specifier = ">=2.39.0" },
+    { name = "locust", specifier = "==2.40.2" },
     { name = "roundrobin", specifier = ">=0.0.4" },
 ]
 provides-extras = ["mq"]
@@ -1153,6 +1153,7 @@ dependencies = [
     { name = "jinja2" },
     { name = "jinja2-simple-tags" },
     { name = "ordered-set" },
+    { name = "pip" },
     { name = "pygls" },
     { name = "random-word" },
 ]
@@ -1174,6 +1175,7 @@ requires-dist = [
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "jinja2-simple-tags", specifier = ">=0.6.1" },
     { name = "ordered-set", specifier = ">=4.1.0" },
+    { name = "pip", specifier = ">=25.2" },
     { name = "pygls", specifier = ">=1.3.1" },
     { name = "random-word", specifier = ">=1.0.13" },
 ]
@@ -1204,7 +1206,6 @@ dev = [
     { name = "line-profiler" },
     { name = "mypy" },
     { name = "parameterized" },
-    { name = "pipdeptree" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-mock" },
@@ -1228,7 +1229,6 @@ dev = [
     { name = "line-profiler", specifier = ">=5.0.0" },
     { name = "mypy", specifier = ">=1.17.1" },
     { name = "parameterized", specifier = ">=0.9.0" },
-    { name = "pipdeptree", specifier = ">=2.28.0" },
     { name = "pytest", specifier = ">=8.4.1" },
     { name = "pytest-cov", specifier = ">=6.2.1" },
     { name = "pytest-mock", specifier = ">=3.14.1" },
@@ -1617,7 +1617,7 @@ wheels = [
 
 [[package]]
 name = "locust"
-version = "2.39.0"
+version = "2.40.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "configargparse" },
@@ -1629,18 +1629,20 @@ dependencies = [
     { name = "locust-cloud" },
     { name = "msgpack" },
     { name = "psutil" },
+    { name = "pytest" },
+    { name = "python-engineio" },
     { name = "python-socketio", extra = ["client"] },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
     { name = "pyzmq" },
     { name = "requests" },
     { name = "setuptools" },
     { name = "tomli", marker = "python_full_version < '3.11'" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
     { name = "werkzeug" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c4/6f/d6ca4483f4795747fbbd610d28e798ca4f5d4358e03f309343eb5bab128f/locust-2.39.0.tar.gz", hash = "sha256:71e82a68324f9d63d4b800035288488c08eab12811fa4c24ff07f031643b7b39", size = 1409879, upload-time = "2025-08-20T13:39:55.233Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/27/e0/a99401e233ad1b9ad26265ad8f45f2466abb6ef954e7747e8484864eb6df/locust-2.40.2.tar.gz", hash = "sha256:9ffdf900d1ad949d4c5809e2a4e526bba582175f025f24da2755f43f4b5cb23e", size = 1411854, upload-time = "2025-09-08T12:55:28.664Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7c/94/7dc9a2b4ccb18a5b0c4be4bfadfa79b6c0fd860267a7114641402627e7db/locust-2.39.0-py3-none-any.whl", hash = "sha256:3817c4d7cca387b4b871da779c9e145c2a95fbb0b5602be5833976902b967a8f", size = 1428138, upload-time = "2025-08-20T13:39:52.549Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/e7/85ddb125d91b3a2bfa2a52eeae2d4c7da062239aaa475d6aebddb5688f41/locust-2.40.2-py3-none-any.whl", hash = "sha256:c8f0060d2bd8479034e9e61e6473669c4c8216930d99ee61ec0e627340b89d3e", size = 1430483, upload-time = "2025-09-08T12:55:25.659Z" },
 ]
 
 [[package]]
@@ -2328,19 +2330,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a0/49/d36a3ddb73d22970a35afa3e9fd53c8318150f8122e4257ca9875f1d4e38/pip_licenses-5.0.0.tar.gz", hash = "sha256:0633a1f9aab58e5a6216931b0e1d5cdded8bcc2709ff563674eb0e2ff9e77e8e", size = 41542, upload-time = "2024-07-23T10:48:29.785Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/27/0a/bfaf1479d09d19f503a669d9c8e433ac59ae687fb8da1d8207eb85c5a9f4/pip_licenses-5.0.0-py3-none-any.whl", hash = "sha256:82c83666753efb86d1af1c405c8ab273413eb10d6689c218df2f09acf40e477d", size = 20497, upload-time = "2024-07-23T10:48:27.59Z" },
-]
-
-[[package]]
-name = "pipdeptree"
-version = "2.28.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "packaging" },
-    { name = "pip" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/25/61/0e855474eee22f06d8508aad787c1bb3f9fff28759e758c0da44f8549998/pipdeptree-2.28.0.tar.gz", hash = "sha256:bae533e30249b1aa6d9cb315ef6f1c039e9adaa55d5b25438395cace5716eaa6", size = 42583, upload-time = "2025-07-20T19:47:26.737Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/0a/84/d5e9403c11f6440dcb127afbb15b34dda7408dcbcefcaf6e0aa9e9a4730f/pipdeptree-2.28.0-py3-none-any.whl", hash = "sha256:a4ce80e7fdf93dfc6d99809d9bbe0115a13902b1f0498775abeafe56c77bdd3d", size = 33840, upload-time = "2025-07-20T19:47:25.282Z" },
 ]
 
 [[package]]

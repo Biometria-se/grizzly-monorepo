@@ -26,7 +26,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from pytest_mock.plugin import MockerFixture
 
 
-@pytest.mark.timeout(40)
 def test_no_pymqi_dependencies() -> None:
     env = environ.copy()
     with suppress(KeyError):

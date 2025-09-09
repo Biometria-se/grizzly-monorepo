@@ -41,6 +41,9 @@ def get_context_root() -> Path:
     context_root: Path | None = None
 
     for possible_context_root in possible_context_roots:
+        if any(ignore in possible_context_root.as_posix() for ignore in ['.venv', '.env', 'node_modules']):
+            continue
+
         if context_root is None:
             context_root = possible_context_root
             continue

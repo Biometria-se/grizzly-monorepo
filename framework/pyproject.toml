@@ -15,7 +15,7 @@ dependencies = [
     "grizzly-loadtester-common",
     "influxdb>=5.3.2",
     "influxdb-client>=1.49.0",
-    "locust>=2.39.0",
+    "locust==2.40.2",
     "roundrobin>=0.0.4",
 ]
 classifiers = [

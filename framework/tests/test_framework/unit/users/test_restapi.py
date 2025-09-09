@@ -190,7 +190,7 @@ class TestRestApiUser:
             request,
             SOME(
                 FastHttpSession,
-                environment=parent.user.environment,
+                request_event=parent.user.environment.events.request,
                 base_url=parent.user.host,
                 user=parent.user,
                 client=SOME(
@@ -217,7 +217,7 @@ class TestRestApiUser:
             request,
             SOME(
                 FastHttpSession,
-                environment=parent.user.environment,
+                request_event=parent.user.environment.events.request,
                 base_url=parent.user.host,
                 user=parent.user,
                 client=SOME(

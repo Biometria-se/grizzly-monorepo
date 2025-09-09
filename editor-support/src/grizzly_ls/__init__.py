@@ -1,3 +1,6 @@
-from .__version__ import __version__
+from importlib.metadata import PackageNotFoundError, version
 
-__all__ = ['__version__']
+try:
+    __version__ = version('grizzly-loadtester-ls')
+except PackageNotFoundError:
+    __version__ = 'unknown'
