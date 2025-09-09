@@ -20,9 +20,7 @@
                 "python.terminal.activateEnvInCurrentTerminal": true,
                 "python.languageServer": "Pylance",
                 "pythonTestExplorer.testFramework": "pytest",
-                "github.copilot.enable": {
-                    "*": false
-                },
+                "github.copilot.chat.codeGeneration.useInstructionFiles": true,
                 "files.associations": {
                     "*.j2.json": "jinja-json",
                     "*.j2.xml": "jinja-xml"
@@ -62,7 +60,9 @@
                 "charliermarsh.ruff",
                 "oderwat.indent-rainbow",
                 "SanjulaGanepola.github-local-actions",
-                "tamasfe.even-better-toml"
+                "tamasfe.even-better-toml",
+                "github.copilot",
+                "github.copilot-chat"
             ]
         }
     },
