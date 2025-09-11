@@ -154,12 +154,11 @@ nav:
     - Changelog: command-line-interface/changelog.md
     - Licenses: command-line-interface/licenses.md
   - Editor support:
-    - Language server:
-      - editor-support/language-server/index.md
-      - Changelog: editor-support/language-server/changelog.md
-      - Licenses: editor-support/language-server/licenses.md
     - Editors:
       - Visual Studio Code:
         - editor-support/editors/vscode/index.md
         - Changelog: editor-support/editors/vscode/changelog.md
         - Licenses: editor-support/editors/vscode/licenses.md
+    - Language server: editor-support/index.md
+    - Changelog: editor-support/changelog.md
+    - Licenses: editor-support/licenses.md

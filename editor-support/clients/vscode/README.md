@@ -3,6 +3,8 @@
 This is the `grizzly-loadtester` Visual Studio Code extension that makes it easier to develop load test scenarios by providing
 auto-complete of step expressions!
 
+![Screen capture of diagnostics](https://github.com/Biometria-se/grizzly-lsp/raw/main/assets/images/grizzly-ls-diagnostics.gif)
+
 ![Screenshot of keyword auto-complete](https://github.com/Biometria-se/grizzly-lsp/raw/main/assets/images/screenshot-auto-complete-keywords.png)
 
 ![Screenshot of step expressions auto-complete](https://github.com/Biometria-se/grizzly-lsp/raw/main/assets/images/screenshot-auto-complete-step-expressions.png)

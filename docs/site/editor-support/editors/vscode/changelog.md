@@ -3,4 +3,4 @@ title: Changelog
 ---
 # Changelog
 
-{{ changelog('ls') }}
+{{ changelog('editor-support/clients/vscode', 'ls/vscode') }}

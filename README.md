@@ -88,7 +88,7 @@ grizzly-cli init my-grizzly-project
 
 The easiest way to start contributing to this project is to have [Visual Studio Code](https://code.visualstudio.com/) (with "Remote - Containers" extension) and [docker](https://www.docker.com/) installed. The project comes with a `devcontainer`, which encapsulates everything needed for a development environment.
 
-It is also possible to use a python virtual environment, but then you would have to manually download and install IBM MQ libraries, and install `grizzly` dependencies.
+It is also possible to use a python virtual environment, but then you would have to manually download and install [`uv`](https://docs.astral.sh/uv/#installation) and IBM MQ libraries.
 
 ```bash
 wget -qO- https://astral.sh/uv/install.sh | sh
@@ -97,5 +97,5 @@ export LD_LIBRARY_PATH="/opt/mqm/lib64:${LD_LIBRARY_PATH}"
 cd ~/
 git clone https://github.com/Biometria-se/grizzly.git
 cd grizzly/
-uv sync --locked --all-packages --all-extras
+uv sync --locked --all-packages --all-extras --all-groups
 ```
