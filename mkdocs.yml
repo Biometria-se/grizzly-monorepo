@@ -94,6 +94,8 @@ plugins:
               level: 2
   - macros:
       include_dir: .
+      module_name: docs/src/grizzly_mkdocs/macros/main
+      verbose: true
   - autorefs:
       resolve_closest: true
   - mkdocstrings:
@@ -152,9 +154,12 @@ nav:
     - Changelog: command-line-interface/changelog.md
     - Licenses: command-line-interface/licenses.md
   - Editor support:
-    - Language server: editor-support/language-server.md
+    - Language server:
+      - editor-support/language-server/index.md
+      - Changelog: editor-support/language-server/changelog.md
+      - Licenses: editor-support/language-server/licenses.md
     - Editors:
-      - editor-support/editors/index.md
-      - Visual Studio Code: editor-support/editors/vscode.md
-    - Changelog: editor-support/changelog.md
-    - Licenses: editor-support/licenses.md
+      - Visual Studio Code:
+        - editor-support/editors/vscode/index.md
+        - Changelog: editor-support/editors/vscode/changelog.md
+        - Licenses: editor-support/editors/vscode/licenses.md

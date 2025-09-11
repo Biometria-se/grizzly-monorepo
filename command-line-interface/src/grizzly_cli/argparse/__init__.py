@@ -59,7 +59,7 @@ class ArgumentParser(CoreArgumentParser):
             for action in self._actions:
                 if action.help is not None:
                     # remove any markdown link markers
-                    action.help = re.sub(r'\[([^\]]*)\]\([^\)]*\)', r'\1', action.help)
+                    action.help = re.sub(r'\[([^\]]*)\][\(\[][^\)]*[\)\]]', r'\1', action.help)
 
         super().print_help(file)
 

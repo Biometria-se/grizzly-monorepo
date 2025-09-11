@@ -3,4 +3,4 @@ title: Licenses
 ---
 # Licenses
 
-@shell cd ../../ && script/docs-generate.bash cli --licenses
+{{ licenses('command-line-interface', 'grizzly-loadtester-cli') }}

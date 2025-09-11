@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from gevent.monkey import patch_all
+
+patch_all()
+
 import inspect
 import re
 import warnings
@@ -11,9 +15,7 @@ from datetime import datetime, timezone
 from importlib import import_module
 from json import dumps as jsondumps
 from pathlib import Path
-from subprocess import CalledProcessError, check_output
 from textwrap import indent
-from time import perf_counter
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 import mkdocs_gen_files
@@ -312,7 +314,7 @@ source_url: {self.repo_url}/blob/main/{path.relative_to(Path.cwd()).as_posix()}
             # <!-- metadata about input and output for generated documentation
             module_path = relative_path.with_suffix('')
             doc_path = path.absolute().relative_to(root_module).with_suffix('.md')
-            if doc_path.stem == '__init__':
+            if path.stem == '__init__':
                 doc_path = doc_path.with_stem('index')
 
             full_doc_path = Path.joinpath(output_path, doc_path)
@@ -417,9 +419,11 @@ source_url: {self.repo_url}/blob/main/{path.relative_to(Path.cwd()).as_posix()}
                 message = f'{root_module_name} does not have output property defined'
                 raise ConfigurationError(message)
 
-            root_module_path_parts: list[str] = root_module_name.split('.')
-            root_module = Path.joinpath(Path.cwd(), *root_module_path_parts)
             output_path = Path.joinpath(self.docs_dir, output_path_name)
+            package_path = output_path.relative_to(self.docs_dir).parts[0]
+
+            root_module_path_parts: list[str] = root_module_name.split('.')
+            root_module = Path.joinpath(Path.cwd(), package_path, 'src', *root_module_path_parts)
             is_package = True
 
             if not root_module.is_dir():
@@ -440,38 +444,7 @@ source_url: {self.repo_url}/blob/main/{path.relative_to(Path.cwd()).as_posix()}
 
         return files
 
-    def _execute_shell_annotation(self, page: Page, text: str) -> str:
-        regex = r'@shell (.*?)$'
-
-        cwd = Path.joinpath(self.docs_dir, page.file.src_uri).parent
-
-        matches = re.finditer(regex, text, re.MULTILINE)
-
-        for match in matches:
-            command = match.group(1)
-            self.logger.info(f'{page.file.src_uri} executing "{command}"...')
-            start = perf_counter()
-            try:
-                output = check_output(command, shell=True, cwd=cwd)  # noqa: S602
-            except CalledProcessError as e:
-                self.logger.error(f'{e!s}', payload=f'stdout: {e.stdout!r}\nstderr: {e.stderr!r}')  # noqa: TRY400
-                raise
-            finally:
-                delta = perf_counter() - start
-                self.logger.info(f'...took {delta:.2f} seconds')
-
-            text = text.replace(match.group(0), output.decode())
-
-        if matches:
-            page.meta.update({'render_macros': False})
-
-        return text
-
     def on_page_markdown(self, markdown: str, page: Page, config: MkDocsConfig, files: Files) -> str | None:
-        # do not execute @shell annotations after live server (on_serve) has executed
-        if '@shell' in markdown:
-            markdown = self._execute_shell_annotation(page, markdown)
-
         return self._on_page(markdown, page, config, files, text_format='markdown')
 
     def on_page_content(self, html: str, page: Page, config: MkDocsConfig, files: Files) -> str | None:

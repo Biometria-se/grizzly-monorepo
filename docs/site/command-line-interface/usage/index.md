@@ -1,4 +1,4 @@
 ---
 title: Usage
 ---
-@shell cd ../../../ && script/docs-generate.bash cli --usage
+{{ command('grizzly-cli --md-help') }}

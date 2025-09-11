@@ -3,4 +3,4 @@ title: Changelog
 ---
 # Changelog
 
-{{ changelog('cli') }}
+{{ changelog('ls') }}
