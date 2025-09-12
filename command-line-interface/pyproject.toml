@@ -1,9 +1,9 @@
 [project]
 name = "grizzly-loadtester-cli"
-dynamic = ["version"]
+dynamic = ["version", "readme"]
 description = "Command line interface for grizzly-loadtester"
-readme = "README.md"
 license = "MIT"
+license-files = ["LICENSE.md"]
 authors = [
     { name = "biometria", email="opensource@biometria.se" },
     { name = "Mikael Göransson", email = "github@mgor.se" }
@@ -26,7 +26,8 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13"
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython"
 ]
 keywords = [
     "grizzly",
@@ -50,14 +51,24 @@ Tracker = "https://github.com/Biometria-se/grizzly/issues"
 grizzly-cli = "grizzly_cli.__main__:main"
 
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = ["hatchling==1.27.0", "hatch-vcs==0.5.0"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.hooks.custom]
+path = "../hatch_build.py"
+
+[tool.hatch.metadata.hooks.custom]
+path = "../hatch_build.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/grizzly_cli"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/grizzly_cli"]
+include = ["src/grizzly_cli", "tests/"]
+exclude = ["tests/test_cli/e2e/example"]
+
+[tool.hatch.build.targets.sdist.force-include]
+"../LICENSE.md" = "LICENSE.md"
 
 [tool.hatch.version]
 source = "vcs"

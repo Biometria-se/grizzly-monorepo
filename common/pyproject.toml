@@ -1,8 +1,9 @@
 [project]
 name = "grizzly-loadtester-common"
-dynamic = ["version"]
+dynamic = ["version", "readme"]
 description = "Common functionality for grizzly-loadtester packages"
 license = "MIT"
+license-files = ["LICENSE.md"]
 authors = [
     { name = "biometria", email="opensource@biometria.se" },
     { name = "Mikael Göransson", email = "github@mgor.se" }
@@ -50,14 +51,23 @@ mq = [
 ]
 
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = ["hatchling==1.27.0", "hatch-vcs==0.5.0"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.hooks.custom]
+path = "../hatch_build.py"
+
+[tool.hatch.metadata.hooks.custom]
+path = "../hatch_build.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/grizzly_common"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/grizzly_common"]
+include = ["src/grizzly_common", "tests/"]
+
+[tool.hatch.build.targets.sdist.force-include]
+"../LICENSE.md" = "LICENSE.md"
 
 [tool.hatch.version]
 source = "vcs"
