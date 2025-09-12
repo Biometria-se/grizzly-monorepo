@@ -11,6 +11,7 @@ members = [
     "grizzly-loadtester",
     "grizzly-loadtester-cli",
     "grizzly-loadtester-common",
+    "grizzly-loadtester-extras-async-messaged",
     "grizzly-loadtester-ls",
     "grizzly-loadtester-monorepo",
     "grizzly-mkdocs",
@@ -1010,6 +1011,7 @@ dependencies = [
     { name = "azure-iot-device" },
     { name = "azure-storage-blob" },
     { name = "grizzly-loadtester-common" },
+    { name = "grizzly-loadtester-extras-async-messaged" },
     { name = "influxdb" },
     { name = "influxdb-client" },
     { name = "locust" },
@@ -1018,7 +1020,7 @@ dependencies = [
 
 [package.optional-dependencies]
 mq = [
-    { name = "grizzly-loadtester-common", extra = ["mq"] },
+    { name = "grizzly-loadtester-extras-async-messaged", extra = ["mq"] },
 ]
 
 [package.metadata]
@@ -1026,13 +1028,17 @@ requires-dist = [
     { name = "azure-iot-device", specifier = ">=2.14.0" },
     { name = "azure-storage-blob", specifier = ">=12.26.0" },
     { name = "grizzly-loadtester-common", editable = "common" },
-    { name = "grizzly-loadtester-common", extras = ["mq"], marker = "extra == 'mq'", editable = "common" },
+    { name = "grizzly-loadtester-extras-async-messaged", editable = "extras/async-messaged" },
+    { name = "grizzly-loadtester-extras-async-messaged", extras = ["mq"], marker = "extra == 'mq'", editable = "extras/async-messaged" },
     { name = "influxdb", specifier = ">=5.3.2" },
     { name = "influxdb-client", specifier = ">=1.49.0" },
     { name = "locust", specifier = "==2.40.2" },
     { name = "roundrobin", specifier = ">=0.0.4" },
 ]
 provides-extras = ["mq"]
+
+[package.metadata.requires-dev]
+dev = []
 
 [[package]]
 name = "grizzly-loadtester-cli"
@@ -1072,7 +1078,6 @@ dev = [
 name = "grizzly-loadtester-common"
 source = { editable = "common" }
 dependencies = [
-    { name = "azure-servicebus" },
     { name = "behave" },
     { name = "jinja2" },
     { name = "jinja2-simple-tags" },
@@ -1081,12 +1086,6 @@ dependencies = [
     { name = "pyotp" },
     { name = "python-dateutil" },
     { name = "pyyaml" },
-    { name = "setproctitle" },
-]
-
-[package.optional-dependencies]
-mq = [
-    { name = "pymqi" },
 ]
 
 [package.dev-dependencies]
@@ -1098,19 +1097,15 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "azure-servicebus", specifier = ">=7.14.2" },
     { name = "behave", specifier = ">=1.3.1" },
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "jinja2-simple-tags", specifier = ">=0.6.1" },
     { name = "jsonpath-ng", specifier = ">=1.7.0" },
     { name = "lxml", specifier = ">=6.0.1" },
-    { name = "pymqi", marker = "extra == 'mq'", specifier = ">=1.12.11" },
     { name = "pyotp", specifier = ">=2.9.0" },
     { name = "python-dateutil", specifier = ">=2.9.0.post0" },
     { name = "pyyaml", specifier = ">=6.0.2" },
-    { name = "setproctitle", specifier = ">=1.3.6" },
 ]
-provides-extras = ["mq"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1120,13 +1115,39 @@ dev = [
 ]
 
 [[package]]
+name = "grizzly-loadtester-extras-async-messaged"
+source = { editable = "extras/async-messaged" }
+dependencies = [
+    { name = "azure-servicebus" },
+    { name = "grizzly-loadtester-common" },
+    { name = "pyzmq" },
+    { name = "setproctitle" },
+]
+
+[package.optional-dependencies]
+mq = [
+    { name = "pymqi" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "azure-servicebus", specifier = ">=7.14.2" },
+    { name = "grizzly-loadtester-common", editable = "common" },
+    { name = "pymqi", marker = "extra == 'mq'", specifier = ">=1.12.11" },
+    { name = "pyzmq", specifier = "==27.0.2" },
+    { name = "setproctitle", specifier = ">=1.3.6" },
+]
+provides-extras = ["mq"]
+
+[package.metadata.requires-dev]
+dev = []
+
+[[package]]
 name = "grizzly-loadtester-ls"
 source = { editable = "editor-support" }
 dependencies = [
-    { name = "behave" },
     { name = "colorama" },
-    { name = "jinja2" },
-    { name = "jinja2-simple-tags" },
+    { name = "grizzly-loadtester-common" },
     { name = "ordered-set" },
     { name = "pip" },
     { name = "pygls" },
@@ -1139,16 +1160,13 @@ debug = [
 ]
 dev = [
     { name = "grizzly-loadtester" },
-    { name = "grizzly-loadtester-common" },
     { name = "types-colorama" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "behave", specifier = ">=1.3.1" },
     { name = "colorama", specifier = ">=0.4.6" },
-    { name = "jinja2", specifier = ">=3.1.6" },
-    { name = "jinja2-simple-tags", specifier = ">=0.6.1" },
+    { name = "grizzly-loadtester-common", editable = "common" },
     { name = "ordered-set", specifier = ">=4.1.0" },
     { name = "pip", specifier = ">=25.2" },
     { name = "pygls", specifier = ">=1.3.1" },
@@ -1159,7 +1177,6 @@ requires-dist = [
 debug = [{ name = "debugpy", specifier = ">=1.8.16" }]
 dev = [
     { name = "grizzly-loadtester", editable = "framework" },
-    { name = "grizzly-loadtester-common", editable = "common" },
     { name = "types-colorama", specifier = ">=0.4.15.20250801" },
 ]
 

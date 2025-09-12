@@ -76,7 +76,7 @@ from typing import TYPE_CHECKING, ClassVar, cast
 from urllib.parse import parse_qs, unquote, urlparse
 
 import zmq.green as zmq
-from grizzly_common.async_message.utils import async_message_request
+from async_messaged.utils import async_message_request
 from zmq import sugar as ztypes
 from zmq.error import ZMQError
 
@@ -94,7 +94,7 @@ except:
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Generator
 
-    from grizzly_common.async_message import AsyncMessageContext, AsyncMessageRequest, AsyncMessageResponse
+    from async_messaged import AsyncMessageContext, AsyncMessageRequest, AsyncMessageResponse
 
     from grizzly.scenarios import GrizzlyScenario
     from grizzly.testdata.communication import GrizzlyDependencies

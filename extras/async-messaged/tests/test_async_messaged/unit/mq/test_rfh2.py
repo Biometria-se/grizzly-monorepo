@@ -1,4 +1,4 @@
-"""Unit test of grizzly_common.async_message.mq.rfh2."""
+"""Unit test of async_messaged.mq.rfh2."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 import pytest
+from async_messaged.mq import Rfh2Decoder, Rfh2Encoder
 from grizzly.types import ZoneInfo
-from grizzly_common.async_message.mq import Rfh2Decoder, Rfh2Encoder
 
 if TYPE_CHECKING:  # pragma: no cover
     from pytest_mock.plugin import MockerFixture

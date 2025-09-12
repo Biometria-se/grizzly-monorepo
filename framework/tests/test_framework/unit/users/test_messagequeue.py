@@ -9,6 +9,7 @@ from os import environ
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 import pytest
+from async_messaged import AsyncMessageError
 from grizzly.context import GrizzlyContextScenario
 from grizzly.exceptions import ResponseHandlerError, RestartScenario, StopScenario
 from grizzly.scenarios import GrizzlyScenario, IteratorScenario
@@ -18,7 +19,6 @@ from grizzly.testdata.utils import transform
 from grizzly.types import RequestMethod, ResponseTarget, pymqi
 from grizzly.types.locust import Environment, StopUser
 from grizzly.users.messagequeue import MessageQueueUser
-from grizzly_common.async_message import AsyncMessageError
 from grizzly_common.transformer import TransformerContentType
 from zmq.error import Again as ZMQAgain
 from zmq.error import ZMQError
@@ -26,7 +26,7 @@ from zmq.error import ZMQError
 from test_framework.helpers import ANY
 
 if TYPE_CHECKING:  # pragma: no cover
-    from grizzly_common.async_message import AsyncMessageResponse
+    from async_messaged import AsyncMessageResponse
 
     from test_framework.fixtures import GrizzlyFixture, MockerFixture, NoopZmqFixture
 

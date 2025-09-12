@@ -1,6 +1,6 @@
 # Adding a new package to the workspace, also needs to be added here:
 # - tool.pytest.ini_options
-# - tool.coverage.run
+# - tool.coverage.path
 # - tool.mypy
 [project]
 name = "grizzly-loadtester-monorepo"
@@ -41,7 +41,7 @@ cli-e2e-example = ["install", "python -m pytest command-line-interface/tests/tes
 cli-all = ["cli-unit", "cli-e2e"]
 
 common-unit = ["install", "python -m pytest common/tests"]
-common-e2e = ["install", "echo not implemented"]
+common-e2e = ["echo not implemented"]
 common-all = ["common-unit"]
 
 ls-unit = ["install", "python -m pytest editor-support/tests --ignore=editor-support/tests/test_ls/e2e"]
@@ -49,8 +49,17 @@ ls-e2e = ["install", "python -m pytest editor-support/tests --ignore=editor-supp
 ls-clients-vscode = ["install", "cd editor-support/clients/vscode && npm run test"]
 ls-all = ["ls-unit", "ls-e2e", "ls-clients-vscode"]
 
-all-unit = ["framework-unit", "cli-unit", "common-unit", "ls-unit"]
-all-e2e = ["framework-e2e", "cli-e2e", "common-e2e", "ls-e2e", "framework-e2e-dist"]
+extras-unit = ["extras-async-messaged-unit"]
+extras-e2e = ["extras-async-messaged-e2e"]
+extras-all = ["extras-unit", "extras-e2e"]
+
+extras-async-messaged-unit = ["install", "python -m pytest extras/async-messaged/tests --ignore=extras/async-messaged/tests/test_async_messaged/e2e"]
+extras-async-messaged-e2e = ["echo not implemented"]
+extras-async-messaged-all = ["extras-async-messaged-unit", "extras-async-messaged-e2e"]
+
+
+all-unit = ["framework-unit", "cli-unit", "common-unit", "ls-unit", "extras-unit"]
+all-e2e = ["framework-e2e", "cli-e2e", "common-e2e", "ls-e2e", "framework-e2e-dist", "extras-e2e"]
 all = ["all-unit", "all-e2e"]
 
 
@@ -78,6 +87,7 @@ members = [
     "docs",
     "command-line-interface",
     "editor-support",
+    "extras/async-messaged",
 ]
 
 [dependency-groups]
@@ -158,7 +168,8 @@ pythonpath = [
     "common/src",
     "docs/src",
     "command-line-interface/src",
-    "editor-support/src"
+    "editor-support/src",
+    "extras/async-messaged/src"
 ]
 # new dependencies, can silently register a pytest plugin, which will cause monkey patchning to fail, and hence not finding any tests;
 # find .venv/lib/python*/ -name 'entry_points.txt' -exec grep -A 1 'pytest11' {} \; | grep -v pytest11
@@ -175,7 +186,8 @@ testpaths = [
     "common/tests",
     "docs/tests",
     "command-line-interface/tests",
-    "editor-support/tests"
+    "editor-support/tests",
+    "extras/async-messaged/tests"
 ]
 timeout = 15
 filterwarnings = [
@@ -194,7 +206,8 @@ source = [
     "common/src",
     "docs/src",
     "command-line-interface/src",
-    "editor-support/src"
+    "editor-support/src",
+    "extras/async-messaged/src"
 ]
 
 [tool.coverage.report]
@@ -203,8 +216,8 @@ skip_empty = true
 
 [tool.mypy]
 explicit_package_bases = true
-mypy_path = "$MYPY_CONFIG_FILE_DIR/framework/src,$MYPY_CONFIG_FILE_DIR/common/src,$MYPY_CONFIG_FILE_DIR/docs/src,$MYPY_CONFIG_FILE_DIR/framework/tests,$MYPY_CONFIG_FILE_DIR/common/tests,$MYPY_CONFIG_FILE_DIR/example,$MYPY_CONFIG_FILE_DIR/command-line-interface/src,$MYPY_CONFIG_FILE_DIR/command-line-interface/tests,$MYPY_CONFIG_FILE_DIR/editor-support/src,$MYPY_CONFIG_FILE_DIR/editor-support/tests"
-files = "framework/src,framework/tests,common/src,common/tests,docs/src,docs/tests,command-line-interface/src,command-line-interface/tests,editor-support/src,editor-support/tests"
+mypy_path = "$MYPY_CONFIG_FILE_DIR/framework/src,$MYPY_CONFIG_FILE_DIR/common/src,$MYPY_CONFIG_FILE_DIR/docs/src,$MYPY_CONFIG_FILE_DIR/framework/tests,$MYPY_CONFIG_FILE_DIR/common/tests,$MYPY_CONFIG_FILE_DIR/example,$MYPY_CONFIG_FILE_DIR/command-line-interface/src,$MYPY_CONFIG_FILE_DIR/command-line-interface/tests,$MYPY_CONFIG_FILE_DIR/editor-support/src,$MYPY_CONFIG_FILE_DIR/editor-support/tests,$MYPY_CONFIG_FILE_DIR/extras/async-messaged/src,$MYPY_CONFIG_FILE_DIR/extras/async-messaged/tests"
+files = "framework/src,framework/tests,common/src,common/tests,docs/src,docs/tests,command-line-interface/src,command-line-interface/tests,editor-support/src,editor-support/tests,extras/async-messaged/src,extras/async-messaged/tests"
 exclude = ["framework/tests/test-project/", "editor-support/tests/project"]
 # https://github.com/python/mypy/issues/5870
 #follow_missing_imports = true

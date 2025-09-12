@@ -118,7 +118,7 @@ from grizzly.utils.protocols import async_message_request_wrapper, zmq_disconnec
 from . import ClientTask, client
 
 if TYPE_CHECKING:  # pragma: no cover
-    from grizzly_common.async_message import AsyncMessageContext, AsyncMessageRequest, AsyncMessageResponse
+    from async_messaged import AsyncMessageContext, AsyncMessageRequest, AsyncMessageResponse
 
     from grizzly.scenarios import GrizzlyScenario
     from grizzly.testdata.communication import GrizzlyDependencies

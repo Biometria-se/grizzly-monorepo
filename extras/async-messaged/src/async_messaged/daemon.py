@@ -19,9 +19,8 @@ from uuid import uuid4
 
 import setproctitle as proc
 import zmq.green as zmq
-from zmq import sugar as ztypes
-
 from grizzly_common.transformer import JsonBytesEncoder
+from zmq import sugar as ztypes
 
 from . import (
     LRU_READY,
@@ -160,8 +159,7 @@ def create_router_socket(context: ztypes.Context) -> ztypes.Socket:
     return socket
 
 
-def router(run_daemon: Event) -> None:  # noqa: C901, PLR0912, PLR0915
-    logger = logging.getLogger('router')
+def router(run_daemon: Event, logger: logging.Logger) -> None:  # noqa: C901, PLR0912, PLR0915
     logger.debug('starting')
 
     context = zmq.Context()
@@ -350,9 +348,9 @@ def router(run_daemon: Event) -> None:  # noqa: C901, PLR0912, PLR0915
 
 
 def main() -> int:
-    logger = logging.getLogger('main')
+    logger = logging.getLogger('router')
     run_daemon = Event()
-    process = Process(target=router, args=(run_daemon,))
+    process = Process(target=router, args=(run_daemon, logger))
 
     def signal_handler(signum: int | Signals, _frame: FrameType | None) -> None:
         if run_daemon.is_set():

@@ -12,11 +12,11 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 import zmq.green as zmq
+from async_messaged import AsyncMessageError
 from grizzly.exceptions import RestartScenario
 from grizzly.scenarios import IteratorScenario
 from grizzly.tasks.clients import MessageQueueClientTask
 from grizzly.types import RequestDirection, StrDict, pymqi
-from grizzly_common.async_message import AsyncMessageError
 from zmq import sugar as ztypes
 from zmq.error import Again as ZMQAgain
 
@@ -308,7 +308,7 @@ class TestMessageQueueClientTask:
 
     def test_connect(self, grizzly_fixture: GrizzlyFixture, mocker: MockerFixture, noop_zmq: NoopZmqFixture) -> None:  # noqa: PLR0915
         noop_zmq('grizzly.tasks.clients.messagequeue')
-        mocker.patch('grizzly_common.async_message.utils.uuid4', return_value='foobar')
+        mocker.patch('async_messaged.utils.uuid4', return_value='foobar')
         zmq_context: ztypes.Context | None = None
 
         parent = grizzly_fixture()
@@ -427,7 +427,7 @@ class TestMessageQueueClientTask:
 
     def test_request_from(self, mocker: MockerFixture, noop_zmq: NoopZmqFixture, grizzly_fixture: GrizzlyFixture, caplog: LogCaptureFixture) -> None:  # noqa: PLR0915
         noop_zmq('grizzly.tasks.clients.messagequeue')
-        mocker.patch('grizzly_common.async_message.utils.uuid4', return_value='foobar')
+        mocker.patch('async_messaged.utils.uuid4', return_value='foobar')
 
         parent = grizzly_fixture(scenario_type=IteratorScenario)
 
@@ -623,7 +623,7 @@ class TestMessageQueueClientTask:
 
     def test_request_to(self, mocker: MockerFixture, noop_zmq: NoopZmqFixture, grizzly_fixture: GrizzlyFixture) -> None:
         noop_zmq('grizzly.tasks.clients.messagequeue')
-        mocker.patch('grizzly_common.async_message.utils.uuid4', return_value='foobar')
+        mocker.patch('async_messaged.utils.uuid4', return_value='foobar')
 
         parent = grizzly_fixture()
 

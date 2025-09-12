@@ -28,8 +28,8 @@ from pathlib import Path
 from time import perf_counter
 from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast, final
 
+from async_messaged import AsyncMessageError
 from gevent.event import Event
-from grizzly_common.async_message import AsyncMessageError
 from locust.event import EventHook
 from locust.user.task import LOCUST_STATE_RUNNING
 from locust.user.users import User, UserMeta

@@ -8,12 +8,12 @@ from typing import TYPE_CHECKING, cast
 
 import pytest
 import zmq.green as zmq
+from async_messaged import AsyncMessageError, AsyncMessageResponse
 from grizzly.context import GrizzlyContextScenario
 from grizzly.tasks import ExplicitWaitTask, RequestTask
 from grizzly.types import RequestMethod
 from grizzly.types.locust import StopUser
 from grizzly.users import GrizzlyUser, ServiceBusUser
-from grizzly_common.async_message import AsyncMessageError, AsyncMessageResponse
 from grizzly_common.transformer import TransformerContentType
 from zmq.error import Again as ZMQAgain
 
@@ -343,7 +343,7 @@ class TestServiceBusUser:
 
     def test_request(self, grizzly_fixture: GrizzlyFixture, noop_zmq: NoopZmqFixture, mocker: MockerFixture) -> None:  # noqa: PLR0915
         noop_zmq('grizzly.users.servicebus')
-        mocker.patch('grizzly_common.async_message.utils.uuid4', return_value='foobar')
+        mocker.patch('async_messaged.utils.uuid4', return_value='foobar')
 
         grizzly_fixture.grizzly.scenarios.create(grizzly_fixture.behave.create_scenario('test scenario'))
         grizzly = grizzly_fixture.grizzly

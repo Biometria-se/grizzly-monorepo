@@ -133,8 +133,8 @@ from typing import TYPE_CHECKING, Any, ClassVar, cast
 from urllib.parse import parse_qs, unquote, urlparse
 
 import zmq.green as zmq
+from async_messaged.utils import async_message_request
 from grizzly_common.arguments import get_unsupported_arguments, parse_arguments
-from grizzly_common.async_message.utils import async_message_request
 from zmq import sugar as ztypes
 
 from grizzly.exceptions import StopScenario
@@ -147,7 +147,7 @@ from . import GrizzlyUser, grizzlycontext
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Generator
 
-    from grizzly_common.async_message import AsyncMessageContext, AsyncMessageRequest, AsyncMessageResponse
+    from async_messaged import AsyncMessageContext, AsyncMessageRequest, AsyncMessageResponse
 
     from grizzly.tasks import RequestTask
     from grizzly.testdata.communication import GrizzlyDependencies

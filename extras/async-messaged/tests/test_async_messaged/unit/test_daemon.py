@@ -1,4 +1,4 @@
-"""Unit tests of grizzly_common.async_message.daemon."""
+"""Unit tests of async_messaged.daemon."""
 
 from __future__ import annotations
 
@@ -12,13 +12,13 @@ from typing import TYPE_CHECKING, cast
 
 import pytest
 import zmq.green as zmq
-from grizzly_common.async_message.daemon import Worker, main, router
+from async_messaged.daemon import Worker, main, router
 
-from test_common.helpers import ANY
+from test_async_messaged.helpers import ANY
 
 if TYPE_CHECKING:  # pragma: no cover
     from _pytest.logging import LogCaptureFixture
-    from grizzly_common.async_message import AsyncMessageRequest, AsyncMessageResponse
+    from async_messaged import AsyncMessageRequest, AsyncMessageResponse
     from pytest_mock.plugin import MockerFixture
 
 
@@ -53,7 +53,7 @@ def test_worker(mocker: MockerFixture, caplog: LogCaptureFixture, scheme: str, i
 
     def mock_handle_response(response: AsyncMessageResponse) -> None:
         mocker.patch(
-            'grizzly_common.async_message.AsyncMessageHandler.handle',
+            'async_messaged.AsyncMessageHandler.handle',
             side_effect=[response],
         )
 
@@ -103,7 +103,7 @@ def test_worker(mocker: MockerFixture, caplog: LogCaptureFixture, scheme: str, i
     worker_mock.send_multipart.reset_mock()
 
     integration_spy = mocker.patch(
-        f'grizzly_common.async_message.{scheme}.{implementation}.__init__',
+        f'async_messaged.{scheme}.{implementation}.__init__',
         return_value=None,
     )
 
@@ -168,6 +168,7 @@ def test_worker(mocker: MockerFixture, caplog: LogCaptureFixture, scheme: str, i
 
 
 def test_router(mocker: MockerFixture, caplog: LogCaptureFixture) -> None:
+    logger = logging.getLogger('router')
     context_mock = mocker.MagicMock()
     create_context_mock = mocker.patch('zmq.green.Context.__new__', return_value=context_mock)
 
@@ -179,24 +180,26 @@ def test_router(mocker: MockerFixture, caplog: LogCaptureFixture) -> None:
     create_poller_mock = mocker.patch('zmq.green.Poller.__new__', return_value=poller_mock)
 
     thread_pool_executor_mock = mocker.MagicMock(spec=ThreadPoolExecutor)
-    mocker.patch('grizzly_common.async_message.daemon.ThreadPoolExecutor.__new__', return_value=thread_pool_executor_mock)
+    mocker.patch('async_messaged.daemon.ThreadPoolExecutor.__new__', return_value=thread_pool_executor_mock)
 
     worker_mock = mocker.MagicMock(spec=Worker)
     worker_mock.integration = mocker.PropertyMock()
     worker_mock.logger = logging.getLogger('worker')
     worker_mock.socket = mocker.PropertyMock()
-    mocker.patch('grizzly_common.async_message.daemon.Worker.__new__', side_effect=[worker_mock, mocker.MagicMock(spec=Worker)])
+    mocker.patch('async_messaged.daemon.Worker.__new__', side_effect=[worker_mock, mocker.MagicMock(spec=Worker)])
 
-    mocker.patch('grizzly_common.async_message.daemon.uuid4', return_value='foobar')
+    mocker.patch('async_messaged.daemon.uuid4', return_value='foobar')
 
     run_daemon = mocker.MagicMock(spec=Event)
 
     mocker.patch.object(run_daemon, 'is_set', side_effect=[False, True, False])
 
-    router(run_daemon)
+    with caplog.at_level(logging.DEBUG):
+        router(run_daemon, logger)
 
-    assert 'spawned worker foobar' in caplog.messages[0]
-    assert 'stopped' in caplog.messages[-1]
+    print(caplog.messages)
+
+    assert [*caplog.messages[:2], caplog.messages[-1]] == ['starting', 'spawned worker foobar', 'stopped']
     caplog.clear()
 
     create_context_mock.assert_called_once_with(
@@ -223,20 +226,21 @@ def test_router(mocker: MockerFixture, caplog: LogCaptureFixture) -> None:
 
 
 def test_main(mocker: MockerFixture) -> None:
-    run_daemon_mock = mocker.patch('grizzly_common.async_message.daemon.Event', spec=Event)
+    run_daemon_mock = mocker.patch('async_messaged.daemon.Event', spec=Event)
+    logger_mock = mocker.patch('async_messaged.daemon.logging.getLogger', spec=logging.Logger)
 
-    setproctitle_mock = mocker.patch('grizzly_common.async_message.daemon.proc.setproctitle', return_value=None)
+    setproctitle_mock = mocker.patch('async_messaged.daemon.proc.setproctitle', return_value=None)
 
-    process_mock = mocker.patch('grizzly_common.async_message.daemon.Process', spec=Process)
+    process_mock = mocker.patch('async_messaged.daemon.Process', spec=Process)
     process_mock.return_value.exitcode = None
     process_mock.return_value.is_alive.return_value = True
 
-    router_mock = mocker.patch('grizzly_common.async_message.daemon.router', return_value=None)
+    router_mock = mocker.patch('async_messaged.daemon.router', return_value=None)
 
     assert main() == 0
     setproctitle_mock.assert_called_once_with('grizzly-async-messaged')
     setproctitle_mock.reset_mock()
-    process_mock.assert_called_once_with(target=router_mock, args=(run_daemon_mock.return_value,))
+    process_mock.assert_called_once_with(target=router_mock, args=(run_daemon_mock.return_value, logger_mock.return_value))
     process_mock.return_value.start.assert_called_once_with()
     run_daemon_mock.return_value.wait.assert_called_once_with()
     process_mock.return_value.terminate.assert_called_once_with()

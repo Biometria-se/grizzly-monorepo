@@ -1,4 +1,4 @@
-"""Unit tests of grizzly_common.async_message."""
+"""Unit tests of async_messaged."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from contextlib import suppress
 from typing import TYPE_CHECKING, cast
 
 import pytest
-from grizzly_common.async_message import (
+from async_messaged import (
     AsyncMessageHandler,
     AsyncMessageRequest,
     AsyncMessageRequestHandler,
@@ -100,7 +100,7 @@ def test_register() -> None:
         return {}
 
     try:
-        from grizzly_common.async_message.mq import handlers
+        from async_messaged.mq import handlers
 
         actual = list(handlers.keys())
         actual.sort()
@@ -113,7 +113,7 @@ def test_register() -> None:
         register(handlers, 'TEST')(handler_a)
         register(handlers, 'TEST')(handler_b)
 
-        from grizzly_common.async_message.mq import handlers
+        from async_messaged.mq import handlers
 
         assert handlers['TEST'] is not handler_b
         assert handlers['TEST'] is handler_a

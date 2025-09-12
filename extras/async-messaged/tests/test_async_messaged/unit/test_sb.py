@@ -1,4 +1,4 @@
-"""Unit tests for grizzly_common.async_message.sb."""
+"""Unit tests for async_messaged.sb."""
 
 from __future__ import annotations
 
@@ -9,15 +9,15 @@ from json import dumps as jsondumps
 from typing import TYPE_CHECKING, cast
 
 import pytest
+from async_messaged import AsyncMessageContext, AsyncMessageError, AsyncMessageRequest
+from async_messaged.sb import AsyncServiceBusHandler
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
 from azure.servicebus import ServiceBusClient, ServiceBusMessage, ServiceBusReceiver, ServiceBusSender, TransportType
 from azure.servicebus.exceptions import ServiceBusError
 from grizzly_common.arguments import parse_arguments
-from grizzly_common.async_message import AsyncMessageContext, AsyncMessageError, AsyncMessageRequest
-from grizzly_common.async_message.sb import AsyncServiceBusHandler
 from grizzly_common.azure.aad import AuthMethod, AzureAadCredential
 
-from test_common.helpers import SOME
+from test_async_messaged.helpers import SOME
 
 if TYPE_CHECKING:  # pragma: no cover
     from _pytest.logging import LogCaptureFixture
@@ -34,8 +34,8 @@ class TestAsyncServiceBusHandler:
 
     def test__prepare_clients_conn_str(self, mocker: MockerFixture, caplog: LogCaptureFixture) -> None:
         handler = AsyncServiceBusHandler('asdf-asdf-asdf')
-        service_bus_client_mock = mocker.patch('grizzly_common.async_message.sb.ServiceBusClient')
-        service_bus_mgmt_client_mock = mocker.patch('grizzly_common.async_message.sb.ServiceBusAdministrationClient')
+        service_bus_client_mock = mocker.patch('async_messaged.sb.ServiceBusClient')
+        service_bus_mgmt_client_mock = mocker.patch('async_messaged.sb.ServiceBusAdministrationClient')
 
         # <!-- connection string
         context: AsyncMessageContext = {
@@ -103,8 +103,8 @@ class TestAsyncServiceBusHandler:
 
     def test__prepare_clients_credential(self, mocker: MockerFixture, caplog: LogCaptureFixture) -> None:
         handler = AsyncServiceBusHandler('asdf-asdf-asdf')
-        service_bus_client_mock = mocker.patch('grizzly_common.async_message.sb.ServiceBusClient')
-        service_bus_mgmt_client_mock = mocker.patch('grizzly_common.async_message.sb.ServiceBusAdministrationClient')
+        service_bus_client_mock = mocker.patch('async_messaged.sb.ServiceBusClient')
+        service_bus_mgmt_client_mock = mocker.patch('async_messaged.sb.ServiceBusAdministrationClient')
 
         # <!-- credential
         context: AsyncMessageContext = {
@@ -230,7 +230,7 @@ class TestAsyncServiceBusHandler:
         receiver.close.assert_called_once_with()
 
     def test_disconnect(self, mocker: MockerFixture) -> None:
-        from grizzly_common.async_message.sb import handlers
+        from async_messaged.sb import handlers
 
         handler = AsyncServiceBusHandler(worker='asdf-asdf-asdf')
         handler._client = mocker.MagicMock()
@@ -299,7 +299,7 @@ class TestAsyncServiceBusHandler:
         receiver_instance.__exit__.assert_called_once_with()
 
     def test_subscribe(self, mocker: MockerFixture) -> None:  # noqa: PLR0915
-        from grizzly_common.async_message.sb import handlers
+        from async_messaged.sb import handlers
 
         handler = AsyncServiceBusHandler(worker='asdf-asdf-asdf')
 
@@ -338,7 +338,7 @@ class TestAsyncServiceBusHandler:
 
         # pre: valid request
         mgmt_client_mock = mocker.MagicMock()
-        create_client_mock = mocker.patch('grizzly_common.async_message.sb.ServiceBusAdministrationClient.from_connection_string', return_value=mgmt_client_mock)
+        create_client_mock = mocker.patch('async_messaged.sb.ServiceBusAdministrationClient.from_connection_string', return_value=mgmt_client_mock)
 
         request['payload'] = '1=1'
 
@@ -439,7 +439,7 @@ class TestAsyncServiceBusHandler:
         mgmt_client_mock.reset_mock()
 
     def test_unsubscribe(self, mocker: MockerFixture) -> None:  # noqa: PLR0915
-        from grizzly_common.async_message.sb import handlers
+        from async_messaged.sb import handlers
 
         handler = AsyncServiceBusHandler(worker='asdf-asdf-asdf')
 
@@ -472,7 +472,7 @@ class TestAsyncServiceBusHandler:
 
         # pre: valid request
         mgmt_client_mock = mocker.MagicMock()
-        create_client_mock = mocker.patch('grizzly_common.async_message.sb.ServiceBusAdministrationClient.from_connection_string', return_value=mgmt_client_mock)
+        create_client_mock = mocker.patch('async_messaged.sb.ServiceBusAdministrationClient.from_connection_string', return_value=mgmt_client_mock)
         request['context'].update({'endpoint': 'topic:my-topic, subscription:my-subscription'})
 
         # topic does not exist
@@ -674,7 +674,7 @@ class TestAsyncServiceBusHandler:
         topic_spy.reset_mock()
 
     def test_hello(self, mocker: MockerFixture, caplog: LogCaptureFixture) -> None:  # noqa: PLR0915
-        from grizzly_common.async_message.sb import handlers
+        from async_messaged.sb import handlers
 
         handler = AsyncServiceBusHandler(worker='asdf-asdf-asdf')
         request: AsyncMessageRequest = {
@@ -709,7 +709,7 @@ class TestAsyncServiceBusHandler:
 
         sender_instance_spy = mocker.patch.object(handler, 'get_sender_instance', autospec=True)
         receiver_instance_spy = mocker.patch.object(handler, 'get_receiver_instance', autospec=True)
-        mocker.patch('grizzly_common.async_message.sb.sleep', return_value=None)
+        mocker.patch('async_messaged.sb.sleep', return_value=None)
 
         request['context']['connection'] = 'sender'
 
@@ -869,12 +869,12 @@ class TestAsyncServiceBusHandler:
         assert handler._receiver_cache.get('topic:test-topic, subscription:test-subscription', None) is not None
 
     def test_request(self, mocker: MockerFixture, caplog: LogCaptureFixture) -> None:  # noqa: PLR0915
-        from grizzly_common.async_message.sb import handlers
+        from async_messaged.sb import handlers
 
         handler = AsyncServiceBusHandler(worker='asdf-asdf-asdf')
         sender_instance_mock = mocker.patch.object(handler, 'get_sender_instance')
         receiver_instance_mock = mocker.patch.object(handler, 'get_receiver_instance')
-        mocker.patch('grizzly_common.async_message.sb.perf_counter', side_effect=cycle([0, 11]))
+        mocker.patch('async_messaged.sb.perf_counter', side_effect=cycle([0, 11]))
 
         request: AsyncMessageRequest = {
             'action': 'SEND',
@@ -1030,7 +1030,7 @@ class TestAsyncServiceBusHandler:
         assert caplog.messages[-1] == 'connection unexpectedly closed, reconnecting'
 
     def test_request_expression(self, mocker: MockerFixture) -> None:  # noqa: PLR0915
-        from grizzly_common.async_message.sb import handlers
+        from async_messaged.sb import handlers
 
         handler = AsyncServiceBusHandler(worker='asdf-asdf-asdf')
         receiver_instance_mock = mocker.patch.object(handler, 'get_receiver_instance')
@@ -1159,7 +1159,7 @@ class TestAsyncServiceBusHandler:
         ]
 
         mocker.patch(
-            'grizzly_common.async_message.sb.perf_counter',
+            'async_messaged.sb.perf_counter',
             side_effect=[0.0, 5.0, 0.1, 0.5, 0, 11.0],
         )
 
@@ -1170,7 +1170,7 @@ class TestAsyncServiceBusHandler:
         receiver_instance_mock.reset_mock()
 
         mocker.patch(
-            'grizzly_common.async_message.sb.perf_counter',
+            'async_messaged.sb.perf_counter',
             return_value=0.0,
         )
 

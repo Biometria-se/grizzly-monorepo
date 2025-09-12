@@ -22,7 +22,7 @@ from test_framework.helpers import SOME
 if TYPE_CHECKING:  # pragma: no cover
     from _pytest.logging import LogCaptureFixture
     from _pytest.tmpdir import TempPathFactory
-    from grizzly_common.async_message import AsyncMessageRequest
+    from async_messaged import AsyncMessageRequest
 
     from test_framework.fixtures import BehaveFixture, GrizzlyFixture, MockerFixture
 

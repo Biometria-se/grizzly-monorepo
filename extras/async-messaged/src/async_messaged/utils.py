@@ -9,14 +9,14 @@ from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
 import zmq.green as zmq
+from grizzly_common.exceptions import StopScenario
 from zmq.error import Again as ZMQAgain
 
-from grizzly_common.async_message import (
+from async_messaged import (
     AsyncMessageError,
     AsyncMessageRequest,
     AsyncMessageResponse,
 )
-from grizzly_common.exceptions import StopScenario
 
 if TYPE_CHECKING:  # pragma: no cover
     from zmq import sugar as ztypes

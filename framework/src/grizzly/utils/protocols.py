@@ -12,10 +12,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, cast
 from urllib.parse import urlparse
 
+from async_messaged.utils import async_message_request
 from dateutil.parser import ParserError
 from dateutil.parser import parse as dateparser
 from gevent.ssl import SSLContext, create_default_context
-from grizzly_common.async_message.utils import async_message_request
 
 from grizzly.utils import _print_table
 
@@ -23,7 +23,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
     from http.cookiejar import CookieJar
 
-    from grizzly_common.async_message import AsyncMessageRequest, AsyncMessageResponse
+    from async_messaged import AsyncMessageRequest, AsyncMessageResponse
     from zmq import sugar as ztypes
 
     from grizzly.scenarios import GrizzlyScenario

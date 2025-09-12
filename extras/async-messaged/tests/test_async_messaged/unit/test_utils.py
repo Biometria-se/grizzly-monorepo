@@ -1,4 +1,4 @@
-"""Unit tests of grizzly_common.async_message.utils."""
+"""Unit tests of async_messaged.utils."""
 
 from __future__ import annotations
 
@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING
 
 import pytest
 import zmq.green as zmq
-from grizzly_common.async_message import AsyncMessageError, AsyncMessageRequest
-from grizzly_common.async_message.utils import async_message_request, tohex
+from async_messaged import AsyncMessageError, AsyncMessageRequest
+from async_messaged.utils import async_message_request, tohex
 from zmq.error import Again as ZMQAgain
 
 if TYPE_CHECKING:  # pragma: no cover
-    from test_common.fixtures import MockerFixture
+    from pytest_mock.plugin import MockerFixture
 
 
 class Test_tohex:
@@ -34,7 +34,7 @@ class Test_tohex:
 
 def test_async_message_request(mocker: MockerFixture) -> None:
     client_mock = mocker.MagicMock()
-    sleep_mock = mocker.patch('grizzly_common.async_message.utils.sleep', return_value=None)
+    sleep_mock = mocker.patch('async_messaged.utils.sleep', return_value=None)
 
     # no valid response
     client_mock.recv_json.side_effect = [ZMQAgain, None]

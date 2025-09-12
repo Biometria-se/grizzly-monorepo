@@ -1,4 +1,4 @@
-"""Unit test of grizzly_common.async_message.mq."""
+"""Unit test of async_messaged.mq."""
 
 from __future__ import annotations
 
@@ -14,13 +14,13 @@ except (ModuleNotFoundError, ImportError):
     from grizzly_common import dummy_pymqi as pymqi
 
 import pytest
-from grizzly_common.async_message import AsyncMessageError, AsyncMessageRequest
-from grizzly_common.async_message.mq import AsyncMessageQueueHandler
-from grizzly_common.async_message.mq.rfh2 import Rfh2Encoder
-from grizzly_common.async_message.utils import tohex
+from async_messaged import AsyncMessageError, AsyncMessageRequest
+from async_messaged.mq import AsyncMessageQueueHandler
+from async_messaged.mq.rfh2 import Rfh2Encoder
+from async_messaged.utils import tohex
 from grizzly_common.transformer import TransformerContentType, transformer
 
-from test_common.helpers import ANY
+from test_async_messaged.helpers import ANY
 
 if TYPE_CHECKING:  # pragma: no cover
     from pytest_mock.plugin import MockerFixture
@@ -37,7 +37,7 @@ def test_no_pymqi_dependencies() -> None:
             [
                 sys.executable,
                 '-c',
-                'import grizzly_common.async_message.mq as mq; print(f"{mq.pymqi.__name__=}"); mq.AsyncMessageQueueHandler(worker="asdf-asdf-asdf")',
+                'import async_messaged.mq as mq; print(f"{mq.pymqi.__name__=}"); mq.AsyncMessageQueueHandler(worker="asdf-asdf-asdf")',
             ],
             env=env,
             stderr=subprocess.STDOUT,
@@ -52,7 +52,7 @@ def test_no_pymqi_dependencies() -> None:
         [
             sys.executable,
             '-c',
-            'import grizzly_common.async_message.mq as mq; print(f"{mq.pymqi.__name__=}"); mq.AsyncMessageQueueHandler(worker="asdf-asdf-asdf")',
+            'import async_messaged.mq as mq; print(f"{mq.pymqi.__name__=}"); mq.AsyncMessageQueueHandler(worker="asdf-asdf-asdf")',
         ],
         env=env,
         stdout=subprocess.PIPE,
@@ -101,7 +101,7 @@ class TestAsyncMessageQueueHandler:
         assert pymqi_qmgr_disconnect_spy.call_count == 1
 
     def test_disconnect(self, mocker: MockerFixture) -> None:
-        from grizzly_common.async_message.mq import handlers
+        from async_messaged.mq import handlers
 
         handler = AsyncMessageQueueHandler(worker='asdf-asdf-asdf')
         handler.qmgr = pymqi.QueueManager(None)
@@ -157,7 +157,7 @@ class TestAsyncMessageQueueHandler:
             assert pymqi_queue_close_spy.call_count == 2
 
     def test_connect(self, mocker: MockerFixture) -> None:
-        from grizzly_common.async_message.mq import handlers
+        from async_messaged.mq import handlers
 
         handler = AsyncMessageQueueHandler(worker='asdf-asdf-asdf')
         handler.qmgr = pymqi.QueueManager(None)
@@ -690,7 +690,7 @@ class TestAsyncMessageQueueHandler:
             },
         }
 
-        from grizzly_common.async_message.mq import handlers
+        from async_messaged.mq import handlers
 
         # Match first message
         response = handlers[request['action']](handler, request)
@@ -901,7 +901,7 @@ class TestAsyncMessageQueueHandler:
             return request
 
         mocker.patch(
-            'grizzly_common.async_message.mq.AsyncMessageQueueHandler._request',
+            'async_messaged.mq.AsyncMessageQueueHandler._request',
             mocked_request,
         )
 
@@ -912,7 +912,7 @@ class TestAsyncMessageQueueHandler:
             'payload': None,
         }
 
-        from grizzly_common.async_message.mq import handlers
+        from async_messaged.mq import handlers
 
         with pytest.raises(AsyncMessageError, match='no payload'):
             handlers[request['action']](handler, request)
@@ -929,7 +929,7 @@ class TestAsyncMessageQueueHandler:
             return request
 
         mocker.patch(
-            'grizzly_common.async_message.mq.AsyncMessageQueueHandler._request',
+            'async_messaged.mq.AsyncMessageQueueHandler._request',
             mocked_request,
         )
 
@@ -940,7 +940,7 @@ class TestAsyncMessageQueueHandler:
             'payload': 'test',
         }
 
-        from grizzly_common.async_message.mq import handlers
+        from async_messaged.mq import handlers
 
         with pytest.raises(AsyncMessageError, match='payload not allowed'):
             handlers[request['action']](handler, request)
