@@ -1,0 +1,92 @@
+name: code quality
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+
+    outputs:
+      changes: ${{ steps.mapper.outputs.mapped_changes }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6.5.0
+        with:
+          version: "0.8.14"
+          python-version: "3.13"
+          enable-cache: true
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          base: "${{ vars.DEFAULT_BRANCH || 'main' }}"
+          filters: |
+            framework: 'framework/**'
+            common: 'common/**'
+            command-line-interface: 'command-line-interface/**'
+            editor-support: 'editor-support/**'
+            docs: 'docs/**'
+            extras/async-messaged: 'extras/async-messaged/**'
+
+      - name: map changed directories to packages
+        id: mapper
+        run: uv run ./extras/scripts/map-changes.py '${{ steps.filter.outputs.changes }}'
+
+  ruff:
+    needs: changes
+    runs-on: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [ubuntu-latest]
+        python-version: ["3.10"]  # , "3.13"]
+        changes: ${{ fromJSON(needs.changes.outputs.changes) }}
+        script: ['ruff check', 'ruff format']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6.5.0
+        with:
+          version: "0.8.14"
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+
+      - name: install dev dependencies
+        run: |
+          uv sync --locked -p ${{ matrix.python-version }} --only-dev --no-install-project --no-install-workspace
+
+      - name: "run ${{ matrix.script }} ${{ matrix.changes.directory }}"
+        run: |
+          uv run ${{ matrix.script }} ${{ matrix.changes.directory }}
+
+  mypy:
+    needs: changes
+    runs-on: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [ubuntu-latest]
+        python-version: ["3.10"] # , "3.13"]
+        changes: ${{ fromJSON(needs.changes.outputs.changes) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6.5.0
+        with:
+          version: "0.8.14"
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+
+      - name: "install ${{ matrix.changes.package }}"
+        run: |
+          uv sync --locked -p ${{ matrix.python-version }} --package ${{ matrix.changes.package }} --dev
+
+      - name: "run mypy in ${{ matrix.changes.directory }}"
+        run: |
+          uv run mypy ${{ matrix.changes.directory }}/
