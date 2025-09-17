@@ -6,7 +6,6 @@ import re
 import sys
 from dataclasses import dataclass
 from io import StringIO
-from json import dumps as jsondumps
 from json import loads as jsonloads
 from pathlib import Path
 from tempfile import NamedTemporaryFile

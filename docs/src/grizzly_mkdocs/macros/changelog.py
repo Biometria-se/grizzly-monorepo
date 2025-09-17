@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import re
-
 from mkdocs_macros.util import trace
 from packaging.version import Version
 

@@ -23,5 +23,11 @@ dependencies = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[dependency-groups]
+dev = [
+    "types-pyyaml>=6.0.12.20250822",
+    "types-requests>=2.32.4.20250809",
+]
+
 [project.entry-points."mkdocs.plugins"]
 grizzly-mkdocs = "grizzly_mkdocs:GrizzlyMkdocs"
