@@ -29,6 +29,7 @@ if sys.version_info >= (3, 11):
     from re._parser import SubPattern
     from re._parser import parse as sre_parse
 else:  # pragma: no cover
+    from abc import abstractmethod
     from sre_constants import (
         ANY,
         BRANCH,
@@ -39,8 +40,21 @@ else:  # pragma: no cover
     from sre_constants import (
         _NamedIntConstant as SreNamedIntConstant,
     )
-    from sre_parse import SubPattern
     from sre_parse import parse as sre_parse
+    from typing import Protocol
+
+    if TYPE_CHECKING:  # pragma: no cover
+        from collections.abc import Iterator
+
+    class SubPattern(Protocol):
+        """Tricking mypy into thinking SubPattern is iterable for py 3.10."""
+
+        @abstractmethod
+        def __iter__(self) -> Iterator[tuple[SreNamedIntConstant, int | tuple[int, int, list[tuple[SreNamedIntConstant, int]]]]]: ...
+
+        @abstractmethod
+        def __next__(self) -> tuple[SreNamedIntConstant, int | tuple[int, int, list[tuple[SreNamedIntConstant, int]]]]: ...
+
 
 SreParseTokens: TypeAlias = Union[
     list[
@@ -135,7 +149,7 @@ class RegexPermutationResolver:
         values: list[Generator[list[str], None, None]] = []
 
         for sub_token, sub_value in subpattern:  # type: ignore[attr-defined,unused-ignore]
-            options = self.handle_token(cast('SreNamedIntConstant', sub_token), cast('SreParseValue', sub_value))
+            options = self.handle_token(sub_token, cast('SreParseValue', sub_value))
 
             for x in range(minimum, maximum + 1):
                 joined = self.cartesian_join([options] * x)

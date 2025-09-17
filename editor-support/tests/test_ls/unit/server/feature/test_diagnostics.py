@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from itertools import product
 from typing import TYPE_CHECKING, Any
 
@@ -12,7 +11,6 @@ from pygls.workspace import TextDocument
 from test_ls.helpers import SOME
 
 if TYPE_CHECKING:
-    from _pytest.logging import LogCaptureFixture
 
     from test_ls.fixtures import LspFixture
 
