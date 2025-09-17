@@ -3,11 +3,8 @@
 from __future__ import annotations
 
 from abc import ABCMeta
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from uuid import UUID
-
-if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Callable, Generator
 
 
 def ANYUUID(version: int = 4) -> object:  # noqa: N802

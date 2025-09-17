@@ -11,7 +11,6 @@ from pygls.workspace import TextDocument
 from test_ls.helpers import SOME
 
 if TYPE_CHECKING:
-
     from test_ls.fixtures import LspFixture
 
 

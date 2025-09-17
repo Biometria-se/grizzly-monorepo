@@ -30,7 +30,6 @@ from azure.servicebus.management import (
     SqlRuleFilter,
     TopicProperties,
 )
-
 from grizzly_common.arguments import get_unsupported_arguments, parse_arguments
 from grizzly_common.azure.aad import AuthMethod, AzureAadCredential
 from grizzly_common.transformer import (

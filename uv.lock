@@ -1023,6 +1023,13 @@ mq = [
     { name = "grizzly-loadtester-extras-async-messaged", extra = ["mq"] },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "types-python-dateutil" },
+    { name = "types-pyyaml" },
+    { name = "types-requests" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "azure-iot-device", specifier = ">=2.14.0" },
@@ -1038,7 +1045,11 @@ requires-dist = [
 provides-extras = ["mq"]
 
 [package.metadata.requires-dev]
-dev = []
+dev = [
+    { name = "types-python-dateutil", specifier = ">=2.9.0.20250822" },
+    { name = "types-pyyaml", specifier = ">=6.0.12.20250822" },
+    { name = "types-requests", specifier = ">=2.32.4.20250809" },
+]
 
 [[package]]
 name = "grizzly-loadtester-cli"

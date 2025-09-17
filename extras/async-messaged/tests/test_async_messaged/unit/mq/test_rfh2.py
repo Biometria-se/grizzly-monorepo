@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import time
 import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 
 import pytest
 from async_messaged.mq import Rfh2Decoder, Rfh2Encoder
-from grizzly.types import ZoneInfo
 
 if TYPE_CHECKING:  # pragma: no cover
     from pytest_mock.plugin import MockerFixture
@@ -152,10 +151,10 @@ class TestRfh2Encoder:
 
         # test generating timestamp
         tstamp_before = str(round(time.time() * 1000))
-        datetime_before = datetime.fromtimestamp(int(tstamp_before) / 1000, tz=ZoneInfo('UTC'))
+        datetime_before = datetime.fromtimestamp(int(tstamp_before) / 1000, tz=timezone.utc)
         e = Rfh2Encoder(b'test payload', queue_name='OTHERQUEUE')
         generated_tstamp = e.name_values[80:93].decode('utf-8')
-        generated_datetime = datetime.fromtimestamp(int(generated_tstamp) / 1000, tz=ZoneInfo('UTC'))
+        generated_datetime = datetime.fromtimestamp(int(generated_tstamp) / 1000, tz=timezone.utc)
         assert generated_datetime >= datetime_before
         assert generated_datetime - timedelta(hours=1) < datetime_before
 
