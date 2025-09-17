@@ -151,6 +151,7 @@ ignore = [
 "editor-support/**/*.py" = ["D100", "D104", "G004", "TRY401"]
 "editor-support/src/grizzly_ls/__main__.py" = ["T100", "LOG015", "PLC0415"]
 "editor-support/tests/project/**" = ["ALL"]
+"extras/scripts/**/*.py" = ["D100"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 15

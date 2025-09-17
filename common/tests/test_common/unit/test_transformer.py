@@ -20,12 +20,44 @@ from grizzly_common.transformer import (
 )
 from lxml import etree as XML  # noqa: N812
 
-from test_common.helpers import JSON_EXAMPLE
-
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
 
     from pytest_mock import MockerFixture
+
+
+JSON_EXAMPLE = {
+    'glossary': {
+        'title': 'example glossary',
+        'GlossDiv': {
+            'title': 'S',
+            'GlossList': {
+                'GlossEntry': {
+                    'ID': 'SGML',
+                    'SortAs': 'SGML',
+                    'GlossTerm': 'Standard Generalized Markup Language',
+                    'Acronym': 'SGML',
+                    'Abbrev': 'ISO 8879:1986',
+                    'GlossDef': {
+                        'para': 'A meta-markup language, used to create markup languages such as DocBook.',
+                        'GlossSeeAlso': ['GML', 'XML'],
+                    },
+                    'GlossSee': 'markup',
+                    'Additional': [
+                        {
+                            'addtitle': 'test1',
+                            'addvalue': 'hello world',
+                        },
+                        {
+                            'addtitle': 'test2',
+                            'addvalue': 'good stuff',
+                        },
+                    ],
+                },
+            },
+        },
+    },
+}
 
 
 class TestTransformer:
