@@ -87,6 +87,10 @@ grizzly-loadtester-common = { workspace = true }
 grizzly-loadtester-extras-async-messaged = { workspace = true }
 
 [dependency-groups]
-dev = []
+dev = [
+    "types-python-dateutil>=2.9.0.20250822",
+    "types-pyyaml>=6.0.12.20250822",
+    "types-requests>=2.32.4.20250809",
+]
 
 
