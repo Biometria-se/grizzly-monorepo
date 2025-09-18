@@ -97,7 +97,6 @@ class TestGrizzlyLanguageServer:
                 words.get('keywords', []),
             )
             assert sorted(ls.keywords_any) == sorted(words.get('keywords_any', []))
-            assert sorted(ls.keywords_once) == sorted(words.get('keywords_once', []))
 
             assert isinstance(ls.logger, LogOutputChannelLogger)
             assert ls.logger.logger.name == 'GrizzlyLanguageServer'

@@ -198,12 +198,12 @@ def step_response_validate(context: Context, target: ResponseTarget, expression:
 
     Example:
     ```gherkin
-    And restart scenario on failure
+    When any task fail restart scenario on failure
     When response metadata "$.['content-type']" is not ".*application/json.*" fail request
     When response metadata "$.['x-test-command']" is "abort" fail request
     When response metadata "$.Authentication" is not "Bearer .*$" fail request
 
-    And stop user on failure
+    When any task fail stop user
     When response payload "$.measurement.id" is not "cpu[0-9]+" fail request
     When response payload "$.success" is "false" fail request
     When response payload "/root/measurement[@id="cpu"]/success/text()" is "'false'" fail request

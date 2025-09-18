@@ -1,2 +1,2 @@
-# will be copied from workspace root when building, so ignore if present
+# will be copied from workspace root by hatch metadata hook when building, so ignore if present
 README.md

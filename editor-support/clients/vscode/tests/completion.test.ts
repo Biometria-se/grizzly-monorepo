@@ -8,27 +8,29 @@ describe('Should do completion on keywords', () => {
         // empty document, only suggest "Feature"
         const position = new vscode.Position(0, 0);
         const actual = await testCompletion('', position);
+        const expected = ['Ability', 'Business Need', 'Feature'];
 
-        expect(actual.items.length).to.be.equal(1);
-        expect(actual.items[0].label).to.be.equal('Feature');
-        expect(actual.items[0].kind).to.be.equal(vscode.CompletionItemKind.Keyword);
+        expect(actual.items.length).to.be.equal(3);
+        expect(actual.items.map((item) => item.label)).to.deep.equal(expected);
+        expect(actual.items.map((item) => item.kind)).to.deep.equal(new Array(expected.length).fill(vscode.CompletionItemKind.Keyword));
 
-        await acceptAndAssertSuggestion(position, 'Feature: ');
+        await acceptAndAssertSuggestion(position, 'Ability: ');
     });
 
     it('Complete keywords, suggest second-level keywords', async () => {
         // only "Feature" present in document, suggest the two second-level keywords
         const position = new vscode.Position(1, 4);
         const actual = await testCompletion('Feature:\n\t', position);
+        const expected = ['Background', 'Example', 'Scenario', 'Scenario Outline', 'Scenario Template']
 
-        expect(actual.items.map((value) => value.label)).to.deep.equal(['Background', 'Scenario', 'Scenario Outline', 'Scenario Template']);
+        expect(actual.items.map((value) => value.label)).to.deep.equal(expected);
         expect(actual.items.map((value) => value.kind)).to.deep.equal(
-            new Array(4).fill(vscode.CompletionItemKind.Keyword)
+            new Array(expected.length).fill(vscode.CompletionItemKind.Keyword)
         );
         await acceptAndAssertSuggestion(position, '\tBackground: ');
     });
 
-    it('Complete keywords, only expect `Scenario`', async () => {
+    it('Complete keywords, only expect second-level keywords that has not been used', async () => {
         // "Background" present in document, which only occurs once, suggest only "Scenario"
         const content = `Feature:
     Background:
@@ -36,12 +38,11 @@ describe('Should do completion on keywords', () => {
 
         const position = new vscode.Position(2, 4);
         const actual = await testCompletion(content, position);
+        const expected = ['Example', 'Scenario', 'Scenario Outline', 'Scenario Template'];
 
-        expect(actual.items.map((value) => value.label)).to.deep.equal(['Scenario', 'Scenario Outline', 'Scenario Template']);
-        expect(actual.items.map((value) => value.kind)).to.deep.equal(
-            new Array(3).fill(vscode.CompletionItemKind.Keyword)
-        );
-        await acceptAndAssertSuggestion(position, '    Scenario: ');
+        expect(actual.items.map((value) => value.label)).to.deep.equal(expected);
+        expect(actual.items.map((value) => value.kind)).to.deep.equal(new Array(expected.length).fill(vscode.CompletionItemKind.Keyword));
+        await acceptAndAssertSuggestion(position, '    Example: ');
     });
 
     it('Complete keywords, all other keywords', async () => {
@@ -53,10 +54,10 @@ describe('Should do completion on keywords', () => {
 
         const position = new vscode.Position(3, 8);
         const actual = await testCompletion(content, position);
-
-        expect(actual.items.map((value) => value.label)).to.deep.equal([
+        const expected = [
             'And',
             'But',
+            'Example',
             'Examples',
             'Given',
             'Scenario',
@@ -65,9 +66,11 @@ describe('Should do completion on keywords', () => {
             'Scenarios',
             'Then',
             'When',
-        ]);
+        ]
+
+        expect(actual.items.map((value) => value.label)).to.deep.equal(expected);
         expect(actual.items.map((value) => value.kind)).to.deep.equal(
-            new Array(10).fill(vscode.CompletionItemKind.Keyword)
+            new Array(expected.length).fill(vscode.CompletionItemKind.Keyword)
         );
         expect(actual.items.map((value) => {
             if (value.insertText instanceof vscode.SnippetString) {
@@ -75,7 +78,7 @@ describe('Should do completion on keywords', () => {
             } else {
                 return value.insertText;
             }
-        })).to.deep.equal(['And ', 'But ', 'Examples: ', 'Given ', 'Scenario: ', 'Scenario Outline: ', 'Scenario Template: ', 'Scenarios: ', 'Then ', 'When ']);
+        })).to.deep.equal(['And ', 'But ', 'Example: ', 'Examples: ', 'Given ', 'Scenario: ', 'Scenario Outline: ', 'Scenario Template: ', 'Scenarios: ', 'Then ', 'When ']);
 
         await acceptAndAssertSuggestion(position, '        And ');
     });
@@ -219,52 +222,26 @@ describe('Should do completion on steps', () => {
         const position = new vscode.Position(3, 13);
         const actual = await testCompletion(content, position);
         const expected = [
-            'a task fails restart scenario',
-            'a task fails restart iteration',
-            'a task fails retry task',
-            'a task fails stop user',
-            'a task fails continue',
-            'a task fails with "" restart scenario',
-            'a task fails with "" restart iteration',
-            'a task fails with "" retry task',
-            'a task fails with "" stop user',
-            'a task fails with "" continue',
-            'condition "" with name "" is true, execute these tasks',
-            'fail ratio is greater than ""% fail scenario',
-            'average response time is greater than "" milliseconds fail scenario',
-            'response time percentile ""% is greater than "" milliseconds fail scenario',
-            'response payload "" is not "" fail request',
-            'response payload "" is "" fail request',
-            'response metadata "" is not "" fail request',
-            'response metadata "" is "" fail request',
-        ];
-
-        actual.items.forEach(async (item) => {
-            expect(item.kind).to.be.equal(vscode.CompletionItemKind.Function);
-            expect(expected).to.contain(item.label);
-        });
-
-        await acceptAndAssertSuggestion(position, '        When a task fails continue');
-    });
-
-    it('Complete steps, keyword `When` step `<null>`, no space', async () => {
-        const content = `Feature:
-    Background:
-    Scenario:
-        When`;
-        const position = new vscode.Position(3, 12);
-        const actual = await testCompletion(content, position);
-        const expected = [
-            'a task fails restart scenario',
-            'a task fails restart iteration',
-            'a task fails retry task',
-            'a task fails stop user',
-            'a task fails continue',
-            'a task fails with "" restart scenario',
-            'a task fails with "" restart iteration',
-            'a task fails with "" retry task',
-            'a task fails with "" stop user',
-            'a task fails with "" continue',
+            'any task fail restart scenario',
+            'any task fail restart iteration',
+            'any task fail retry task',
+            'any task fail stop user',
+            'any task fail continue',
+            'any task fail with "" restart scenario',
+            'any task fail with "" restart iteration',
+            'any task fail with "" retry task',
+            'any task fail with "" stop user',
+            'any task fail with "" continue',
+            'the task fails restart scenario',
+            'the task fails restart iteration',
+            'the task fails retry task',
+            'the task fails stop user',
+            'the task fails continue',
+            'the task fails with "" restart scenario',
+            'the task fails with "" restart iteration',
+            'the task fails with "" retry task',
+            'the task fails with "" stop user',
+            'the task fails with "" continue',
             'condition "" with name "" is true, execute these tasks',
             'fail ratio is greater than ""% fail scenario',
             'average response time is greater than "" milliseconds fail scenario',
@@ -280,7 +257,53 @@ describe('Should do completion on steps', () => {
             expect(expected).to.contain(item.label);
         });
 
-        await acceptAndAssertSuggestion(position, '        When a task fails continue');
+        await acceptAndAssertSuggestion(position, '        When any task fail continue');
+    });
+
+    it('Complete steps, keyword `When` step `<null>`, no space', async () => {
+        const content = `Feature:
+    Background:
+    Scenario:
+        When`;
+        const position = new vscode.Position(3, 12);
+        const actual = await testCompletion(content, position);
+        const expected = [
+            'any task fail restart scenario',
+            'any task fail restart iteration',
+            'any task fail retry task',
+            'any task fail stop user',
+            'any task fail continue',
+            'any task fail with "" restart scenario',
+            'any task fail with "" restart iteration',
+            'any task fail with "" retry task',
+            'any task fail with "" stop user',
+            'any task fail with "" continue',
+            'the task fails restart scenario',
+            'the task fails restart iteration',
+            'the task fails retry task',
+            'the task fails stop user',
+            'the task fails continue',
+            'the task fails with "" restart scenario',
+            'the task fails with "" restart iteration',
+            'the task fails with "" retry task',
+            'the task fails with "" stop user',
+            'the task fails with "" continue',
+            'condition "" with name "" is true, execute these tasks',
+            'fail ratio is greater than ""% fail scenario',
+            'average response time is greater than "" milliseconds fail scenario',
+            'response time percentile ""% is greater than "" milliseconds fail scenario',
+            'response payload "" is not "" fail request',
+            'response payload "" is "" fail request',
+            'response metadata "" is not "" fail request',
+            'response metadata "" is "" fail request',
+        ];
+
+        actual.items.forEach((item) => {
+            expect(item.kind).to.be.equal(vscode.CompletionItemKind.Function);
+            expect(expected).to.contain(item.label);
+        });
+
+        await acceptAndAssertSuggestion(position, '        When any task fail continue');
     });
 
     it('Complete steps, keyword `When` step `response `', async () => {

@@ -173,7 +173,7 @@ def main() -> int:
         server.add_startup_error_message(err_msg)
 
     if not args.socket:
-        server.start_io(sys.stdin, sys.stdout)
+        server.start_io(sys.stdin.buffer, sys.stdout.buffer)  # type: ignore[arg-type]
     else:
         server.start_tcp('127.0.0.1', args.socket_port)
 

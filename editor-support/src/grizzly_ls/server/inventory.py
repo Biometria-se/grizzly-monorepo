@@ -227,14 +227,6 @@ def compile_keyword_inventory(ls: GrizzlyLanguageServer) -> None:
         }
     )
 
-    # localized keywords that should only appear once
-    ls.__class__.keywords_once = list(
-        {
-            *ls.localizations.get('feature', []),
-            *ls.localizations.get('background', []),
-        }
-    )
-
     ls.__class__.keywords_headers = []
     ls.__class__.keywords_all = []
     for key, values in ls.localizations.items():

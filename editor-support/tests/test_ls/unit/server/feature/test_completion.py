@@ -67,8 +67,6 @@ def test_complete_keyword(lsp_fixture: LspFixture) -> None:
         )
     ) == sorted(
         [
-            'Ability',
-            'Business Need',
             'Background',
             'Example',
             'Scenario',
@@ -91,10 +89,8 @@ Scenario:
         )
     ) == sorted(
         [
-            'Ability',
             'And',
             'Background',
-            'Business Need',
             'But',
             'Example',
             'Examples',
@@ -124,9 +120,7 @@ Scenario:
         )
     ) == sorted(
         [
-            'Ability',
             'And',
-            'Business Need',
             'But',
             'Example',
             'Examples',

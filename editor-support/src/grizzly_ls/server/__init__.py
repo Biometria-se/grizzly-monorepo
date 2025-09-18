@@ -70,7 +70,6 @@ class GrizzlyLanguageServer(LanguageServer):
     behave_steps: dict[str, list[ParseMatcher]]
     steps: dict[str, list[Step]]
     keywords: list[str]
-    keywords_once: ClassVar[list[str]] = []
     keywords_any: ClassVar[list[str]] = []
     keywords_headers: ClassVar[list[str]] = []
     keywords_all: ClassVar[list[str]] = []

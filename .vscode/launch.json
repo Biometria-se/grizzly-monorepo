@@ -14,7 +14,10 @@
       "outFiles": [
         "${workspaceRoot}/editor-support/clients/vscode/out/**/*.js"
       ],
-      "preLaunchTask": "debug client"
+      "preLaunchTask": "debug client",
+      "env": {
+        "VIRTUAL_ENV": "${workspaceFolder}/.venv"
+      },
     },
     {
       // Gets launched when clicking "Debug Test" in the Testing view

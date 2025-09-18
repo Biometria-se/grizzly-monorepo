@@ -6,7 +6,7 @@
       "script": "compile",
       "group": "build",
       "options": {
-        "cwd": "${workspaceFolder}/editor-support/client/vscode"
+        "cwd": "${workspaceFolder}/editor-support/clients/vscode"
       },
       "presentation": {
         "panel": "dedicated",
@@ -26,7 +26,7 @@
         "isDefault": true
       },
       "options": {
-        "cwd": "${workspaceFolder}/editor-support/client/vscode"
+        "cwd": "${workspaceFolder}/editor-support/clients/vscode"
       },
       "presentation": {
         "panel": "dedicated",

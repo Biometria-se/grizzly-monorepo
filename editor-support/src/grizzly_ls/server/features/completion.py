@@ -111,9 +111,12 @@ def complete_keyword(
 
         keywords = scenario_keywords if not any(scenario_keyword in text_document.source for scenario_keyword in scenario_keywords) else ls.keywords.copy()
 
-        for keyword_once in ls.keywords_once:
-            if f'{keyword_once}:' not in text_document.source:
-                keywords.append(keyword_once)
+        for key in ['feature', 'background']:
+            keys = ls.localizations.get(key, [])
+            if any(f'{keyword_once}:' in text_document.source for keyword_once in keys):
+                continue
+
+            keywords.extend(keys)
 
         # check for partial matches
         if keyword is not None:

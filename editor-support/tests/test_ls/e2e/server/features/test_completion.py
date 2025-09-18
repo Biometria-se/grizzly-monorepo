@@ -81,9 +81,7 @@ def test_completion_keywords(lsp_fixture: LspFixture) -> None:
     assert response is not None
     assert not response.is_incomplete
     assert filter_keyword_properties(response.items) == [
-        {'label': 'Ability', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'Ability: '},
         {'label': 'Background', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'Background: '},
-        {'label': 'Business Need', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'Business Need: '},
         {'label': 'But', 'kind': lsp.CompletionItemKind.Keyword, 'text_edit': 'But '},
     ]
 

@@ -287,7 +287,7 @@ def test_main(mocker: MockerFixture) -> None:
 
     main()
 
-    server_start_io_mock.assert_called_once_with(sys.stdin, sys.stdout)
+    server_start_io_mock.assert_called_once_with(sys.stdin.buffer, sys.stdout.buffer)
     server_start_tcp_mock.assert_not_called()
     server_start_io_mock.reset_mock()
 
