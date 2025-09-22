@@ -4,6 +4,8 @@ on:
   pull_request:
     branches: [ main ]
 
+  workflow_dispatch:
+
 jobs:
   changes:
     runs-on: ubuntu-latest
@@ -29,7 +31,8 @@ jobs:
 
       - name: map changed directories to packages
         id: mapper
-        run: uv run ./extras/scripts/map-changes.py --changes '${{ steps.filter.outputs.changes }}' --branch '${{ vars.DEFAULT_BRANCH || 'main' }}'
+        run: |
+          uv run ./extras/scripts/map-changes.py --changes '${{ steps.filter.outputs.changes }}' --force ${{ github.event_name == 'workflow_dispatch' }}
 
   uv:
     needs: changes
@@ -38,10 +41,17 @@ jobs:
       fail-fast: false
       matrix:
         image: [ubuntu-latest]
-        python-version: ["3.10"]  # , "3.13"]
+        python-version: ["3.10", "3.13"]
         changes: ${{ fromJSON(needs.changes.outputs.changes_uv) }}
 
     steps:
+      - name: timezone
+        uses: MathRobin/timezone-action@v1.1
+        with:
+          timezoneLinux: 'Europe/Stockholm'
+          timezoneWindows: 'W. Europe Standard Time'
+          timezoneMacos: 'Europe/Stockholm'
+
       - uses: actions/checkout@v4
 
       - uses: astral-sh/setup-uv@v6.5.0
@@ -52,13 +62,73 @@ jobs:
 
       - name: "install ${{ matrix.changes.package }} dev dependencies"
         run: |
+          echo "!! datetime=$(date)"
           uv sync --locked -p ${{ matrix.python-version }} --inexact --only-dev --all-packages --no-install-project --no-install-workspace
           uv sync --locked -p ${{ matrix.python-version }} --inexact --package ${{ matrix.changes.package }}
 
-      - name: "run ${{ matrix.changes.label }}"
+      - name: "run lint"
         working-directory: ${{ matrix.changes.directory }}
         run: |
-          uv run ${{ matrix.changes.script }}
+          uv run ruff check .
+
+      - name: "run format"
+        working-directory: ${{ matrix.changes.directory }}
+        run: |
+          uv run ruff format .
+
+      - name: "check types"
+        working-directory: ${{ matrix.changes.directory }}
+        run: |
+          uv run mypy .
+
+      - name: "run unit tests"
+        if: matrix.changes.tests.unit != ''
+        working-directory: ${{ matrix.changes.directory }}
+        run: |
+          uv run pytest ${{ matrix.changes.tests.unit }}
+
+      - name: "check coverage"
+        if: matrix.changes.tests.unit != ''
+        working-directory: ${{ matrix.changes.directory }}
+        run: |
+          uv run coverage report -i --omit=tests/**/* --fail-under=80
+
+      - name: "run e2e test"
+        id: e2e_local
+        if: matrix.changes.tests.e2e.local != ''
+        working-directory: ${{ matrix.changes.directory }}
+        run: |
+          uv run pytest ${{ matrix.changes.tests.e2e.local }}
+
+      - name: "e2e test log"
+        if: matrix.changes.tests.e2e.local != '' && steps.e2e_local.outcome == 'failure'
+        continue-on-error: true
+        run: |
+          cat /tmp/grizzly.log
+
+      - name: install docker-compose
+        id: install-docker-compose
+        if: matrix.changes.tests.e2e.dist != ''
+        uses: KengoTODA/actions-setup-docker-compose@main
+        with:
+          version: '2.39.3'
+
+      - name: "run e2e distributed test"
+        id: e2e_dist
+        if: matrix.changes.tests.e2e.dist != ''
+        working-directory: ${{ matrix.changes.directory }}
+        env:
+          E2E_RUN_MODE: dist
+          SSH_AUTH_SOCK: /tmp/ssh_auth_sock
+        run: |
+          ssh-agent -a /tmp/ssh_auth_sock
+          uv run pytest ${{ matrix.changes.e2e.dist }}
+
+      - name: "e2e test log"
+        if: matrix.changes.tests.e2e.dist != '' && steps.e2e_dist.outcome == 'failure'
+        continue-on-error: true
+        run: |
+          cat /tmp/grizzly.log
 
   npm:
     needs: changes
@@ -67,7 +137,7 @@ jobs:
       fail-fast: false
       matrix:
         image: [ubuntu-latest]
-        python-version: ["3.10"] # , "3.13"]
+        python-version: ["3.10"]
         changes: ${{ fromJSON(needs.changes.outputs.changes_npm) }}
 
     steps:
@@ -94,26 +164,30 @@ jobs:
         run: |
           npm install
 
-      - name: "run ${{ matrix.changes.label }}"
+      - name: "lint"
+        working-directory: ${{ matrix.changes.directory }}
+        run: |
+          npm run lint
+
+      - name: "tests"
         uses: mgor/setup-xvfb@v1
         env:
           VERBOSE: true
           VIRTUAL_ENV: ./.venv
+        if: vars.DEFAULT_BRANCH || 'main' != 'HEAD'
         with:
           run: |
-            npm run ${{ matrix.changes.script }}
+            npm run tests
           working-directory: ${{ matrix.changes.directory }}
 
       - name: server logs
-        if: always()
+        if: always() && matrix.changes.script == 'tests'
         continue-on-error: true
         working-directory: "${{ matrix.changes.directory }}/../../"
         run: |
           cat tests/project/grizzly-ls.log || true
 
       - name: "package ${{ matrix.changes.package }}"
-        id: test-package
-        if: always()
         working-directory: ${{ matrix.changes.directory }}
         run: |
           npx @vscode/vsce package

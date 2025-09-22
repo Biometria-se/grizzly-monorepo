@@ -2,7 +2,9 @@
 #
 # /// script
 # requires-python = ">=3.13"
-# dependencies = []
+# dependencies = [
+#    "pyyaml>=6.0.2",
+# ]
 # ///
 
 
@@ -11,19 +13,32 @@ import json
 import sys
 from contextlib import suppress
 from dataclasses import asdict, dataclass
+from operator import itemgetter
 from os import environ
 from pathlib import Path
-from typing import Any, Literal, TypedDict
+from typing import Any, TypedDict
 
 import tomllib
+import yaml
+
+
+@dataclass(eq=True, frozen=True)
+class ChangeE2eTests:
+    local: str
+    dist: str
+
+
+@dataclass(eq=True, frozen=True)
+class ChangeTests:
+    unit: str
+    e2e: ChangeE2eTests
 
 
 @dataclass(eq=True, frozen=True)
 class Change:
     directory: str
     package: str
-    script: str
-    label: str
+    tests: ChangeTests
 
 
 class Changes(TypedDict):
@@ -31,15 +46,41 @@ class Changes(TypedDict):
     uv: set[Change]
 
 
-# @TODO: uv and npm should have seperate jobs, hence seperate output variables
-# @TODO: check client-vscode job https://github.com/Biometria-se/grizzly-lsp/blob/main/.github/workflows/code-quality.yaml
+def _create_python_change(directory: str, package: str) -> Change:
+    directory_path = Path(directory)
+
+    try:
+        test_directory = next(iter([test_base for test_base in Path.joinpath(directory_path, 'tests').glob('test_*') if test_base.is_dir()]))
+    except StopIteration:  # no tests and/or tests/test_ directories, ergo: no tests
+        return Change(directory=directory, package=package, tests=ChangeTests(unit='', e2e=ChangeE2eTests(local='', dist='')))
+
+    test_unit_directory = Path.joinpath(test_directory, 'unit')
+    test_e2e_directory = Path.joinpath(test_directory, 'e2e')
+
+    args_unit: str = ''
+    args_e2e: str = ''
+    args_e2e_dist: str = ''
+
+    if test_unit_directory.exists() and test_e2e_directory.exists():
+        args_unit = f'{test_directory.relative_to(directory_path).as_posix()} --ignore={test_e2e_directory.relative_to(directory_path).as_posix()}'
+        args_e2e = f'{test_directory.relative_to(directory_path).as_posix()} --ignore={test_unit_directory.relative_to(directory_path).as_posix()}'
+
+        if package == 'grizzly-loadtester':
+            args_e2e_dist = f'{test_directory.relative_to(directory_path).as_posix()} --ignore={test_unit_directory.relative_to(directory_path).as_posix()}'
+    else:
+        args_unit = f'{test_directory.relative_to(directory_path).as_posix()}'
+
+    tests = ChangeTests(unit=args_unit, e2e=ChangeE2eTests(local=args_e2e, dist=args_e2e_dist))
+
+    return Change(directory=directory, package=package, tests=tests)
 
 
 def python_package(directory: str, uv_lock_package: list[dict[str, Any]]) -> set[Change]:
-    scripts: list[str] = ['ruff check .', 'ruff format .', 'mypy .']
     changes: set[Change] = set()
 
-    pyproject_file = Path(directory) / 'pyproject.toml'
+    directory_path = Path(directory)
+    pyproject_file = directory_path / 'pyproject.toml'
+
     if not pyproject_file.exists():
         return changes
 
@@ -49,9 +90,7 @@ def python_package(directory: str, uv_lock_package: list[dict[str, Any]]) -> set
 
         package = project.get('name', None)
 
-        for script in scripts:
-            label = ' '.join(script.split(' ')[:-1])
-            changes.add(Change(directory=directory, package=package, script=script, label=label))
+        changes.add(_create_python_change(directory, package))
 
         # workspace packages that has dependencies on this package
         for value in uv_lock_package:
@@ -61,14 +100,12 @@ def python_package(directory: str, uv_lock_package: list[dict[str, Any]]) -> set
             reverse_package: str = value['name']
             reverse_directory: str = value['source']['editable']
 
-            for script in scripts:
-                label = ' '.join(script.split(' ')[:-1])
-                changes.add(Change(directory=reverse_directory, package=reverse_package, script=script, label=label))
+            changes.add(_create_python_change(reverse_directory, reverse_package))
 
     return changes
 
 
-def node_package(directory: str, branch: str) -> set[Change]:
+def node_package(directory: str) -> set[Change]:
     changes: set[Change] = set()
 
     package_json_file = Path(directory) / 'package.json'
@@ -77,13 +114,12 @@ def node_package(directory: str, branch: str) -> set[Change]:
 
     with package_json_file.open('r') as fd:
         package_json = json.loads(fd.read())
-        package_json_scripts = package_json.get('scripts', {})
+        package_scripts = package_json.get('scripts', {})
 
-        for script in ['lint', 'types', 'tests']:
-            if script not in package_json_scripts or (script == 'tests' and branch == 'HEAD'):
-                continue
+        args_unit: str = 'tests' if 'tests' in package_scripts else ''
+        args_e2e: str = 'e2e-tests' if 'e2e-tests' in package_scripts else ''
 
-            changes.add(Change(directory=directory, package=package_json['name'], script=script, label=script))
+        changes.add(Change(directory=directory, package=package_json['name'], tests=ChangeTests(args_unit, e2e=ChangeE2eTests(local=args_e2e, dist=''))))
 
     return changes
 
@@ -91,15 +127,21 @@ def node_package(directory: str, branch: str) -> set[Change]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--changes', required=True, type=str, help='JSON string of list of directories that had changes')
-    parser.add_argument('--branch', required=True, type=str, help='branch where changes has been detected')
+    parser.add_argument('--force', required=True, type=str, help='Force run on all packages')
 
     args = parser.parse_args()
 
-    try:
-        workflow_input = json.loads(args.changes)
-    except json.JSONDecodeError:
-        print(f'invalid json in --changes: "{args.changed_projects}"', file=sys.stderr)
-        return 1
+    if args.force == 'true':
+        change_filters_file = Path.joinpath(Path(__file__).parent.parent.parent, '.github', 'change-filters.yaml')
+        with change_filters_file.open('r') as fd:
+            change_filters = yaml.safe_load(fd)
+            workflow_input = list(change_filters.keys())
+    else:
+        try:
+            workflow_input = json.loads(args.changes)
+        except json.JSONDecodeError:
+            print(f'invalid json in --changes: "{args.changed_projects}"', file=sys.stderr)
+            return 1
 
     changes: Changes = {'uv': set(), 'npm': set()}
     uv_lock_file = (Path(__file__).parent / '..' / '..' / 'uv.lock').resolve()
@@ -110,14 +152,14 @@ def main() -> int:
 
         for directory in workflow_input:
             changes['uv'].update(python_package(directory, uv_lock_package))
-            changes['npm'].update(node_package(directory, args.branch))
+            changes['npm'].update(node_package(directory))
 
         if len(changes) < 1:
             print('no changes detected in known locations', file=sys.stderr)
             return 1
 
-    changes_npm = json.dumps([asdict(change) for change in changes['npm']])
-    changes_uv = json.dumps([asdict(change) for change in changes['uv']])
+    changes_npm = json.dumps(sorted([asdict(change) for change in changes['npm']], key=itemgetter('package')))
+    changes_uv = json.dumps(sorted([asdict(change) for change in changes['uv']], key=itemgetter('package')))
 
     print(f'detected changes:\nuv={changes_uv}\nnpm={changes_npm}')
 

@@ -1066,6 +1066,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "grizzly-loadtester" },
+    { name = "pip" },
     { name = "requests-mock" },
 ]
 
@@ -1082,6 +1083,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "grizzly-loadtester", editable = "framework" },
+    { name = "pip", specifier = ">=25.2" },
     { name = "requests-mock", specifier = ">=1.12.1" },
 ]
 
