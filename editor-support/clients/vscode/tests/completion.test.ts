@@ -21,12 +21,10 @@ describe('Should do completion on keywords', () => {
         // only "Feature" present in document, suggest the two second-level keywords
         const position = new vscode.Position(1, 4);
         const actual = await testCompletion('Feature:\n\t', position);
-        const expected = ['Background', 'Example', 'Scenario', 'Scenario Outline', 'Scenario Template']
+        const expected = ['Background', 'Example', 'Scenario', 'Scenario Outline', 'Scenario Template'];
 
         expect(actual.items.map((value) => value.label)).to.deep.equal(expected);
-        expect(actual.items.map((value) => value.kind)).to.deep.equal(
-            new Array(expected.length).fill(vscode.CompletionItemKind.Keyword)
-        );
+        expect(actual.items.map((value) => value.kind)).to.deep.equal(new Array(expected.length).fill(vscode.CompletionItemKind.Keyword));
         await acceptAndAssertSuggestion(position, '\tBackground: ');
     });
 
@@ -66,12 +64,10 @@ describe('Should do completion on keywords', () => {
             'Scenarios',
             'Then',
             'When',
-        ]
+        ];
 
         expect(actual.items.map((value) => value.label)).to.deep.equal(expected);
-        expect(actual.items.map((value) => value.kind)).to.deep.equal(
-            new Array(expected.length).fill(vscode.CompletionItemKind.Keyword)
-        );
+        expect(actual.items.map((value) => value.kind)).to.deep.equal(new Array(expected.length).fill(vscode.CompletionItemKind.Keyword));
         expect(actual.items.map((value) => {
             if (value.insertText instanceof vscode.SnippetString) {
                 return value.insertText.value;

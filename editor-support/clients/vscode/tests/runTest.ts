@@ -66,9 +66,13 @@ async function installExtension(vscodeExecutablePath: string, extensionId: strin
 
 async function main() {
     try {
+        const extensionTestsPath = path.resolve(__dirname, './index');
+        const testWorkspace: string = path.resolve(__dirname, '../../../../tests/project');
+        console.log(`dirname=${__dirname}, extenstionTestsPath=${extensionTestsPath}, testWorkspace=${testWorkspace}`);
 
         const vscodeExecutablePath = await downloadAndUnzipVSCode();
-        await runVSCodeCommand(['--install-extension', 'ms-python.python', '--force']);
+
+        await runVSCodeCommand(['--install-extension', 'ms-python.python', '--force', '--verbose']);
 
         const extensionDevelopmentPathExtra = await installExtension(vscodeExecutablePath, 'ms-python.python');
 
@@ -78,9 +82,6 @@ async function main() {
 
         // The path to test runner
         // Passed to --extensionTestsPath
-        const extensionTestsPath = path.resolve(__dirname, './index');
-
-        const testWorkspace: string = path.resolve(__dirname, '../../../../tests/project');
 
         const argv = process.argv.slice(2);
 
@@ -91,7 +92,7 @@ async function main() {
             vscodeExecutablePath,
             extensionDevelopmentPath,
             extensionTestsPath,
-            launchArgs: ['--disable-chromium-sandbox', testWorkspace],
+            launchArgs: ['--verbose', '--disable-chromium-sandbox', testWorkspace],
         });
         process.exit(0);
     } catch (err) {

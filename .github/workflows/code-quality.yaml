@@ -9,7 +9,8 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      changes: ${{ steps.mapper.outputs.mapped_changes }}
+      changes_uv: ${{ steps.mapper.outputs.changes_uv }}
+      changes_npm: ${{ steps.mapper.outputs.changes_npm }}
 
     steps:
       - uses: actions/checkout@v4
@@ -24,19 +25,13 @@ jobs:
         id: filter
         with:
           base: "${{ vars.DEFAULT_BRANCH || 'main' }}"
-          filters: |
-            framework: 'framework/**'
-            common: 'common/**'
-            command-line-interface: 'command-line-interface/**'
-            editor-support: 'editor-support/**'
-            docs: 'docs/**'
-            extras/async-messaged: 'extras/async-messaged/**'
+          filters: .github/change-filters.yaml
 
       - name: map changed directories to packages
         id: mapper
-        run: uv run ./extras/scripts/map-changes.py '${{ steps.filter.outputs.changes }}'
+        run: uv run ./extras/scripts/map-changes.py --changes '${{ steps.filter.outputs.changes }}' --branch '${{ vars.DEFAULT_BRANCH || 'main' }}'
 
-  ruff:
+  uv:
     needs: changes
     runs-on: ${{ matrix.image }}
     strategy:
@@ -44,8 +39,7 @@ jobs:
       matrix:
         image: [ubuntu-latest]
         python-version: ["3.10"]  # , "3.13"]
-        changes: ${{ fromJSON(needs.changes.outputs.changes) }}
-        script: ['ruff check', 'ruff format']
+        changes: ${{ fromJSON(needs.changes.outputs.changes_uv) }}
 
     steps:
       - uses: actions/checkout@v4
@@ -56,15 +50,17 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
 
-      - name: install dev dependencies
+      - name: "install ${{ matrix.changes.package }} dev dependencies"
         run: |
-          uv sync --locked -p ${{ matrix.python-version }} --only-dev --no-install-project --no-install-workspace
+          uv sync --locked -p ${{ matrix.python-version }} --inexact --only-dev --all-packages --no-install-project --no-install-workspace
+          uv sync --locked -p ${{ matrix.python-version }} --inexact --package ${{ matrix.changes.package }}
 
-      - name: "run ${{ matrix.script }} ${{ matrix.changes.directory }}"
+      - name: "run ${{ matrix.changes.label }}"
+        working-directory: ${{ matrix.changes.directory }}
         run: |
-          uv run ${{ matrix.script }} ${{ matrix.changes.directory }}
+          uv run ${{ matrix.changes.script }}
 
-  mypy:
+  npm:
     needs: changes
     runs-on: ${{ matrix.image }}
     strategy:
@@ -72,7 +68,7 @@ jobs:
       matrix:
         image: [ubuntu-latest]
         python-version: ["3.10"] # , "3.13"]
-        changes: ${{ fromJSON(needs.changes.outputs.changes) }}
+        changes: ${{ fromJSON(needs.changes.outputs.changes_npm) }}
 
     steps:
       - uses: actions/checkout@v4
@@ -83,10 +79,42 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
 
-      - name: "install ${{ matrix.changes.package }}"
-        run: |
-          uv sync --locked -p ${{ matrix.python-version }} --package ${{ matrix.changes.package }} --dev
+      - uses: actions/setup-node@v5
+        with:
+          cache: 'npm'
+          node-version: 24
+          cache-dependency-path: "${{ matrix.changes.directory }}/package-lock.json"
 
-      - name: "run mypy in ${{ matrix.changes.directory }}"
+      - name: "install grizzly-ls"
         run: |
-          uv run mypy ${{ matrix.changes.directory }}/
+            uv sync --locked -p ${{ matrix.python-version }} --package grizzly-loadtester-ls --dev --no-install-workspace --no-install-project
+
+      - name: "install ${{ matrix.changes.package }} dev dependencies"
+        working-directory: ${{ matrix.changes.directory }}
+        run: |
+          npm install
+
+      - name: "run ${{ matrix.changes.label }}"
+        uses: mgor/setup-xvfb@v1
+        env:
+          VERBOSE: true
+          VIRTUAL_ENV: ./.venv
+        with:
+          run: |
+            npm run ${{ matrix.changes.script }}
+          working-directory: ${{ matrix.changes.directory }}
+
+      - name: server logs
+        if: always()
+        continue-on-error: true
+        working-directory: "${{ matrix.changes.directory }}/../../"
+        run: |
+          cat tests/project/grizzly-ls.log || true
+
+      - name: "package ${{ matrix.changes.package }}"
+        id: test-package
+        if: always()
+        working-directory: ${{ matrix.changes.directory }}
+        run: |
+          npx @vscode/vsce package
+

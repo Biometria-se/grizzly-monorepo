@@ -178,16 +178,16 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build-base -- --minify",
+    "vscode:prepublish": "cp ../../../LICENSE.md . && npm run build-base -- --minify",
     "build-base": "esbuild ./src/extension.ts --bundle --outfile=out/src/extension.js --external:vscode --format=cjs --platform=node",
     "build": "npm run build-base -- --sourcemap",
     "watch": "npm run build-base -- --sourcemap --watch",
     "tsc-watch": "tsc -b -w",
     "compile": "tsc -b",
-    "lint": "eslint src/ --ext .ts,.tsx",
-    "lint-fix": "eslint src/ --ext .ts,.tsx --fix",
-    "pretest": "npm run compile",
-    "test": "node out/tests/runTest",
+    "lint": "eslint src/ tests/ --ext .ts,.tsx",
+    "lint-fix": "eslint src/ tests/ --ext .ts,.tsx --fix",
+    "pretests": "npm run compile",
+    "tests": "node out/tests/runTest",
     "licenses": "npm-license-crawler --noColor --production --json"
   },
   "dependencies": {
