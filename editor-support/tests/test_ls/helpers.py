@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+import os
+import stat
+import sys
 from abc import ABCMeta
 from enum import Enum
+from pathlib import Path
+from shutil import rmtree
 from typing import TYPE_CHECKING, Any
 
 import parse
@@ -9,6 +14,9 @@ from grizzly.types import MessageDirection
 from grizzly_common.text import PermutationEnum, permutation
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from types import TracebackType
+
     from lsprotocol.types import CompletionItem, CompletionItemKind
 
 
@@ -96,6 +104,40 @@ def parse_enum_indirect(text: str) -> MessageDirection:
     return MessageDirection.from_string(text)
 
 
+def ANY(*cls: type, message: str | None = None) -> object:  # noqa: N802
+    """Compare equal to everything, as long as it is of the same type."""
+
+    class WrappedAny(metaclass=ABCMeta):  # noqa: B024
+        def __eq__(self, other: object) -> bool:
+            if len(cls) < 1:
+                return True
+
+            return isinstance(other, cls) and (message is None or (message is not None and message in str(other)))
+
+        def __ne__(self, other: object) -> bool:
+            return not self.__eq__(other)
+
+        def __neq__(self, other: object) -> bool:
+            return self.__ne__(other)
+
+        def __repr__(self) -> str:
+            c = cls[0] if len(cls) == 1 else cls
+            representation: list[str] = [f'<ANY({c})', '>']
+
+            if message is not None:
+                representation.insert(-1, f", message='{message}'")
+
+            return ''.join(representation)
+
+        def __hash__(self) -> int:
+            return hash(self)
+
+    for c in cls:
+        WrappedAny.register(c)
+
+    return WrappedAny()
+
+
 def SOME(cls: type, *value: Any, **values: Any) -> object:  # noqa: N802
     if len(value) > 0 and len(values) > 0:
         message = 'cannot use both positional and named arguments'
@@ -140,3 +182,41 @@ def SOME(cls: type, *value: Any, **values: Any) -> object:  # noqa: N802
     WrappedSome.register(cls)
 
     return WrappedSome()
+
+
+def onerror(
+    func: Callable,
+    path: str,
+    exc_info: BaseException  # noqa: ARG001
+    | tuple[
+        type[BaseException],
+        BaseException,
+        TracebackType | None,
+    ],
+) -> None:
+    """Error handler for shutil.rmtree.
+
+    If the error is due to an access error (read only file)
+    it attempts to add write permission and then retries.
+    If the error is for another reason it re-raises the error.
+    Usage : ``shutil.rmtree(path, onerror=onerror)``
+    """
+    _path = Path(path)
+    # Is the error an access error?
+    if not os.access(_path, os.W_OK):
+        _path.chmod(stat.S_IWUSR)
+        func(path)
+    else:
+        raise  # noqa: PLE0704
+
+
+def rm_rf(path: str | Path) -> None:
+    """Remove the path contents recursively, even if some elements
+    are read-only.
+    """
+    p = path.as_posix() if isinstance(path, Path) else path
+
+    if sys.version_info >= (3, 12):
+        rmtree(p, onexc=onerror)
+    else:
+        rmtree(p, onerror=onerror)

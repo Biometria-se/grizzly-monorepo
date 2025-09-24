@@ -456,8 +456,7 @@ def find_language(source: str) -> str:
 
 
 def get_current_line(text_document: TextDocument, position: Position) -> str:
-    source = text_document.source
-    return source.split('\n')[position.line]
+    return text_document.source.split('\n')[position.line]
 
 
 def normalize_text(text: str) -> str:

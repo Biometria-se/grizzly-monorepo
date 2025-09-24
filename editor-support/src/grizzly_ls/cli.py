@@ -64,7 +64,7 @@ def lint(ls: GrizzlyLanguageServer, args: Arguments) -> int:
     compile_inventory(ls, standalone=True)
 
     if args.files == ['.']:
-        files = list(Path.cwd().rglob('**/*.feature'))
+        files = list(ls.root_path.rglob('**/*.feature'))
     else:
         files = []
         paths = [Path(file) for file in args.files]
@@ -81,15 +81,19 @@ def lint(ls: GrizzlyLanguageServer, args: Arguments) -> int:
     grouped_diagnostics: dict[str, list[Diagnostic]] = {}
     max_length = 0
 
-    for file in files:
+    for file in sorted(files):
         text_document = TextDocument(file.resolve().as_uri())
-        ls.language = find_language(text_document.source)
+        try:
+            ls.language = find_language(text_document.source)
+        except ValueError:  # pragma: no cover
+            ls.language = 'en'
+
         diagnostics = validate_gherkin(ls, text_document)
 
         if len(diagnostics) < 1:
             continue
 
-        text_document_file = Path(text_document.uri.replace('file://', ''))
+        text_document_file = Path(text_document.uri.removeprefix('file://'))
         filename = text_document_file.as_posix().replace(Path.cwd().as_posix(), '').lstrip('/\\')
         max_length = max(max_length, len(filename))
 
@@ -105,10 +109,16 @@ def lint(ls: GrizzlyLanguageServer, args: Arguments) -> int:
 
 
 def render(args: Arguments) -> int:
-    feature_file = Path(args.file[0])
-    if not feature_file.exists():
-        print(f'{feature_file.as_posix()} does not exist', file=sys.stderr)
+    try:
+        feature_file = Path(args.file[0])
+
+        if not feature_file.exists():
+            print(f'{feature_file.as_posix()} does not exist', file=sys.stderr)
+            return 1
+    except IndexError:
+        print('no file specified', file=sys.stderr)
         return 1
+
     try:
         print(render_gherkin(feature_file.as_posix(), feature_file.read_text(), raw=True))
     except:

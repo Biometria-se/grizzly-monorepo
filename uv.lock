@@ -1025,6 +1025,7 @@ mq = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "grizzly-loadtester-cli" },
     { name = "types-python-dateutil" },
     { name = "types-pyyaml" },
     { name = "types-requests" },
@@ -1046,6 +1047,7 @@ provides-extras = ["mq"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "grizzly-loadtester-cli", editable = "command-line-interface" },
     { name = "types-python-dateutil", specifier = ">=2.9.0.20250822" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20250822" },
     { name = "types-requests", specifier = ">=2.32.4.20250809" },

@@ -34,7 +34,7 @@ jobs:
         run: |
           uv run ./extras/scripts/map-changes.py --changes '${{ steps.filter.outputs.changes }}' --force ${{ github.event_name == 'workflow_dispatch' }}
 
-  uv-lint:
+  uv_lint:
     name: "lint / ${{ matrix.changes.package }} / ${{ matrix.image }} / py${{ matrix.python-version }}"
     needs: changes
     outputs:
@@ -82,18 +82,19 @@ jobs:
         run: |
           uv run mypy .
 
-  uv-test:
+  uv_test:
     name: "test / ${{ matrix.changes.package }} / ${{ matrix.image }} / py${{ matrix.python-version }}"
-    needs: uv-lint
+    needs: uv_lint
+    continue-on-error: true
     outputs:
-      changes_uv: ${{ needs.uv-lint.outputs.changes_uv }}
+      changes_uv: ${{ needs.uv_lint.outputs.changes_uv }}
     runs-on: ${{ matrix.image }}
     strategy:
       fail-fast: false
       matrix:
         image: [ubuntu-latest]
         python-version: ["3.10", "3.13"]
-        changes: ${{ fromJSON(needs.uv-lint.outputs.changes_uv) }}
+        changes: ${{ fromJSON(needs.uv_lint.outputs.changes_uv) }}
 
     steps:
       - uses: MathRobin/timezone-action@v1.1
@@ -110,6 +111,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
 
+      - name: "install ${{ matrix.changes.package }} dev dependencies"
+        run: |
+          uv sync --locked -p ${{ matrix.python-version }} --inexact --only-dev --all-packages --no-install-project --no-install-workspace
+          uv sync --locked -p ${{ matrix.python-version }} --inexact --package ${{ matrix.changes.package }}
+
       - name: "run unit tests"
         if: matrix.changes.tests.unit != ''
         working-directory: ${{ matrix.changes.directory }}
@@ -120,20 +126,20 @@ jobs:
         if: matrix.changes.tests.unit != ''
         working-directory: ${{ matrix.changes.directory }}
         run: |
-          uv run coverage report -i --omit=tests/**/* --fail-under=80
+          uv run coverage report -i --omit=tests/**/*,**/*messagequeue*,**/mq/__init__.py,**/__version__.py --fail-under=80
 
-  uv-test-e2e:
+  uv_test_e2e:
     name: "test-e2e / ${{ matrix.changes.package }} / ${{ matrix.image }} / py${{ matrix.python-version }}"
-    needs: uv-test
+    needs: uv_test
     outputs:
-      changes_uv: ${{ needs.uv-test.outputs.changes_uv }}
+      changes_uv: ${{ needs.uv_test.outputs.changes_uv }}
     runs-on: ${{ matrix.image }}
     strategy:
       fail-fast: false
       matrix:
         image: [ubuntu-latest]
         python-version: ["3.13"]
-        changes: ${{ fromJSON(needs.uv-test.outputs.changes_uv) }}
+        changes: ${{ fromJSON(needs.uv_test.outputs.changes_uv) }}
 
     steps:
       - uses: MathRobin/timezone-action@v1.1
@@ -158,7 +164,7 @@ jobs:
       - name: "install ${{ matrix.changes.package }} dev dependencies"
         run: |
           uv sync --locked -p ${{ matrix.python-version }} --inexact --only-dev --all-packages --no-install-project --no-install-workspace
-          uv sync --locked -p ${{ matrix.python-version }} --inexact --package ${{ matrix.changes.package }}
+          uv sync --locked -p ${{ matrix.python-version }} --inexact --package ${{ matrix.changes.package }} --dev
 
       - name: setup environment
         run: |

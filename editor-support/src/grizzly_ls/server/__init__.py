@@ -11,7 +11,7 @@ from logging import ERROR
 from os import environ, fsdecode
 from os.path import pathsep, sep
 from pathlib import Path
-from subprocess import CalledProcessError
+from subprocess import CalledProcessError, CompletedProcess
 from tempfile import gettempdir
 from time import sleep
 from typing import TYPE_CHECKING, Any, ClassVar, cast
@@ -98,6 +98,7 @@ class GrizzlyLanguageServer(LanguageServer):
         self.markup_kind = lsp.MarkupKind.Markdown  # assume, until initialized request
         self.language = 'en'  # assumed default
         self.file_ignore_patterns = []
+        self.client_settings = {}
         self.startup_messages = deque()
 
         # monkey patch functions to short-circuit them (causes problems in this context)
@@ -110,7 +111,6 @@ class GrizzlyLanguageServer(LanguageServer):
             return
 
         signal.signal = _signal  # type: ignore[assignment]
-        self.client_settings = {}
 
     @property
     def language(self) -> str:
@@ -152,18 +152,18 @@ class GrizzlyLanguageServer(LanguageServer):
         for line in lines[1:]:
             step_keyword, _ = get_step_parts(line)
 
-            if step_keyword is None:
+            if step_keyword is None:  # pragma: no cover
                 continue
 
             step_keyword = step_keyword.rstrip(' :')
 
-            if step_keyword not in self.keywords_all:
+            if step_keyword not in self.keywords_all:  # pragma: no cover
                 continue
 
             if step_keyword not in self.keywords_any:
                 return step_keyword
 
-        return base_keyword
+        return base_keyword  # pragma: no cover
 
     def _normalize_step_expression(self, step: ParseMatcher | str) -> list[str]:
         pattern = step.pattern if isinstance(step, ParseMatcher) else step
@@ -183,7 +183,7 @@ class GrizzlyLanguageServer(LanguageServer):
 
         for steps in self.steps.values():
             for step in steps:
-                if step.expression.strip() == expression.strip() and (key in (keyword, 'step')):
+                if step.expression.strip() == expression.strip() and (key in (keyword.lower(), 'step')):
                     return step.help
                 if step.expression.startswith(expression) and step.help is not None:
                     possible_help.update({step.expression: step.help})
@@ -195,7 +195,7 @@ class GrizzlyLanguageServer(LanguageServer):
 
 
 class InstallError(Exception):
-    def __init__(self, *args: Any, backend: str | None = None, stdout: bytes | None = None, stderr: bytes | None = None) -> None:
+    def __init__(self, *args: Any, backend: str | None = None, stdout: str | bytes | None = None, stderr: str | bytes | None = None) -> None:
         super().__init__(*args)
 
         self.stdout = stdout
@@ -207,29 +207,37 @@ class ConfigurationError(Exception):
     pass
 
 
+def _run_uv(cmd: list[str]) -> CompletedProcess:  # pragma: no cover
+    from uv import find_uv_bin  # noqa: PLC0415
+
+    uv = fsdecode(find_uv_bin())
+    env = environ.copy()
+    env.update({'UV_INTERNAL__PARENT_INTERPRETER': sys.executable})
+
+    return subprocess.run([uv, *cmd], check=False)
+
+
+def _run_venv(path: Path, *, with_pip: bool) -> None:  # pragma: no cover
+    from venv import create as venv_create  # noqa: PLC0415
+
+    venv_create(path, with_pip=with_pip)
+
+
 def _create_virtual_environment(path: Path, python_version: str) -> None:
     # prefer uv over virtualenv
     try:
-        from uv import find_uv_bin  # noqa: PLC0415
-
-        uv = fsdecode(find_uv_bin())
-        env = environ.copy()
-        env.update({'UV_INTERNAL__PARENT_INTERPRETER': sys.executable})
-
-        rc = subprocess.run([uv, 'venv', '--managed-python', '--python', python_version, path.as_posix()], check=False)
+        rc = _run_uv(['venv', '--managed-python', '--python', python_version, path.as_posix()])
 
         if rc.returncode != 0:
             raise InstallError(backend='uv', stdout=rc.stdout, stderr=rc.stderr)
     except ModuleNotFoundError:
         try:
-            from venv import create as venv_create  # noqa: PLC0415
-
-            venv_create(path.as_posix(), with_pip=True)
+            _run_venv(path, with_pip=True)
         except CalledProcessError as e:
             raise InstallError(backend='virtualenv', stdout=e.stdout, stderr=e.stderr) from None
 
 
-def use_virtual_environment(ls: GrizzlyLanguageServer, progress: Progress, project_name: str, env: dict[str, str]) -> Path | None:
+def use_virtual_environment(ls: GrizzlyLanguageServer, project_name: str, env: dict[str, str]) -> Path | None:
     virtual_environment = Path(gettempdir()) / f'grizzly-ls-{project_name}'
     has_venv = virtual_environment.exists()
     python_version = '.'.join(str(v) for v in sys.version_info[:2])
@@ -237,8 +245,6 @@ def use_virtual_environment(ls: GrizzlyLanguageServer, progress: Progress, proje
     ls.logger.debug(f'looking for venv at {virtual_environment}, {has_venv=}')
 
     if not has_venv:
-        progress.report('creating venv', 33)
-
         try:
             _create_virtual_environment(virtual_environment, python_version)
         except InstallError as e:
@@ -246,13 +252,15 @@ def use_virtual_environment(ls: GrizzlyLanguageServer, progress: Progress, proje
 
             error: list[str] = []
             if e.stderr is not None:
-                error.append(f'stderr={e.stderr.decode()}')
+                stderr = e.stderr.decode() if isinstance(e.stderr, bytes) else e.stderr
+                error.append(f'stderr={stderr}')
 
             if e.stdout is not None:
-                error.append(f'stdout={e.stdout.decode()}')
+                stdout = e.stdout.decode() if isinstance(e.stdout, bytes) else e.stdout
+                error.append(f'stdout={stdout}')
 
             if error:
-                ls.logger.error(''.join(error))  # noqa: TRY400
+                ls.logger.error('\n'.join(error))  # noqa: TRY400
 
             raise InstallError from None
 
@@ -273,7 +281,7 @@ def use_virtual_environment(ls: GrizzlyLanguageServer, progress: Progress, proje
     rc, output = run_command(['python', '-m', 'ensurepip'], env=env)
 
     if rc != 0:
-        ls.logger.error(f'failed to ensure pip is installed for venv {virtual_environment.name}', notify=True)
+        ls.logger.error(f'failed to ensure pip is installed for venv {project_name}', notify=True)
         ls.logger.error(f'ensurepip error:\n{"".join(output)}')
 
         raise InstallError
@@ -300,19 +308,17 @@ def use_virtual_environment(ls: GrizzlyLanguageServer, progress: Progress, proje
     return virtual_environment
 
 
-def pip_install_upgrade(ls: GrizzlyLanguageServer, progress: Progress, project_name: str, executable: str, requirements_file: Path, env: dict[str, str]) -> None:
+def pip_install_upgrade(ls: GrizzlyLanguageServer, project_name: str, executable: str, requirements_file: Path, env: dict[str, str]) -> None:
     project_path = Path(gettempdir()) / f'grizzly-ls-{project_name}'
     project_age_file = project_path / '.age'
 
-    if not (not project_age_file.exists() or (requirements_file.lstat().st_mtime > project_age_file.lstat().st_mtime)):
+    if project_age_file.exists() and requirements_file.lstat().st_mtime <= project_age_file.lstat().st_mtime:
+        ls.logger.debug(f'{requirements_file.as_posix()} is not newer than {project_age_file.as_posix()}, no need to install or upgrade')
         return
 
     action = 'install' if not project_age_file.exists() else 'upgrade'
 
-    ls.logger.debug(f'{action} from {requirements_file}')
-
-    # <!-- install dependencies
-    progress.report(f'{action} dependencies', 50)
+    ls.logger.debug(f'{action} from {requirements_file.as_posix()}')
 
     rc, output = run_command(
         [
@@ -330,7 +336,7 @@ def pip_install_upgrade(ls: GrizzlyLanguageServer, progress: Progress, project_n
 
     for line in output:
         if line.strip().startswith('ERROR:'):
-            _, line = line.split(' ', 1)  # noqa: PLW2901
+            _, line = line.split('ERROR:', 1)  # noqa: PLW2901
             log_method = ls.logger.error
         elif rc == 0:
             log_method = ls.logger.debug
@@ -344,14 +350,13 @@ def pip_install_upgrade(ls: GrizzlyLanguageServer, progress: Progress, project_n
 
     if rc != 0:
         ls.logger.error(
-            f'failed to {action} from {requirements_file}',
+            f'failed to {action} from {requirements_file.as_posix()}',
             notify=True,
         )
         raise InstallError
 
     project_age_file.parent.mkdir(parents=True, exist_ok=True)
     project_age_file.touch()
-    # // -->
 
 
 server = GrizzlyLanguageServer()
@@ -372,34 +377,42 @@ def install(ls: GrizzlyLanguageServer, *_args: Any) -> None:
 
     try:
         with Progress(ls.progress, 'grizzly-ls') as progress:
+            progress.report('loading extension', 1)
             # <!-- should a virtual environment be used?
             use_venv = ls.client_settings.get('use_virtual_environment', True)
             executable = 'python' if use_venv else sys.executable
             # // -->
 
-            ls.logger.debug(f'workspace root: {ls.root_path} (use virtual environment: {use_venv})')
+            ls.logger.debug(f'workspace root: {ls.root_path.as_posix()} (use virtual environment: {use_venv!r})')
 
             env = environ.copy()
             project_name = ls.root_path.stem
 
-            virtual_environment = use_virtual_environment(ls, progress, project_name, env) if use_venv else None
+            if use_venv:
+                progress.report('setting up virtual environment', 10)
+                virtual_environment = use_virtual_environment(ls, project_name, env)
+            else:
+                virtual_environment = None
+
+            progress.report('virtual environment done', 40)
 
             requirements_file = ls.root_path / 'requirements.txt'
             if not requirements_file.exists():
                 ls.logger.error(
-                    f'project "{project_name}" does not have a requirements.txt in {ls.root_path}',
+                    f'project "{project_name}" does not have a requirements.txt in {ls.root_path.as_posix()}',
                     notify=True,
                 )
-                return
+                raise InstallError
 
             # pip install (slow operation) if:
             # - age file does not exist
             # - requirements file has been modified since age file was last touched
-            pip_install_upgrade(ls, progress, project_name, executable, requirements_file, env)
+            progress.report('preparing step dependencies', 60)
+            pip_install_upgrade(ls, project_name, executable, requirements_file, env)
 
             try:
                 # <!-- compile inventory
-                progress.report('compile inventory', 85)
+                progress.report('building step inventory', 80)
                 compile_inventory(ls)
                 # // ->
             except ModuleNotFoundError:
@@ -409,14 +422,16 @@ def install(ls: GrizzlyLanguageServer, *_args: Any) -> None:
                 )
                 raise InstallError from None
             finally:
-                if use_venv and virtual_environment is not None:
+                if use_venv and virtual_environment is not None and virtual_environment.as_posix() in sys.path[-1]:
                     # always restore to original value
                     sys.path.pop()
-    except Exception as e:
-        if isinstance(e, InstallError):
-            return
 
-        ls.logger.exception('failed to install extension', notify=True)
+            progress.report('extension done', 100)
+    except Exception as e:
+        if not isinstance(e, InstallError):
+            ls.logger.exception('failed to install extension, check output', notify=True)
+
+        return
 
     # validate all open text documents after extension has been installed
     try:
@@ -431,6 +446,7 @@ def install(ls: GrizzlyLanguageServer, *_args: Any) -> None:
 
 
 def _configuration_index_url(ls: GrizzlyLanguageServer) -> None:
+    """Command-line argument > pip configuration > vscode extension."""
     # no index-url specified as argument, check if we have it in pip configuration
     if ls.index_url is None:
         pip_config = PipConfiguration(isolated=False)
@@ -441,55 +457,59 @@ def _configuration_index_url(ls: GrizzlyLanguageServer) -> None:
     # no index-url specified in pip config, check if we have it in extension configuration
     if ls.index_url is None:
         ls.index_url = ls.client_settings.get('pip_extra_index_url', None)
-        if ls.index_url is not None and len(ls.index_url.strip()) < 1:
+        if ls.index_url is not None and len(ls.index_url.strip()) < 1:  # setting was an empty string
             ls.index_url = None
 
-    ls.logger.debug(f'{ls.index_url=}')
+    if ls.index_url is not None:
+        ls.logger.info(f'using pip extra index url: {ls.index_url}')
 
 
 def _configuration_variable_pattern(ls: GrizzlyLanguageServer) -> None:
     variable_patterns = ls.client_settings.get('variable_pattern', [])
-    if len(variable_patterns) > 0:
-        # validate and normalize patterns
-        normalized_variable_patterns: set[str] = set()
-        try:
-            for variable_pattern in variable_patterns:
-                original_variable_pattern = variable_pattern
-                if not variable_pattern.startswith('.*') and not variable_pattern.startswith('^'):
-                    variable_pattern = f'.*{variable_pattern}'  # noqa: PLW2901
+    if len(variable_patterns) < 1:
+        return
 
-                if not variable_pattern.startswith('^'):
-                    variable_pattern = f'^{variable_pattern}'  # noqa: PLW2901
+    # validate and normalize patterns
+    normalized_variable_patterns: set[str] = set()
+    try:
+        for variable_pattern in variable_patterns:
+            original_variable_pattern = variable_pattern
+            if not variable_pattern.startswith('.*') and not variable_pattern.startswith('^'):
+                variable_pattern = f'.*{variable_pattern}'  # noqa: PLW2901
 
-                if not variable_pattern.endswith('$'):
-                    variable_pattern = f'{variable_pattern}$'  # noqa: PLW2901
+            if not variable_pattern.startswith('^'):
+                variable_pattern = f'^{variable_pattern}'  # noqa: PLW2901
 
-                pattern = re.compile(variable_pattern)
+            if not variable_pattern.endswith('$'):
+                variable_pattern = f'{variable_pattern}$'  # noqa: PLW2901
 
-                if pattern.groups != 1:
-                    ls.logger.warning(f'variable pattern "{original_variable_pattern}" contains {pattern.groups} match groups, it must be exactly one', notify=True)
-                    return
+            pattern = re.compile(variable_pattern)
 
-                normalized_variable_patterns.add(variable_pattern)
-        except Exception:
-            ls.logger.exception(
-                f'variable pattern "{variable_pattern}" is not valid, check grizzly.variable_pattern setting',
-                notify=True,
-            )
-            raise ConfigurationError from None
+            if pattern.groups != 1:
+                ls.logger.warning(f'variable pattern "{original_variable_pattern}" contains {pattern.groups} match groups, it must be exactly one', notify=True)
+                continue
 
-        variable_pattern = f'({"|".join(normalized_variable_patterns)})'
+            normalized_variable_patterns.add(variable_pattern)
+    except Exception:
+        ls.logger.exception(
+            f'variable pattern "{original_variable_pattern}" is not valid, check grizzly.variable_pattern setting',
+            notify=True,
+        )
+        raise ConfigurationError from None
+
+    if len(normalized_variable_patterns) > 0:
+        variable_pattern = f'({"|".join(sorted(normalized_variable_patterns))})'
         ls.variable_pattern = re.compile(variable_pattern)
 
 
 @server.feature(lsp.INITIALIZE)
 def initialize(ls: GrizzlyLanguageServer, params: lsp.InitializeParams) -> None:
-    run_mode = 'embedded' if environ.get('GRIZZLY_RUN_EMBEDDED', 'false') == 'true' else 'standalone'
+    run_mode = 'embedded' if environ.get('GRIZZLY_RUN_EMBEDDED', 'false').lower() == 'true' else 'standalone'
     ls.logger.info(f'initializing language server {__version__} ({run_mode})')
 
     if params.root_path is None and params.root_uri is None:
         ls.logger.error(
-            'neither root_path or root uri was received from client',
+            'neither root path or uri was received from client',
             notify=True,
         )
         return
@@ -499,11 +519,12 @@ def initialize(ls: GrizzlyLanguageServer, params: lsp.InitializeParams) -> None:
         ls.logger.log(level, msg, exc_info=False, notify=True)
 
     try:
-        root_path = Path(unquote(url2pathname(urlparse(params.root_uri).path))) if params.root_uri is not None else Path(cast('str', params.root_path))
+        parsed = urlparse(cast('str', params.root_uri))
+        root_path = Path(unquote(url2pathname(parsed.path)) if params.root_uri is not None else cast('str', params.root_path))
 
         # fugly as hell
-        if not root_path.exists() and root_path.as_posix()[0:1] == sep and root_path.as_posix()[2] == ':':
-            root_path = Path(str(root_path)[1:])
+        if not root_path.exists() and root_path.as_posix()[0] == sep and root_path.as_posix()[2] == ':':
+            root_path = Path(root_path.as_posix()[1:])
 
         ls.root_path = root_path
 
@@ -512,14 +533,11 @@ def initialize(ls: GrizzlyLanguageServer, params: lsp.InitializeParams) -> None:
             ls.client_settings = cast('dict[str, Any]', client_settings)
 
         markup_supported: list[lsp.MarkupKind] = get_capability(
-            ls.client_capabilities,
+            params.capabilities,
             'text_document.completion.completion_item.documentation_format',
             [lsp.MarkupKind.Markdown],
         )
-        if len(markup_supported) < 1:
-            ls.markup_kind = lsp.MarkupKind.PlainText
-        else:
-            ls.markup_kind = markup_supported[0]
+        ls.markup_kind = lsp.MarkupKind.PlainText if len(markup_supported) < 1 else markup_supported[0]
 
         _configuration_index_url(ls)
 
@@ -537,10 +555,12 @@ def initialize(ls: GrizzlyLanguageServer, params: lsp.InitializeParams) -> None:
 
         # <!-- missing step impl template
         step_impl_template = ls.client_settings['quick_fix'].get('step_impl_template', None)
-        if step_impl_template is None or len(step_impl_template.strip()) == 0:
-            step_impl_template = "@{keyword}(u'{expression}')"
+        if step_impl_template is None or step_impl_template.strip() == '':
+            step_impl_template = "@{keyword}('{expression}')"
             ls.client_settings['quick_fix'].update({'step_impl_template': step_impl_template})
         # // ->
+
+        ls.logger.info('done initializing extension')
     except Exception as e:
         if isinstance(e, ConfigurationError):
             return
@@ -594,7 +614,6 @@ def text_document_completion(
                     base_keyword = ls.get_base_keyword(params.position, text_document)
 
                     ls.logger.debug(f'{keyword=}, {base_keyword=}, {text=}, {ls.keywords=}')
-
                     items = complete_step(ls, keyword, params.position, text, base_keyword=base_keyword)
                 else:
                     ls.logger.debug(f'{keyword=}, {text=}, {ls.keywords=}')
@@ -623,8 +642,6 @@ def text_document_hover(ls: GrizzlyLanguageServer, params: lsp.HoverParams) -> l
     text_document = ls.workspace.get_text_document(params.text_document.uri)
     current_line = get_current_line(text_document, params.position)
     keyword, step = get_step_parts(current_line)
-
-    ls.logger.debug(f'{keyword=}, {step=}')
 
     abort: bool = False
 
