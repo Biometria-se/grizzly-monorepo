@@ -146,6 +146,18 @@ def compile_inventory(ls: GrizzlyLanguageServer, *, standalone: bool = False) ->
         plain_paths = [path.as_posix() for path in paths]
 
         ls.logger.debug(f'loading steps from {plain_paths}')
+
+        try:
+            from gevent import monkey  # noqa: PLC0415
+
+            ls.logger.info('found gevent, applying monkey patching')
+
+            monkey.patch_all()
+        except ModuleNotFoundError:
+            pass
+        except Exception:
+            ls.logger.exception('failed to apply gevent monkey patching')
+
         # ignore paths that contains errors
         for path in paths:
             try:

@@ -112,7 +112,7 @@ def _create_build_command(args: Arguments, containerfile: str, tag: str, context
         extra_args += ['--build-arg', f'IBM_MQ_LIB={ibm_mq_lib}']
 
     return [
-        f'{args.container_system}',
+        args.container_system,
         'image',
         'build',
         '--ssh',

@@ -62,6 +62,7 @@ if TYPE_CHECKING:  # pragma: no cover
 class GrizzlyLanguageServer(LanguageServer):
     logger: LogOutputChannelLogger
 
+    verbose: bool
     variable_pattern: re.Pattern[str] = re.compile(r'(.*ask for value of variable "([^"]*)"$|.*value for variable "([^"]*)" is ".*?"$)')
 
     file_ignore_patterns: list[str]
@@ -90,6 +91,7 @@ class GrizzlyLanguageServer(LanguageServer):
         super().__init__('grizzly-ls', __version__)
 
         self.logger = LogOutputChannelLogger(self)
+        self.verbose = False
 
         self.index_url = environ.get('PIP_EXTRA_INDEX_URL', None)
         self.behave_steps = {}
@@ -248,7 +250,7 @@ def use_virtual_environment(ls: GrizzlyLanguageServer, project_name: str, env: d
         try:
             _create_virtual_environment(virtual_environment, python_version)
         except InstallError as e:
-            ls.logger.error(f'failed to create virtual environment with {e.backend}', notify=True)  # noqa: TRY400
+            ls.logger.exception(f'failed to create virtual environment with {e.backend}', notify=True)
 
             error: list[str] = []
             if e.stderr is not None:
@@ -376,7 +378,7 @@ def install(ls: GrizzlyLanguageServer, *_args: Any) -> None:
     ls.logger.debug(f'{FEATURE_INSTALL}: installing')
 
     try:
-        with Progress(ls.progress, 'grizzly-ls') as progress:
+        with Progress(ls, 'grizzly-ls') as progress:
             progress.report('loading extension', 1)
             # <!-- should a virtual environment be used?
             use_venv = ls.client_settings.get('use_virtual_environment', True)

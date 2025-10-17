@@ -11,10 +11,11 @@ import { PythonExtension } from '@vscode/python-extension';
 
 import { Settings, ExtensionStatus } from './model';
 import { GherkinPreview, GherkinPreviewOptions } from './preview';
+import { ConsoleLogOutputChannel } from './log';
 
 const exec = util.promisify(child_process.exec);
 
-let logger: vscode.LogOutputChannel;
+let logger: ConsoleLogOutputChannel;
 let client: LanguageClient;
 let python: PythonExtension;
 let documentUri: vscode.Uri;
@@ -55,8 +56,10 @@ async function createStdioLanguageServer(
 
     args = ['-m', module, '--embedded', ...args];
 
-    if (process.env.VERBOSE && !args.includes('--verbose')) {
-        args = [...args, '--verbose'];
+    if (process.env.VERBOSE) {
+        if (!args.includes('--verbose')) {
+            args = [...args, '--verbose'];
+        }
         logger.warn('Starting language server in verbose mode');
     }
 
@@ -70,7 +73,7 @@ async function createStdioLanguageServer(
         markdown: {
             isTrusted: true,
         },
-        outputChannel: logger,
+        outputChannel: logger.channel,
         initializationOptions,
     };
 
@@ -97,7 +100,7 @@ function createSocketLanguageServer(
 
     const clientOptions: LanguageClientOptions = {
         documentSelector: documentSelector,
-        outputChannel: logger,
+        outputChannel: logger.channel,
         markdown: {
             isTrusted: true,
         },
@@ -212,8 +215,7 @@ async function stopLanguageServer(): Promise<void> {
 }
 
 export async function activate(context: vscode.ExtensionContext): Promise<ExtensionStatus | undefined> {
-    logger = vscode.window.createOutputChannel('Grizzly Language Server', {log: true});
-    logger.show();
+    logger = new ConsoleLogOutputChannel('Grizzly Language Server', {log: true});
 
     const previewer = new GherkinPreview(context, logger);
 
@@ -346,8 +348,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Extens
         vscode.commands.registerCommand('grizzly.gherkin.preview.beside', (options: GherkinPreviewOptions) => {
             if (!client) {
                 if (!notifiedAboutWaiting) {
-                    vscode.window.showWarningMessage('Wait until language server has started');
-                    notifiedAboutWaiting = true;
+                    vscode.window.showWarningMessage('Wait until language server has started').then(() => notifiedAboutWaiting = true);
                 }
                 return;
             }

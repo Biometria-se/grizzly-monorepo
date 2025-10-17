@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { Utils } from 'vscode-uri';
 
+import { ConsoleLogOutputChannel } from './log';
+
 export interface GherkinPreviewOptions {
     document?: vscode.TextDocument;
     content?: string;
@@ -18,7 +20,7 @@ export class GherkinPreview {
         preserveFocus: true,
     };
 
-    constructor(private readonly context: vscode.ExtensionContext, private readonly logger: vscode.LogOutputChannel) {
+    constructor(private readonly context: vscode.ExtensionContext, private readonly logger: ConsoleLogOutputChannel) {
         this.panels = new Map();
 
         const colorThemeKind = vscode.window.activeColorTheme.kind;
@@ -29,7 +31,7 @@ export class GherkinPreview {
                 this.style = 'github';
                 break;
             case vscode.ColorThemeKind.HighContrast:
-            case vscode.ColorThemeKind.Dark: // dark
+            case vscode.ColorThemeKind.Dark:
                 this.style = 'github-dark';
                 break;
         }

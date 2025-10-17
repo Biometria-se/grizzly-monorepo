@@ -469,7 +469,7 @@ class TestUseVirtualEnvironment(ServerUseVirtualEnvironment):
 
         assert self.logger_mock.mock_calls == [
             call.debug(f'looking for venv at {self.venv_path.as_posix()}, has_venv=False'),
-            call.error('failed to create virtual environment with uv', notify=True),
+            call.exception('failed to create virtual environment with uv', notify=True),
             call.error('stderr=world\nstdout=hello'),
         ]
         self.create_virtual_environment_mock.assert_called_once_with(self.test_context / f'grizzly-ls-{self.project_name}', self.python_version)
@@ -692,7 +692,7 @@ class TestInstall(ServerInstall):
 
         install(self.ls)
 
-        self.progress_class_mock.assert_called_once_with(self.ls.progress, 'grizzly-ls')
+        self.progress_class_mock.assert_called_once_with(self.ls, 'grizzly-ls')
         assert self.logger_mock.mock_calls == [
             call.debug('grizzly-ls/install: installing'),
             call.debug(f'workspace root: {self.test_context.as_posix()} (use virtual environment: True)'),
@@ -714,7 +714,7 @@ class TestInstall(ServerInstall):
 
         install(self.ls)
 
-        self.progress_class_mock.assert_called_once_with(self.ls.progress, 'grizzly-ls')
+        self.progress_class_mock.assert_called_once_with(self.ls, 'grizzly-ls')
         assert self.logger_mock.mock_calls == [
             call.debug('grizzly-ls/install: installing'),
             call.debug(f'workspace root: {self.test_context.as_posix()} (use virtual environment: False)'),
@@ -738,7 +738,7 @@ class TestInstall(ServerInstall):
 
         install(self.ls)
 
-        self.progress_class_mock.assert_called_once_with(self.ls.progress, 'grizzly-ls')
+        self.progress_class_mock.assert_called_once_with(self.ls, 'grizzly-ls')
         assert self.logger_mock.mock_calls == [call.debug('grizzly-ls/install: installing'), call.exception('failed to install extension, check output', notify=True)]
         self.use_virtual_environment_mock.assert_not_called()
         self.pip_install_upgrade_mock.assert_not_called()
@@ -764,7 +764,7 @@ class TestInstall(ServerInstall):
         install(self.ls)
 
         assert python_sys_path not in sys.path[-1]
-        self.progress_class_mock.assert_called_once_with(self.ls.progress, 'grizzly-ls')
+        self.progress_class_mock.assert_called_once_with(self.ls, 'grizzly-ls')
         self.progress_mock.report.assert_has_calls(
             [
                 call('loading extension', 1),

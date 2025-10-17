@@ -174,7 +174,7 @@ def test_compile_inventory(lsp_fixture: LspFixture, caplog: LogCaptureFixture) -
     with caplog.at_level(logging.INFO, 'GrizzlyLanguageServer'):
         compile_inventory(ls)
 
-    assert len(caplog.messages) == 1
+    assert len(caplog.messages) == 2
 
     assert ls.steps != {}
     assert len(ls.normalizer.custom_types.keys()) >= 8

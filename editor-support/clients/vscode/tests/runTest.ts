@@ -68,11 +68,12 @@ async function main() {
     try {
         const extensionTestsPath = path.resolve(__dirname, './index');
         const testWorkspace: string = path.resolve(__dirname, '../../../../tests/project');
-        console.log(`dirname=${__dirname}, extenstionTestsPath=${extensionTestsPath}, testWorkspace=${testWorkspace}`);
+        console.log(`!! dirname=${__dirname}, extenstionTestsPath=${extensionTestsPath}, testWorkspace=${testWorkspace}`);
+        console.log(`!! VIRTUAL_ENV=${process.env['VIRTUAL_ENV']}`);
 
         const vscodeExecutablePath = await downloadAndUnzipVSCode();
 
-        await runVSCodeCommand(['--install-extension', 'ms-python.python', '--force', '--verbose']);
+        await runVSCodeCommand(['--install-extension', 'ms-python.python', '--force']);
 
         const extensionDevelopmentPathExtra = await installExtension(vscodeExecutablePath, 'ms-python.python');
 
@@ -85,6 +86,10 @@ async function main() {
 
         const argv = process.argv.slice(2);
 
+        const output = await runVSCodeCommand(['--status']);
+
+        console.log(`!! VSCode status:\n${output.stdout}`);
+
         process.env['TESTS'] = `${argv}`;
 
         // Download VS Code, unzip it and run the integration test
@@ -92,7 +97,7 @@ async function main() {
             vscodeExecutablePath,
             extensionDevelopmentPath,
             extensionTestsPath,
-            launchArgs: ['--verbose', '--disable-chromium-sandbox', testWorkspace],
+            launchArgs: [testWorkspace],
         });
         process.exit(0);
     } catch (err) {

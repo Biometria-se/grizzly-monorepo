@@ -74,9 +74,13 @@ def test_e2e_step_setup_save_statistics(e2e_fixture: End2EndFixture, url: str) -
         identifier=url,
     )
 
-    rc, _ = e2e_fixture.execute(feature_file, env_conf=env_conf)
+    rc, output = e2e_fixture.execute(feature_file, env_conf=env_conf)
 
-    assert rc == 0
+    try:
+        assert rc == 0
+    except AssertionError:
+        print(''.join(output))
+        raise
 
 
 @pytest.mark.parametrize(

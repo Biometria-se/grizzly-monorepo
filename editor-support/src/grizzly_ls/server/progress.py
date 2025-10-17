@@ -11,16 +11,21 @@ if TYPE_CHECKING:  # pragma: no cover
 
     from pygls.progress import Progress as PyglsProgress
 
+    from grizzly_ls.server import GrizzlyLanguageServer
+    from grizzly_ls.utils import LogOutputChannelLogger
+
 
 class Progress:
     progress: PyglsProgress
     title: str
     token: str
+    logger: LogOutputChannelLogger
 
-    def __init__(self, progress: PyglsProgress, title: str) -> None:
-        self.progress = progress
+    def __init__(self, ls: GrizzlyLanguageServer, title: str) -> None:
+        self.progress = ls.progress
         self.title = title
         self.token = str(uuid4())
+        self.logger = ls.logger
 
     @staticmethod
     def callback(*_args: Any, **_kwargs: Any) -> None:
@@ -33,6 +38,8 @@ class Progress:
             self.token,
             lsp.WorkDoneProgressBegin(title=self.title, percentage=0, cancellable=False),
         )
+
+        self.logger.debug(f'Progress "{self.title}": 0% - <starting>')
 
         return self
 
@@ -53,3 +60,4 @@ class Progress:
             self.token,
             lsp.WorkDoneProgressReport(message=message, percentage=percentage),
         )
+        self.logger.debug(f'Progress "{self.title}": {percentage}% - {message}')

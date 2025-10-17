@@ -269,18 +269,24 @@ jobs:
 
       - name: "install grizzly-ls"
         run: |
-            uv sync --locked -p ${{ matrix.python-version }} --package grizzly-loadtester-ls --dev --no-install-workspace --no-install-project
+            uv sync --locked --inexact --package grizzly-loadtester-ls --no-dev
+            uv sync --locked --inexact --package grizzly-loadtester --no-dev
+            echo "VIRTUAL_ENV=$PWD/.venv" >> $GITHUB_ENV
+            echo "PATH=$PWD/.venv/bin:$PATH" >> $GITHUB_ENV
 
       - name: "install ${{ matrix.changes.package }} dev dependencies"
         working-directory: ${{ matrix.changes.directory }}
+        env:
+          VIRTUAL_ENV: ${{ env.VIRTUAL_ENV }}
         run: |
           npm install
+          python -m pip install uv
 
       - name: "tests"
         uses: mgor/setup-xvfb@v1
         env:
           VERBOSE: true
-          VIRTUAL_ENV: ./.venv
+          VIRTUAL_ENV: ${{ env.VIRTUAL_ENV }}
         if: vars.DEFAULT_BRANCH || 'main' != 'HEAD'
         with:
           run: |
@@ -288,8 +294,9 @@ jobs:
           working-directory: ${{ matrix.changes.directory }}
 
       - name: server logs
-        if: always()
-        continue-on-error: true
-        working-directory: "${{ matrix.changes.directory }}/../../"
-        run: |
-          cat tests/project/grizzly-ls.log
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: grizzly-ls-server-logs
+          path: "./editor-support/tests/project/grizzly-ls.log"
+          if-no-files-found: error

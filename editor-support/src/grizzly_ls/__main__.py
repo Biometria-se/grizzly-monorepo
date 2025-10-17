@@ -167,10 +167,14 @@ def main() -> int:
         from grizzly_ls.cli import render
 
         return render(args)
+
     setup_logging(args)
     err_msg = setup_debugging(args)
+
     if err_msg:
         server.add_startup_error_message(err_msg)
+
+    server.verbose = args.verbose
 
     if not args.socket:
         server.start_io(sys.stdin.buffer, sys.stdout.buffer)  # type: ignore[arg-type]

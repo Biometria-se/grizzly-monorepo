@@ -53,7 +53,8 @@
           "typescript"
         ],
         "eslint.format.enable": true,
-        "eslint.lintTask.enable": true
+        "eslint.lintTask.enable": true,
+        "dev.containers.dockerCredentialHelper": false
       },
       "extensions": [
         "ms-python.python",

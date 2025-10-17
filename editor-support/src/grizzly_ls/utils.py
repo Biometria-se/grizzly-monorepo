@@ -20,7 +20,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable
 
     from behave.model import Scenario
-    from pygls.server import LanguageServer
+
+    from grizzly_ls.server import GrizzlyLanguageServer
 
 logger = logging.getLogger(__name__)
 
@@ -90,11 +91,11 @@ class MissingScenarioError(Exception):
 
 
 class LogOutputChannelLogger:
-    ls: LanguageServer
+    ls: GrizzlyLanguageServer
     logger: logging.Logger
     embedded: bool
 
-    def __init__(self, ls: LanguageServer) -> None:
+    def __init__(self, ls: GrizzlyLanguageServer) -> None:
         self.ls = ls
         self.logger = logging.getLogger(ls.__class__.__name__)
         self.embedded = os.environ.get('GRIZZLY_RUN_EMBEDDED', 'false') == 'true'
@@ -122,9 +123,10 @@ class LogOutputChannelLogger:
 
     def log(self, level: int, message: str, *, exc_info: bool, notify: bool) -> None:
         msg_type = self.py2lsp_level(level)
-        if not self.embedded:
+        if not self.embedded or self.ls.verbose:
             self.logger.log(level, message, exc_info=exc_info)
-        else:
+
+        if self.embedded:
             if exc_info:
                 message = f'{message}\n{self.get_current_exception()}'
             self.ls.show_message_log(message, msg_type=msg_type)
