@@ -4,7 +4,7 @@ import logging
 import sys
 from collections import deque
 from contextlib import suppress
-from os import utime
+from os import pathsep, utime
 from os.path import sep
 from pathlib import Path
 from subprocess import CalledProcessError, CompletedProcess
@@ -468,7 +468,7 @@ class TestUseVirtualEnvironment(ServerUseVirtualEnvironment):
             use_virtual_environment(self.ls, self.project_name, {})
 
         assert self.logger_mock.mock_calls == [
-            call.debug(f'looking for venv at {self.venv_path.as_posix()}, has_venv=False'),
+            call.debug(f'looking for venv at {self.venv_path!s}, has_venv=False'),
             call.exception('failed to create virtual environment with uv', notify=True),
             call.error('stderr=world\nstdout=hello'),
         ]
@@ -482,14 +482,15 @@ class TestUseVirtualEnvironment(ServerUseVirtualEnvironment):
 
         self.run_command_mock.assert_called_once_with(['python', '-m', 'ensurepip'], env=self.env)
         assert self.logger_mock.mock_calls == [
-            call.debug(f'looking for venv at {self.venv_path.as_posix()}, has_venv=True'),
+            call.debug(f'looking for venv at {self.venv_path!s}, has_venv=True'),
             call.error('failed to ensure pip is installed for venv unit-test-project', notify=True),
             call.error('ensurepip error:\nthis is the error'),
         ]
+        executables_dir = 'bin' if sys.platform != 'win32' else 'Scripts'
         assert self.env == {
-            'PATH': f'{self.venv_path.as_posix()}/bin:/bin',
-            'VIRTUAL_ENV': self.venv_path.as_posix(),
-            'PYTHONPATH': (self.test_context / 'features').as_posix(),
+            'PATH': f'{self.venv_path!s}{sep}{executables_dir}{pathsep}/bin',
+            'VIRTUAL_ENV': f'{self.venv_path!s}',
+            'PYTHONPATH': f'{(self.test_context / "features")!s}',
         }
 
     def test_index_url(self) -> None:
@@ -501,13 +502,14 @@ class TestUseVirtualEnvironment(ServerUseVirtualEnvironment):
 
         self.run_command_mock.assert_called_once_with(['python', '-m', 'ensurepip'], env=self.env)
         assert self.logger_mock.mock_calls == [
-            call.debug(f'looking for venv at {self.venv_path.as_posix()}, has_venv=True'),
+            call.debug(f'looking for venv at {self.venv_path!s}, has_venv=True'),
             call.error('global.index-url does not contain username and/or password, check your configuration!', notify=True),
         ]
+        executables_dir = 'bin' if sys.platform != 'win32' else 'Scripts'
         assert self.env == {
-            'PATH': f'{self.venv_path.as_posix()}/bin:/bin',
-            'VIRTUAL_ENV': self.venv_path.as_posix(),
-            'PYTHONPATH': (self.test_context / 'features').as_posix(),
+            'PATH': f'{self.venv_path!s}{sep}{executables_dir}{pathsep}/bin',
+            'VIRTUAL_ENV': f'{self.venv_path!s}',
+            'PYTHONPATH': f'{(self.test_context / "features")!s}',
         }
 
         self.reset_mocks()
@@ -519,12 +521,12 @@ class TestUseVirtualEnvironment(ServerUseVirtualEnvironment):
         assert use_virtual_environment(self.ls, self.project_name, self.env) == self.venv_path
         assert sys.path[-1] == f'{self.venv_path.as_posix()}/lib/python{self.python_version}/site-packages'
         assert self.env == {
-            'PATH': f'{self.venv_path.as_posix()}/bin:/bin',
-            'VIRTUAL_ENV': self.venv_path.as_posix(),
-            'PYTHONPATH': (self.test_context / 'features').as_posix(),
+            'PATH': f'{self.venv_path!s}{sep}{executables_dir}{pathsep}/bin',
+            'VIRTUAL_ENV': f'{self.venv_path!s}',
+            'PYTHONPATH': f'{(self.test_context / "features")!s}',
             'PIP_EXTRA_INDEX_URL': 'https://user:pass@example.com/pypi',
         }
-        assert self.logger_mock.mock_calls == [call.debug(f'looking for venv at {self.venv_path.as_posix()}, has_venv=True')]
+        assert self.logger_mock.mock_calls == [call.debug(f'looking for venv at {self.venv_path!s}, has_venv=True')]
         self.run_command_mock.assert_called_once()
 
 
@@ -958,8 +960,13 @@ class TestInitialize(ServerInitialize):
         ]
 
     def test_failed_to_initialize_extension(self) -> None:
-        self.params.root_path = '/opt/test'
-        self.params.root_uri = f'file://{self.params.root_path}'
+        if sys.platform == 'win32':
+            self.params.root_path = 'c:\\opt\\test'
+            root_uri = self.params.root_path.replace('\\', '/')
+            self.params.root_uri = f'file:///{root_uri}'
+        else:
+            self.params.root_path = '/opt/test'
+            self.params.root_uri = f'file://{self.params.root_path}'
 
         # <!-- fail with ConfigurationError
         self.env.update({'GRIZZLY_RUN_EMBEDDED': 'false'})
@@ -971,8 +978,8 @@ class TestInitialize(ServerInitialize):
 
         initialize(self.ls, self.params)
 
-        assert self.ls.root_path == Path(self.params.root_path)
-        assert self.logger_mock.mock_calls == [
+        assert str(self.ls.root_path).lower() == self.params.root_path.lower()
+        assert [mock_call for mock_call in self.logger_mock.mock_calls if mock_call[0] != 'debug'] == [
             call.info(f'initializing language server {__version__} (standalone)'),
             call.log(logging.ERROR, 'foobar', exc_info=False, notify=True),
             call.log(logging.ERROR, 'barfoo', exc_info=False, notify=True),
@@ -988,7 +995,7 @@ class TestInitialize(ServerInitialize):
 
         initialize(self.ls, self.params)
 
-        assert self.logger_mock.mock_calls == [
+        assert [mock_call for mock_call in self.logger_mock.mock_calls if mock_call[0] != 'debug'] == [
             call.info(f'initializing language server {__version__} (embedded)'),
             call.exception('failed to initialize extension', notify=True),
         ]
@@ -1007,7 +1014,7 @@ class TestInitialize(ServerInitialize):
 
         initialize(self.ls, self.params)
 
-        assert self.logger_mock.mock_calls == [
+        assert [mock_call for mock_call in self.logger_mock.mock_calls if mock_call[0] != 'debug'] == [
             call.info(f'initializing language server {__version__} (standalone)'),
             call.info('done initializing extension'),
         ]

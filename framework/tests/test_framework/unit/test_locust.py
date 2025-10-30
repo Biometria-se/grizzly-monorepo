@@ -263,102 +263,104 @@ def test_setup_locust_scenarios_user_distribution(behave_fixture: BehaveFixture,
         assert user_class.sticky_tag is None
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason='resource module is posix only, this is not done in locust on windows')
 def test_setup_resource_limits(behave_fixture: BehaveFixture, mocker: MockerFixture, caplog: LogCaptureFixture) -> None:  # noqa: PLR0915
-    import resource
+    if sys.platform == 'win32':
+        pytest.skip('resource module is posix only, this is not done in locust on windows')
+    else:
+        import resource
 
-    behave = behave_fixture.context
+        behave = behave_fixture.context
 
-    def mock_on_master(*, is_master: bool) -> None:
-        def mocked_on_master(_: Context) -> bool:
-            return is_master
+        def mock_on_master(*, is_master: bool) -> None:
+            def mocked_on_master(_: Context) -> bool:
+                return is_master
 
-        mocker.patch(
-            'grizzly.locust.on_master',
-            mocked_on_master,
+            mocker.patch(
+                'grizzly.locust.on_master',
+                mocked_on_master,
+            )
+
+        def mock_sys_platform(name: str) -> None:
+            mocker.patch(
+                'grizzly.locust.sys.platform',
+                name,
+            )
+
+        def mock_getrlimit(limit: int) -> MagicMock:
+            return mocker.patch(
+                'resource.getrlimit',
+                return_value=(limit, limit),
+            )
+
+        getrlimit_mock = mock_getrlimit(1024)
+
+        setrlimit_mock = mocker.patch(
+            'resource.setrlimit',
+            return_value=None,
         )
 
-    def mock_sys_platform(name: str) -> None:
-        mocker.patch(
-            'grizzly.locust.sys.platform',
-            name,
-        )
-
-    def mock_getrlimit(limit: int) -> MagicMock:
-        return mocker.patch(
-            'resource.getrlimit',
-            return_value=(limit, limit),
-        )
-
-    getrlimit_mock = mock_getrlimit(1024)
-
-    setrlimit_mock = mocker.patch(
-        'resource.setrlimit',
-        return_value=None,
-    )
-
-    # win32
-    mock_on_master(is_master=False)
-    mock_sys_platform('win32')
-    setup_resource_limits(behave)
-    setrlimit_mock.assert_not_called()
-    getrlimit_mock.assert_not_called()
-
-    mock_on_master(is_master=True)
-    mock_sys_platform('win32')
-    setup_resource_limits(behave)
-    setrlimit_mock.assert_not_called()
-    getrlimit_mock.assert_not_called()
-
-    # linux
-    mock_on_master(is_master=True)
-    mock_sys_platform('linux')
-    setup_resource_limits(behave)
-    setrlimit_mock.assert_not_called()
-    getrlimit_mock.assert_not_called()
-
-    # make sure setrlimit is called
-    mock_on_master(is_master=False)
-    getrlimit_mock = mock_getrlimit(1024)
-    setup_resource_limits(behave)
-    getrlimit_mock.assert_called_once_with(resource.RLIMIT_NOFILE)
-    setrlimit_mock.assert_called_once_with(resource.RLIMIT_NOFILE, (10000, resource.RLIM_INFINITY))
-    getrlimit_mock.reset_mock()
-    setrlimit_mock.reset_mock()
-
-    # failed to set resource limits
-    setrlimit_mock = mocker.patch(
-        'resource.setrlimit',
-        side_effect=[OSError],
-    )
-
-    with caplog.at_level(logging.WARNING):
+        # win32
+        mock_on_master(is_master=False)
+        mock_sys_platform('win32')
         setup_resource_limits(behave)
-    assert "and the OS didn't allow locust to increase it by itself" in caplog.text
-    setrlimit_mock.assert_called_once_with(resource.RLIMIT_NOFILE, (10000, resource.RLIM_INFINITY))
-    getrlimit_mock.assert_called_once_with(resource.RLIMIT_NOFILE)
-    getrlimit_mock.reset_mock()
-    caplog.clear()
+        setrlimit_mock.assert_not_called()
+        getrlimit_mock.assert_not_called()
 
-    setrlimit_mock = mocker.patch(
-        'resource.setrlimit',
-        side_effect=[ValueError],
-    )
-    with caplog.at_level(logging.WARNING):
+        mock_on_master(is_master=True)
+        mock_sys_platform('win32')
         setup_resource_limits(behave)
-    assert "and the OS didn't allow locust to increase it by itself" in caplog.text
-    setrlimit_mock.assert_called_once_with(resource.RLIMIT_NOFILE, (10000, resource.RLIM_INFINITY))
-    getrlimit_mock.assert_called_once_with(resource.RLIMIT_NOFILE)
-    setrlimit_mock.reset_mock()
-    getrlimit_mock.reset_mock()
-    caplog.clear()
+        setrlimit_mock.assert_not_called()
+        getrlimit_mock.assert_not_called()
 
-    getrlimit_mock = mock_getrlimit(10001)
-    setup_resource_limits(behave)
-    getrlimit_mock.assert_called_once_with(resource.RLIMIT_NOFILE)
-    setrlimit_mock.assert_not_called()
-    getrlimit_mock.reset_mock()
-    setrlimit_mock.reset_mock()
+        # linux
+        mock_on_master(is_master=True)
+        mock_sys_platform('linux')
+        setup_resource_limits(behave)
+        setrlimit_mock.assert_not_called()
+        getrlimit_mock.assert_not_called()
+
+        # make sure setrlimit is called
+        mock_on_master(is_master=False)
+        getrlimit_mock = mock_getrlimit(1024)
+        setup_resource_limits(behave)
+        getrlimit_mock.assert_called_once_with(resource.RLIMIT_NOFILE)
+        setrlimit_mock.assert_called_once_with(resource.RLIMIT_NOFILE, (10000, resource.RLIM_INFINITY))
+        getrlimit_mock.reset_mock()
+        setrlimit_mock.reset_mock()
+
+        # failed to set resource limits
+        setrlimit_mock = mocker.patch(
+            'resource.setrlimit',
+            side_effect=[OSError],
+        )
+
+        with caplog.at_level(logging.WARNING):
+            setup_resource_limits(behave)
+        assert "and the OS didn't allow locust to increase it by itself" in caplog.text
+        setrlimit_mock.assert_called_once_with(resource.RLIMIT_NOFILE, (10000, resource.RLIM_INFINITY))
+        getrlimit_mock.assert_called_once_with(resource.RLIMIT_NOFILE)
+        getrlimit_mock.reset_mock()
+        caplog.clear()
+
+        setrlimit_mock = mocker.patch(
+            'resource.setrlimit',
+            side_effect=[ValueError],
+        )
+        with caplog.at_level(logging.WARNING):
+            setup_resource_limits(behave)
+        assert "and the OS didn't allow locust to increase it by itself" in caplog.text
+        setrlimit_mock.assert_called_once_with(resource.RLIMIT_NOFILE, (10000, resource.RLIM_INFINITY))
+        getrlimit_mock.assert_called_once_with(resource.RLIMIT_NOFILE)
+        setrlimit_mock.reset_mock()
+        getrlimit_mock.reset_mock()
+        caplog.clear()
+
+        getrlimit_mock = mock_getrlimit(10001)
+        setup_resource_limits(behave)
+        getrlimit_mock.assert_called_once_with(resource.RLIMIT_NOFILE)
+        setrlimit_mock.assert_not_called()
+        getrlimit_mock.reset_mock()
+        setrlimit_mock.reset_mock()
 
 
 def test_setup_environment_listeners(behave_fixture: BehaveFixture, mocker: MockerFixture) -> None:  # noqa: PLR0915

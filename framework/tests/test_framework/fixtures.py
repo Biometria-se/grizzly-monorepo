@@ -4,14 +4,16 @@ from __future__ import annotations
 
 import inspect
 import re
-from contextlib import nullcontext, suppress
+import sys
+from contextlib import suppress
 from cProfile import Profile
 from getpass import getuser
 from hashlib import sha1
 from json import dumps as jsondumps
 from os import chdir, environ
+from os.path import pathsep, sep
 from pathlib import Path
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, _TemporaryFileWrapper, gettempdir
 from textwrap import dedent, indent
 from typing import TYPE_CHECKING, Any, Literal, cast
 from urllib.parse import urlparse
@@ -592,7 +594,7 @@ def step_start_webserver(context: Context, port: int) -> None:
         self._tmp_path_factory = tmp_path_factory
         self.webserver = webserver
         self.cwd = (Path(__file__).parent / '..' / '..').resolve()
-        self._env = {}
+        self._env = environ.copy() if sys.platform == 'win32' else {}
         self._validators = {}
         self._root = None
         self._after_features = {}
@@ -600,6 +602,11 @@ def step_start_webserver(context: Context, port: int) -> None:
         self._distributed = distributed
         self._has_pymqi = None
         self.profile = None
+
+        temp_dir = environ.get('GRIZZLY_TMP_DIR', gettempdir())
+
+        self.log_file = Path(temp_dir) / 'grizzly.log'
+        self.log_file.unlink(missing_ok=True)
 
     @property
     def root(self) -> Path:
@@ -650,17 +657,20 @@ def step_start_webserver(context: Context, port: int) -> None:
                 assert rc == 0
             except AssertionError:
                 print(''.join(output))
+                with self.log_file.open('a+') as fd:
+                    fd.write(''.join(output))
 
                 raise
         else:
             virtual_env_path = Path(virtual_env)
 
         path = environ.get('PATH', '')
+        virtual_env_bin_dir = 'Scripts' if sys.platform == 'win32' else 'bin'
 
         self._env.update(
             {
-                'PATH': f'{virtual_env_path.as_posix()}/bin:{path}',
-                'VIRTUAL_ENV': virtual_env_path.as_posix(),
+                'PATH': f'{virtual_env_path!s}{sep}{virtual_env_bin_dir}{pathsep}{path}',
+                'VIRTUAL_ENV': f'{virtual_env_path!s}',
                 'PYTHONPATH': environ.get('PYTHONPATH', '.'),
                 'HOME': environ.get('HOME', '/'),
             },
@@ -686,6 +696,8 @@ def step_start_webserver(context: Context, port: int) -> None:
             assert rc == 0
         except AssertionError:
             print(''.join(output))
+            with self.log_file.open('a+') as fd:
+                fd.write(''.join(output))
             raise
 
         self._root = test_context / project_name
@@ -749,6 +761,8 @@ def step_start_webserver(context: Context, port: int) -> None:
                 assert rc == 0
             except AssertionError:
                 print(''.join(output))
+                with self.log_file.open('a+') as fd:
+                    fd.write(''.join(output))
                 raise
         else:
             # install dependencies, in local venv
@@ -767,6 +781,8 @@ def step_start_webserver(context: Context, port: int) -> None:
                 assert rc == 0
             except AssertionError:
                 print(''.join(output))
+                with self.log_file.open('a+') as fd:
+                    fd.write(''.join(output))
                 raise
 
         return self
@@ -941,8 +957,7 @@ def step_start_webserver(context: Context, port: int) -> None:
         # write feature file
         with (self.root / 'features' / f'{name}.feature').open('w+') as fd:
             fd.write(contents)
-
-        feature_file_name = fd.name.replace(f'{self.root}/', '')
+            feature_file_name = str(Path(fd.name).relative_to(self.root))
 
         # cache current step implementations
         steps_impl = steps_file.read_text()
@@ -1013,19 +1028,15 @@ def step_start_webserver(context: Context, port: int) -> None:
         *,
         dry_run: bool = False,
     ) -> tuple[int, list[str]]:
-        env_conf_fd: Any
+        env_conf_fd: _TemporaryFileWrapper[bytes] | None = None
         if env_conf is not None:
             prefix = Path(feature_file).stem
-            env_conf_fd = NamedTemporaryFile(delete=not self.keep_files, prefix=prefix, suffix='.yaml', dir=(self.root / 'environments'))  # noqa: SIM115
-        else:
-            env_conf_fd = nullcontext()
+            env_conf_fd = NamedTemporaryFile(delete=False, prefix=prefix, suffix='.yaml', dir=(self.root / 'environments'))  # noqa: SIM115
 
         if project_name is None:
             project_name = self.root.name
 
-        Path('/tmp/grizzly.log').unlink(missing_ok=True)  # noqa: S108
-
-        with env_conf_fd as env_conf_file:
+        try:
             command = [
                 'grizzly-cli',
                 self.mode,
@@ -1033,7 +1044,7 @@ def step_start_webserver(context: Context, port: int) -> None:
                 '--yes',
                 '--verbose',
                 '-l',
-                '/tmp/grizzly.log',  # noqa: S108
+                f'{self.log_file!s}',
                 feature_file,
             ]
 
@@ -1043,11 +1054,12 @@ def step_start_webserver(context: Context, port: int) -> None:
             if self._distributed:
                 command = [*command[:2], '--project-name', project_name, *command[2:]]
 
-            if env_conf is not None:
-                env_conf_file.write(yaml.dump(env_conf, Dumper=yaml.Dumper).encode())
-                env_conf_file.flush()
-                env_conf_path = str(env_conf_file.name).replace(f'{self.root.as_posix()}/', '')
-                command += ['-e', env_conf_path]
+            if env_conf_fd is not None:
+                with env_conf_fd as env_conf_file:
+                    env_conf_file.write(yaml.dump(env_conf, Dumper=yaml.Dumper).encode())
+                    env_conf_file.flush()
+                    env_conf_path = str(env_conf_file.name).replace(f'{self.root.as_posix()}/', '')
+                    command += ['-e', env_conf_path]
 
             if testdata is not None:
                 for key, value in testdata.items():
@@ -1077,5 +1089,11 @@ def step_start_webserver(context: Context, port: int) -> None:
                     )
 
                     output += o
+        finally:
+            if env_conf_fd is not None and not self.keep_files:
+                Path(env_conf_fd.name).unlink()
 
-            return rc, output
+        if sys.platform == 'win32':
+            output = [o.replace('\r', '') for o in output]
+
+        return rc, output

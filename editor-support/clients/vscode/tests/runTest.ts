@@ -86,10 +86,6 @@ async function main() {
 
         const argv = process.argv.slice(2);
 
-        const output = await runVSCodeCommand(['--status']);
-
-        console.log(`!! VSCode status:\n${output.stdout}`);
-
         process.env['TESTS'] = `${argv}`;
 
         // Download VS Code, unzip it and run the integration test

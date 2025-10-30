@@ -140,6 +140,7 @@ class GrizzlyUser(User, metaclass=GrizzlyUserMeta):
     def failure_handler(self, exception: Exception | None, *, task: GrizzlyTask | None = None) -> None:
         # no failure, just return
         if exception is None:
+            self.logger.debug('no exception to handle in failure_handler')
             return
 
         # failure action has already been decided, let it through
@@ -147,10 +148,12 @@ class GrizzlyUser(User, metaclass=GrizzlyUserMeta):
         from grizzly.types import FailureAction  # noqa: PLC0415
 
         if isinstance(exception, FailureAction.get_failure_exceptions()):
+            self.logger.debug('exception is already a failure action, re-raising it')
             raise exception
 
         # always raise StopUser when these unhandled exceptions has occured
         if isinstance(exception, NotImplementedError | KeyError | IndexError | AttributeError | TypeError | SyntaxError):
+            self.logger.debug('exception is a critical error, raising StopUser')
             raise StopUser from exception
 
         # check for custom actions based on failure
@@ -161,16 +164,21 @@ class GrizzlyUser(User, metaclass=GrizzlyUserMeta):
 
             # continue test for this specific error, i.e. ignore it
             if failure_action is None:
+                self.logger.debug('ignoring exception of type %r', failure_type)
                 return
 
             if (isinstance(failure_type, str) and failure_type in repr(exception)) or exception.__class__ is failure_type:
+                self.logger.debug('handling exception of type %r with action %r', failure_type, failure_action)
                 raise failure_action from exception
 
         # no match, raise the default if it has been set
         default_exception = self._scenario.failure_handling.get(None, None)
 
         if default_exception is not None:
+            self.logger.debug('raising default failure action %r for exception %r', default_exception, exception)
             raise default_exception from exception
+
+        self.logger.debug('no failure action matched for exception %r, continue', exception)
 
     def on_quitting(self, *_args: Any, **kwargs: Any) -> None:
         # if it already has been called with True, do not change it back to False

@@ -120,16 +120,18 @@ def test_create_normalizer(lsp_fixture: LspFixture, mocker: MockerFixture) -> No
 def test__filter_source_paths(mocker: MockerFixture) -> None:
     m = mocker.patch('pathlib.Path.is_dir', return_value=True)
 
+    base_path = Path('my', 'directory')
+
     test_paths = [
-        Path('/my/directory/.venv/foo/file.py'),
-        Path('/my/directory/node_modules/sub1/sub2/sub.py'),
-        Path('/my/directory/bin/some_bin.py'),
-        Path('/my/directory/steps/step1.py'),
-        Path('/my/directory/steps/step2.py'),
-        Path('/my/directory/steps/helpers/helper.py'),
-        Path('/my/directory/util/utils.py'),
-        Path('/my/directory/util/utils2.py'),
-        Path('/my/directory/util/utils2.py'),
+        Path.joinpath(base_path, '.venv', 'foo', 'file.py'),
+        Path.joinpath(base_path, 'node_modules', 'sub1', 'sub2', 'sub.py'),
+        Path.joinpath(base_path, 'bin', 'some_bin.py'),
+        Path.joinpath(base_path, 'steps', 'step1.py'),
+        Path.joinpath(base_path, 'steps', 'step2.py'),
+        Path.joinpath(base_path, 'steps', 'helpers', 'helper.py'),
+        Path.joinpath(base_path, 'util', 'utils.py'),
+        Path.joinpath(base_path, 'util', 'utils2.py'),
+        Path.joinpath(base_path, 'util', 'utils2.py'),
     ]
 
     # Default, subdirectories under .venv and node_modules should be ignored,
@@ -138,28 +140,28 @@ def test__filter_source_paths(mocker: MockerFixture) -> None:
     filtered = _filter_source_directories(file_ignore_patterns, test_paths)
     assert m.call_count == 9
     assert len(filtered) == 3
-    assert Path('/my/directory/steps') in filtered
-    assert Path('/my/directory/steps/helpers') in filtered
-    assert Path('/my/directory/util') in filtered
+    assert Path.joinpath(base_path, 'steps') in filtered
+    assert Path.joinpath(base_path, 'steps', 'helpers') in filtered
+    assert Path.joinpath(base_path, 'util') in filtered
 
     # Ignore util directory
     file_ignore_patterns = ['**/util']
     filtered = _filter_source_directories(file_ignore_patterns, test_paths)
     assert len(filtered) == 5
-    assert Path('/my/directory/.venv/foo') in filtered
-    assert Path('/my/directory/node_modules/sub1/sub2') in filtered
-    assert Path('/my/directory/steps') in filtered
-    assert Path('/my/directory/steps/helpers') in filtered
-    assert Path('/my/directory/bin') in filtered
+    assert Path.joinpath(base_path, '.venv', 'foo') in filtered
+    assert Path.joinpath(base_path, 'node_modules', 'sub1', 'sub2') in filtered
+    assert Path.joinpath(base_path, 'steps') in filtered
+    assert Path.joinpath(base_path, 'steps', 'helpers') in filtered
+    assert Path.joinpath(base_path, 'bin') in filtered
 
     # Ignore steps and any subdirectory under it
     file_ignore_patterns = ['**/steps']
     filtered = _filter_source_directories(file_ignore_patterns, test_paths)
     assert len(filtered) == 4
-    assert Path('/my/directory/.venv/foo') in filtered
-    assert Path('/my/directory/node_modules/sub1/sub2') in filtered
-    assert Path('/my/directory/util') in filtered
-    assert Path('/my/directory/bin') in filtered
+    assert Path.joinpath(base_path, '.venv', 'foo') in filtered
+    assert Path.joinpath(base_path, 'node_modules', 'sub1', 'sub2') in filtered
+    assert Path.joinpath(base_path, 'util') in filtered
+    assert Path.joinpath(base_path, 'bin') in filtered
 
 
 def test_compile_inventory(lsp_fixture: LspFixture, caplog: LogCaptureFixture) -> None:

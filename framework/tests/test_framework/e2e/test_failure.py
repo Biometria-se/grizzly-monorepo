@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from textwrap import dedent
 from typing import TYPE_CHECKING, Any, cast
 
@@ -286,6 +287,8 @@ def test_e2e_scenario_failure_handling_timeout(e2e_fixture: End2EndFixture) -> N
 
     e2e_fixture.add_after_feature(after_feature)
 
+    sleep_time = '1.0' if sys.platform != 'win32' else '3.0'
+
     start_webserver_step = f'Then start webserver on master port "{e2e_fixture.webserver.port}"\n' if e2e_fixture._distributed else ''
 
     feature_file = e2e_fixture.create_feature(
@@ -299,7 +302,7 @@ def test_e2e_scenario_failure_handling_timeout(e2e_fixture: End2EndFixture) -> N
         And repeat for "2" iterations
         When any task fail stop user
         When any task fail with "TaskTimeoutError" retry task
-        Then get request with name "slow-get1" from endpoint "/api/sleep-once/10 | timeout=1.0"
+        Then get request with name "slow-get1" from endpoint "/api/sleep-once/10 | timeout={sleep_time}"
         Then get request with name "fast-get2" from endpoint "/api/echo?foo=bar | content_type=json"
     """),
     )
@@ -313,10 +316,16 @@ def test_e2e_scenario_failure_handling_timeout(e2e_fixture: End2EndFixture) -> N
 
     result = ''.join(output)
 
-    assert rc == 1
-    assert 'HOOK-ERROR in after_feature: RuntimeError: locust test failed' in result
-    assert "GET 001 slow-get1: TaskTimeoutError('task took more than 1.0 seconds')" in result
+    try:
+        assert rc == 1
+        assert 'HOOK-ERROR in after_feature: RuntimeError: locust test failed' in result
+        assert f"GET 001 slow-get1: TaskTimeoutError('task took more than {sleep_time} seconds')" in result
 
-    log_files = list((e2e_fixture.root / 'features' / 'logs').glob('*.log'))
+        log_files = list((e2e_fixture.root / 'features' / 'logs').glob('*.log'))
 
-    assert len(log_files) == 1
+        assert len(log_files) == 1
+    except AssertionError:
+        print(''.join(output))
+        with e2e_fixture.log_file.open('a+') as fd:
+            fd.write(''.join(output))
+        raise

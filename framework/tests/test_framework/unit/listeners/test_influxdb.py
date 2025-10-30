@@ -7,12 +7,14 @@ import os
 import socket
 from contextlib import suppress
 from datetime import datetime, timezone
+from itertools import cycle
 from json import dumps as jsondumps
 from platform import node as get_hostname
 from typing import TYPE_CHECKING, Any
 from unittest.mock import patch
 
 import pytest
+from gevent.event import Event
 from grizzly.listeners.influxdb import InfluxDbError, InfluxDbListener, InfluxDbPoint, InfluxDbV1, InfluxDbV2
 from grizzly.types.locust import CatchResponseError
 from influxdb.exceptions import InfluxDBClientError
@@ -369,7 +371,7 @@ class TestInfluxDblistener:
     def test_run_user_count(self, locust_fixture: LocustFixture, patch_influxdblistener: Callable[[], None], mocker: MockerFixture) -> None:
         patch_influxdblistener()
 
-        gsleep_spy = mocker.patch('gevent.sleep', return_value=None)
+        gsleep_mock = mocker.patch('gevent.sleep', return_value=None)
         mocker.patch(
             'locust.runners.Runner.user_classes_count',
             new_callable=mocker.PropertyMock,
@@ -380,42 +382,50 @@ class TestInfluxDblistener:
             locust_fixture.environment,
             'https://influx.test.com:1240/testdb?Testplan=unittest-plan&TargetEnvironment=local&ProfileName=unittest-profile&Description=unittesting',
         )
+        quit_event_mock = mocker.MagicMock(spec=Event)
+        listener._quit_event = quit_event_mock
+        queue_event_mock = mocker.patch.object(listener, 'queue_event', return_value=None)
 
         try:
-            queue_event_mock = mocker.patch.object(listener, 'queue_event', side_effect=[RuntimeError])
+            quit_event_mock.is_set.side_effect = cycle([False, True])
 
-            with pytest.raises(RuntimeError):
-                listener.run_user_count()
+            listener.run_user_count()
 
-            gsleep_spy.assert_not_called()
+            gsleep_mock.assert_called_once_with(5.0)
             queue_event_mock.assert_called_once_with([])
 
-            queue_event_mock = mocker.patch.object(listener, 'queue_event', side_effect=[None, RuntimeError])
+            gsleep_mock.reset_mock()
+            queue_event_mock.reset_mock()
 
-            with pytest.raises(RuntimeError):
-                listener.run_user_count()
+            quit_event_mock.is_set.side_effect = cycle([False, False, True])
 
-            gsleep_spy.assert_called_once_with(5.0)
-            gsleep_spy.reset_mock()
+            listener.run_user_count()
+
+            assert gsleep_mock.mock_calls == [mocker.call(5.0), mocker.call(5.0)]
+            gsleep_mock.reset_mock()
 
             assert queue_event_mock.call_count == 2
             for i in range(2):
-                args, _ = queue_event_mock.call_args_list[i]
-                assert len(args) == 1
-                assert len(args[0]) == 2
-                for j in range(2):
-                    assert args[0][j].get('measurement', None) == 'user_count'
-                    assert args[0][j].get('tags', None) == {
-                        'environment': 'local',
-                        'testplan': 'unittest-plan',
-                        'hostname': get_hostname(),
-                        'user_class': f'User{j + 1}',
-                        'description': 'unittesting',
-                        'profile': 'unittest-profile',
-                    }
-                    assert args[0][j].get('fields', None) == {
-                        'user_count': 2 + j,
-                    }
+                queue_event_mock.call_args_list[i].assert_called_once_with(
+                    [
+                        {
+                            'measurement': 'user_count',
+                            'tags': {
+                                'environment': 'local',
+                                'testplan': 'unittest-plan',
+                                'hostname': get_hostname(),
+                                'user_class': f'User{i + 1}',
+                                'description': 'unittesting',
+                                'profile': 'unittest-profile',
+                            },
+                            'fields': {
+                                'user_count': i + 2,
+                            },
+                            'timestamp': ANY(str),
+                        }
+                        for j in range(2)
+                    ]
+                )
         finally:
             with suppress(Exception):
                 listener._events.clear()
@@ -429,26 +439,28 @@ class TestInfluxDblistener:
             locust_fixture.environment,
             'https://influx.test.com:1241/testdb?Testplan=unittest-plan&TargetEnvironment=local&ProfileName=unittest-profile&Description=unittesting',
         )
+        listener._events = []
+        quit_event_mock = mocker.MagicMock(spec=Event)
+        quit_event_mock.is_set.side_effect = cycle([False, True])
+        listener._quit_event = quit_event_mock
 
         try:
-            mocker.patch(
-                'gevent.sleep',
-                side_effect=RuntimeError('gsleep was called'),
-            )
+            gsleep_mock = mocker.patch('gevent.sleep', return_value=None)
             write_mock = mocker.patch.object(listener.connection, 'write', return_value=None)
-            listener._events = []
 
-            with pytest.raises(RuntimeError):
-                listener.run_events()
+            listener.run_events()
 
             write_mock.assert_not_called()
+
+            gsleep_mock.assert_called_once_with(1.5)
+            gsleep_mock.reset_mock()
 
             listener._log_request('GET', '/api/v1/test', 'Success', {'response_time': 133.7}, {}, None)
             assert len(listener._events) == 1
 
-            with pytest.raises(RuntimeError):
-                listener.run_events()
+            listener.run_events()
 
+            gsleep_mock.assert_called_once_with(1.5)
             write_mock.assert_called()
             assert len(listener._events) == 0
         finally:

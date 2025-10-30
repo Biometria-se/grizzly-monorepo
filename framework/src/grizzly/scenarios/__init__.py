@@ -35,6 +35,7 @@ class GrizzlyScenario(SequentialTaskSet):
     abort: Event
 
     _task_index: int
+    _user: GrizzlyUser
 
     def __init__(self, parent: GrizzlyUser) -> None:
         super().__init__(parent=parent)
@@ -63,7 +64,7 @@ class GrizzlyScenario(SequentialTaskSet):
 
     @property
     def user(self) -> GrizzlyUser:
-        return cast('GrizzlyUser', self._user)
+        return self._user
 
     @property
     def current_iteration(self) -> int:

@@ -244,7 +244,7 @@ def use_virtual_environment(ls: GrizzlyLanguageServer, project_name: str, env: d
     has_venv = virtual_environment.exists()
     python_version = '.'.join(str(v) for v in sys.version_info[:2])
 
-    ls.logger.debug(f'looking for venv at {virtual_environment}, {has_venv=}')
+    ls.logger.debug(f'looking for venv at {virtual_environment!s}, {has_venv=}')
 
     if not has_venv:
         try:
@@ -269,14 +269,14 @@ def use_virtual_environment(ls: GrizzlyLanguageServer, project_name: str, env: d
     bin_dir = 'Scripts' if platform.system() == 'Windows' else 'bin'
 
     paths = [
-        (virtual_environment / bin_dir).as_posix(),
+        str(virtual_environment / bin_dir),
         env.get('PATH', ''),
     ]
     env.update(
         {
             'PATH': pathsep.join(paths),
-            'VIRTUAL_ENV': virtual_environment.as_posix(),
-            'PYTHONPATH': (ls.root_path / 'features').as_posix(),
+            'VIRTUAL_ENV': str(virtual_environment),
+            'PYTHONPATH': str(ls.root_path / 'features'),
         }
     )
 
@@ -525,7 +525,9 @@ def initialize(ls: GrizzlyLanguageServer, params: lsp.InitializeParams) -> None:
         root_path = Path(unquote(url2pathname(parsed.path)) if params.root_uri is not None else cast('str', params.root_path))
 
         # fugly as hell
-        if not root_path.exists() and root_path.as_posix()[0] == sep and root_path.as_posix()[2] == ':':
+        if (not root_path.exists() and root_path.as_posix()[0] == sep and root_path.as_posix()[2] == ':') or (
+            sys.platform == 'win32' and not root_path.exists() and root_path.as_posix()[0] == '/'
+        ):
             root_path = Path(root_path.as_posix()[1:])
 
         ls.root_path = root_path

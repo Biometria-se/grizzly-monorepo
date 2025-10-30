@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol, TypedDict, cast
 from urllib.parse import parse_qs, unquote, urlparse
 
 import gevent
+from gevent.event import Event
 from gevent.lock import Semaphore
 from influxdb import InfluxDBClient as InfluxDBClientV1
 from influxdb.exceptions import InfluxDBClientError
@@ -245,6 +246,7 @@ class InfluxDbListener:
         url: str,
     ) -> None:
         self.lock = Semaphore()
+        self.logger = logging.getLogger(__name__)
 
         parsed = urlparse(url)
         path = parsed.path[1:] if parsed.path is not None else None
@@ -253,6 +255,7 @@ class InfluxDbListener:
         assert path is not None, f'{url} contains no path'
         assert len(path) > 0, f'database was not found in {url}'
 
+        self.logger.debug('url=%s, parsed=%r', url, parsed)
         self.influx_host = parsed.hostname
         self.influx_port = parsed.port or 8086
 
@@ -279,7 +282,6 @@ class InfluxDbListener:
         self._description = params['Description'][0] if 'Description' in params else ''
 
         self.connection = self.create_client().connect()
-        self.logger = logging.getLogger(__name__)
         self.environment.events.request.add_listener(self.request)
         self.environment.events.heartbeat_sent.add_listener(self.heartbeat_sent)
         self.environment.events.heartbeat_received.add_listener(self.heartbeat_received)
@@ -295,7 +297,11 @@ class InfluxDbListener:
         self.run_events_greenlet = gevent.spawn(self.run_events)
         self.run_user_count_greenlet = gevent.spawn(self.run_user_count)
 
+        self._quit_event = Event()
+
     def on_quit(self, *_args: Any, **_kwargs: Any) -> None:
+        self.logger.info('received quit event')
+        self._quit_event.set()
         self.destroy_client()
 
     def create_client(self) -> InfluxDb:
@@ -321,9 +327,15 @@ class InfluxDbListener:
             gevent.sleep(0.5)
             count += 1
 
-            if count % 10 == 0:
+            if count % 20 == 0:
                 self.logger.info('%d events in queue, waiting', len(self._events))
+                if self._quit_event.is_set():
+                    break
                 count = 0
+
+        if len(self._events) > 0:
+            self.logger.warning('proceeding with shutdown, %d events still in queue', len(self._events))
+            self.logger.warning('discarded metrics: %s', json.dumps(self._events))
 
         self.run_events_greenlet.kill(block=False)
         self.run_user_count_greenlet.kill(block=False)
@@ -346,7 +358,7 @@ class InfluxDbListener:
 
         assert runner is not None, 'no runner is set'
 
-        while True:
+        while not self._quit_event.is_set():
             events: list[Any] = []
             timestamp = datetime.now(timezone.utc).isoformat()
 
@@ -374,19 +386,19 @@ class InfluxDbListener:
             gevent.sleep(5.0)
 
     def run_events(self) -> None:
-        while True:
+        while not self._quit_event.is_set():
+            gevent.sleep(1.5)
+
             with self.lock:
                 if self._events:
-                    # Buffer samples, so that a locust greenlet will write to the new list
-                    # instead of the one that has been sent into postgres client
                     try:
                         self.connection.write(self._events)
                         self.logger.debug('wrote %d measurements', len(self._events))
                         self._events.clear()
                     except:
                         self.logger.exception('failed to write metrics')
-
-            gevent.sleep(1.5)
+                        if self._quit_event.is_set():
+                            self.logger.warning('discarded metrics: %s', json.dumps(self._events))
 
     def _override_event(self, event: InfluxDbPoint, context: StrDict) -> None:
         # override values set in context

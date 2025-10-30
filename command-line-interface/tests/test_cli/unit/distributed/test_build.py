@@ -11,6 +11,7 @@ from pathlib import Path
 from socket import gaierror
 from typing import TYPE_CHECKING
 
+import pytest
 from grizzly_cli.distributed.build import _create_build_command, build, getgid, getuid
 from grizzly_cli.utils import RunCommandResult, rm_rf
 
@@ -22,13 +23,14 @@ if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
 
-def test_getuid_getgid_nt(mocker: MockerFixture) -> None:
-    mocker.patch('grizzly_cli.distributed.build.os.name', 'nt')
+@pytest.mark.skipif(sys.platform == 'win32', reason='only run test on non-windows platforms')
+def test_getuid_getgid_win32(mocker: MockerFixture) -> None:
+    mocker.patch('grizzly_cli.distributed.build.sys.platform', 'win32')
 
     assert getuid() == 1000
     assert getgid() == 1000
 
-    mocker.patch('grizzly_cli.distributed.build.os.name', 'posix')
+    mocker.patch('grizzly_cli.distributed.build.sys.platform', 'linux')
 
     assert getuid() >= 0
     assert getgid() >= 0

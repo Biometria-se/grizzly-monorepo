@@ -22,7 +22,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from grizzly.types import Self
 
 logger = logging.getLogger('webserver')
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class TestApp(Flask):
@@ -190,7 +190,9 @@ def app_sleep(seconds: str) -> FlaskResponse:
 def app_sleep_once(seconds: str) -> FlaskResponse:
     x_grizzly_user = request.headers.get('x-grizzly-user', 'unknown')
 
-    x_grizzly_user = f'{x_grizzly_user}::sleep-once'
+    x_grizzly_user = f'sleep-once::{x_grizzly_user}'
+
+    logger.debug('app_sleep_once called for user %s', x_grizzly_user)
 
     app._user_request_tracker.update({x_grizzly_user: app._user_request_tracker.get(x_grizzly_user, 0) + 1})
 

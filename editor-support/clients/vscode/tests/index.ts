@@ -8,7 +8,15 @@ export function run(): Promise<void> {
         ui: 'tdd',
         color: true,
     });
-    mocha.timeout(300000);
+
+    switch (process.platform) {
+        case 'darwin':
+            mocha.timeout(420000);
+            break;
+        default:
+            mocha.timeout(300000); // 5 minutes
+            break;
+    }
 
     const testsRoot = __dirname;
 

@@ -62,11 +62,11 @@ def _create_python_change(directory: str, package: str) -> Change:
     args_e2e_dist: str = ''
 
     if test_unit_directory.exists() and test_e2e_directory.exists():
-        args_unit = f'{test_directory.relative_to(directory_path).as_posix()} --ignore={test_e2e_directory.relative_to(directory_path).as_posix()}'
-        args_e2e = f'{test_directory.relative_to(directory_path).as_posix()} --ignore={test_unit_directory.relative_to(directory_path).as_posix()}'
+        args_unit = test_unit_directory.relative_to(directory_path).as_posix()
+        args_e2e = test_e2e_directory.relative_to(directory_path).as_posix()
 
         if package == 'grizzly-loadtester':
-            args_e2e_dist = f'{test_directory.relative_to(directory_path).as_posix()} --ignore={test_unit_directory.relative_to(directory_path).as_posix()}'
+            args_e2e_dist = args_e2e
     else:
         args_unit = f'{test_directory.relative_to(directory_path).as_posix()}'
 

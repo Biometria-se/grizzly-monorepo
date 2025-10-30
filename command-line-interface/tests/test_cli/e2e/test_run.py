@@ -132,30 +132,28 @@ def install_dependencies(e2e_fixture: End2EndFixture, example_root: Path) -> Non
         try:
             assert rc == 0
         except AssertionError:
-            print(''.join(output))
+            with e2e_fixture.log_file.open('a+') as fd:
+                fd.write(''.join(output))
             raise
     else:
-        command = ['python', '-m', 'pip', 'install', '--no-cache-dir', '-r', 'requirements.txt']
-        if sys.platform == 'win32':
-            command += ['--user']
+        command = ['uv', 'sync', '--active', '--locked', '--package', 'grizzly-loadtester']
+        repo_root_path = (Path(__file__).parent / '..' / '..' / '..' / '..').resolve()
 
         rc, output = run_command(
             command,
-            cwd=example_root,
+            cwd=repo_root_path,
             env=e2e_fixture._env,
         )
 
         try:
             assert rc == 0
         except AssertionError:
-            print(''.join(output))
+            with e2e_fixture.log_file.open('a+') as fd:
+                fd.write(''.join(output))
             raise
 
 
 def test_e2e_run_example(e2e_fixture: End2EndFixture) -> None:
-    if sys.version_info < (3, 8) and not e2e_fixture._distributed:
-        pytest.skip('grizzly-loadtester only supports python >= 3.8')
-
     if sys.platform == 'win32' and e2e_fixture._distributed:
         pytest.skip('windows github runners do not support running linux containers')
 
@@ -213,5 +211,6 @@ def test_e2e_run_example(e2e_fixture: End2EndFixture) -> None:
             validate_result(rc, result, example_root)
     except:
         if result is not None:
-            print(result)
+            with e2e_fixture.log_file.open('a+') as fd:
+                fd.write(''.join(output))
         raise

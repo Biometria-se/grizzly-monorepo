@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from os.path import sep as os_path_sep
 from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -30,7 +31,7 @@ def test_e2e_step_setup_variable_value_ask(e2e_fixture: End2EndFixture) -> None:
         ],
     )
 
-    assert feature_file == 'features/test_e2e_step_setup_variable_value_ask.feature'
+    assert feature_file == f'features{os_path_sep}test_e2e_step_setup_variable_value_ask.feature'
 
     rc, output = e2e_fixture.execute(
         feature_file,

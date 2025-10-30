@@ -19,6 +19,7 @@ dependencies = [
     "pyotp>=2.9.0",
     "python-dateutil>=2.9.0.post0",
     "pyyaml>=6.0.2",
+    "tzdata>=2025.2",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",

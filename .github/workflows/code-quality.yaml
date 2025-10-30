@@ -8,7 +8,7 @@ on:
 
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on: "ubuntu-latest"
 
     outputs:
       changes_uv: ${{ steps.mapper.outputs.changes_uv }}
@@ -34,8 +34,8 @@ jobs:
         run: |
           uv run ./extras/scripts/map-changes.py --changes '${{ steps.filter.outputs.changes }}' --force ${{ github.event_name == 'workflow_dispatch' }}
 
-  uv_lint:
-    name: "lint / ${{ matrix.changes.package }} / ${{ matrix.image }} / py${{ matrix.python-version }}"
+  uv-lint:
+    name: "uv lint / ${{ matrix.changes.package }} / py${{ matrix.python-version }} / ${{ matrix.image }}"
     needs: changes
     outputs:
       changes_uv: ${{ needs.changes.outputs.changes_uv }}
@@ -43,9 +43,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [ubuntu-latest]
+        image: ["ubuntu-latest", "windows-latest", "macos-15-intel"]
         python-version: ["3.10", "3.13"]
         changes: ${{ fromJSON(needs.changes.outputs.changes_uv) }}
+        exclude:
+          - image: "windows-latest"
+            python-version: "3.10"
+          - image: "macos-15-intel"
+            python-version: "3.10"
 
     steps:
       - uses: MathRobin/timezone-action@v1.1
@@ -82,19 +87,24 @@ jobs:
         run: |
           uv run mypy .
 
-  uv_test:
-    name: "test / ${{ matrix.changes.package }} / ${{ matrix.image }} / py${{ matrix.python-version }}"
-    needs: uv_lint
+  uv-test:
+    name: "uv test / ${{ matrix.changes.package }} / py${{ matrix.python-version }} / ${{ matrix.image }}"
+    needs: uv-lint
     continue-on-error: true
     outputs:
-      changes_uv: ${{ needs.uv_lint.outputs.changes_uv }}
+      changes_uv: ${{ needs.uv-lint.outputs.changes_uv }}
     runs-on: ${{ matrix.image }}
     strategy:
       fail-fast: false
       matrix:
-        image: [ubuntu-latest]
+        image: ["ubuntu-latest", "windows-latest", "macos-15-intel"]
         python-version: ["3.10", "3.13"]
-        changes: ${{ fromJSON(needs.uv_lint.outputs.changes_uv) }}
+        changes: ${{ fromJSON(needs.uv-lint.outputs.changes_uv) }}
+        exclude:
+          - image: "windows-latest"
+            python-version: "3.10"
+          - image: "macos-15-intel"
+            python-version: "3.10"
 
     steps:
       - uses: MathRobin/timezone-action@v1.1
@@ -128,18 +138,18 @@ jobs:
         run: |
           uv run coverage report -i --omit=tests/**/*,**/*messagequeue*,**/mq/__init__.py,**/__version__.py --fail-under=80
 
-  uv_test_e2e:
-    name: "test-e2e / ${{ matrix.changes.package }} / ${{ matrix.image }} / py${{ matrix.python-version }}"
-    needs: uv_test
+  uv-test-e2e:
+    name: "uv test-e2e / ${{ matrix.changes.package }} / py${{ matrix.python-version }} / ${{ matrix.image }}"
+    needs: uv-test
     outputs:
-      changes_uv: ${{ needs.uv_test.outputs.changes_uv }}
+      changes_uv: ${{ needs.uv-test.outputs.changes_uv }}
     runs-on: ${{ matrix.image }}
     strategy:
       fail-fast: false
       matrix:
-        image: [ubuntu-latest]
+        image: ["ubuntu-latest", "windows-latest", "macos-15-intel"]
         python-version: ["3.13"]
-        changes: ${{ fromJSON(needs.uv_test.outputs.changes_uv) }}
+        changes: ${{ fromJSON(needs.uv-test.outputs.changes_uv) }}
 
     steps:
       - uses: MathRobin/timezone-action@v1.1
@@ -156,10 +166,34 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
 
-      - uses: KengoTODA/actions-setup-docker-compose@main
-        if: matrix.changes.tests.e2e.dist != ''
+      - name: setup docker (macos)
+        if: matrix.changes.tests.e2e.dist != '' && matrix.image == 'macos-15-intel'
+        id: setup-docker-macos
+        shell: bash
+        run: |
+          uname -a
+          brew install docker docker-compose docker-buildx capstone dtc libslirp libssh ncurses snappy vde qemu lima colima || true
+          mkdir -p $HOME/.docker/cli-plugins || true
+          ln -sfn /usr/local/opt/docker-buildx/bin/docker-buildx ~/.docker/cli-plugins/docker-buildx
+          ln -sfn /usr/local/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
+          colima start --verbose || { cat /Users/runner/.colima/_lima/colima/serial*.log; exit 1; }
+          sudo ln -sf $HOME/.colima/default/docker.sock /var/run/docker.sock
+
+      - name: "install docker compose (ubuntu)"
+        uses: KengoTODA/actions-setup-docker-compose@main
+        if: matrix.changes.tests.e2e.dist != '' && matrix.image == 'ubuntu-latest'
         with:
-          version: '2.39.3'
+          version: "2.39.3"
+
+      - name: set shell encoding (windows)
+        if: matrix.image == 'windows-latest'
+        run: |
+          if (!(Test-Path $profile))
+          {
+            New-Item -Path $profile -Type File -Force
+          }
+          # note that PYTHONUTF8=1 only works for python >= 3.7...
+          '$OutputEncoding = [console]::InputEncoding = [console]::OutputEncoding = New-Object System.Text.UTF8Encoding' + [Environment]::Newline + (Get-Content -Raw $profile -ErrorAction SilentlyContinue) + [Environment]::Newline + '$env:PYTHONIOENCODING = "utf-8"' + [Environment]::Newline + '$env:PYTHONUTF8 = 1' + [Environment]::Newline | Set-Content -Encoding utf8 $profile
 
       - name: "install ${{ matrix.changes.package }} dev dependencies"
         run: |
@@ -168,43 +202,58 @@ jobs:
 
       - name: setup environment
         run: |
-          ssh-agent -a /tmp/ssh_auth_sock
-          uv run ./extras/scripts/setup-e2e-environment.py
+          uv run ./extras/scripts/setup-environment.py
 
-      - name: "run e2e test"
+      - name: start ssh agent
+        id: ssh-agent
+        if: matrix.image != 'windows-latest'
+        run: |
+          ssh-agent -a /tmp/ssh_auth_sock
+
+      - name: "run e2e local test"
         id: e2e_local
         if: matrix.changes.tests.e2e.local != ''
         working-directory: ${{ matrix.changes.directory }}
         env:
           E2E_RUN_MODE: local
           SSH_AUTH_SOCK: /tmp/ssh_auth_sock
+          VIRTUAL_ENV: ${{ env.VIRTUAL_ENV }}
         run: |
           uv run pytest ${{ matrix.changes.tests.e2e.local }}
 
-      - name: "e2e test log"
-        if: matrix.changes.tests.e2e.local != '' && steps.e2e_local.outcome == 'failure'
-        continue-on-error: true
-        run: |
-          cat /tmp/grizzly.log
+      - name: "e2e local test log"
+        uses: actions/upload-artifact@v4
+        if: failure() && matrix.changes.tests.e2e.local != '' && steps.e2e_local.outcome == 'failure'
+        env:
+          GRIZZLY_TMP_LOGFILE: ${{ env.GRIZZLY_TMP_LOGFILE }}
+        with:
+          name: "grizzly-e2e-local-logs-${{ matrix.image }}-py${{ matrix.python-version }}"
+          path: "${{ env.GRIZZLY_TMP_LOGFILE }}"
+          if-no-files-found: error
 
       - name: "run e2e distributed test"
         id: e2e_dist
-        if: matrix.changes.tests.e2e.dist != ''
+        if: matrix.changes.tests.e2e.dist != '' && matrix.image == 'ubuntu-latest'
         working-directory: ${{ matrix.changes.directory }}
         env:
           E2E_RUN_MODE: dist
           SSH_AUTH_SOCK: /tmp/ssh_auth_sock
+          VIRTUAL_ENV: ${{ env.VIRTUAL_ENV }}
         run: |
-          uv run pytest ${{ matrix.changes.e2e.dist }}
+          uv run pytest ${{ matrix.changes.tests.e2e.dist }}
 
-      - name: "e2e test log"
-        if: matrix.changes.tests.e2e.dist != '' && steps.e2e_dist.outcome == 'failure'
-        continue-on-error: true
-        run: |
-          cat /tmp/grizzly.log
+      - name: "e2e distributed test log"
+        uses: actions/upload-artifact@v4
+        if: failure() && matrix.changes.tests.e2e.dist != '' && steps.e2e_dist.outcome == 'failure'
+        env:
+          GRIZZLY_TMP_LOGFILE: ${{ env.GRIZZLY_TMP_LOGFILE }}
+        with:
+          name: "grizzly-e2e-dist-logs-${{ matrix.image }}-py${{ matrix.python-version }}"
+          path: "${{ env.GRIZZLY_TMP_LOGFILE }}"
+          if-no-files-found: error
 
   npm-lint:
-    name: "lint / ${{ matrix.changes.package }} / node"
+    name: "npm lint / ${{ matrix.changes.package }} / ${{ matrix.image }}"
     needs: changes
     runs-on: ${{ matrix.image }}
     outputs:
@@ -212,7 +261,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [ubuntu-latest]
+        image: ["ubuntu-latest"]
+        python-version: ["3.10"]
         changes: ${{ fromJSON(needs.changes.outputs.changes_npm) }}
 
     steps:
@@ -240,7 +290,7 @@ jobs:
           npx @vscode/vsce package
 
   npm-test:
-    name: "test / ${{ matrix.changes.package }} / node"
+    name: "npm test / ${{ matrix.changes.package }} / ${{ matrix.image }}"
     needs: npm-lint
     outputs:
       changes_npm: ${{ needs.npm-lint.outputs.changes_npm }}
@@ -248,7 +298,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [ubuntu-latest]
+        image: ["ubuntu-latest", "windows-latest", "macos-15-intel"]
         python-version: ["3.10"]
         changes: ${{ fromJSON(needs.npm-lint.outputs.changes_npm) }}
 
@@ -267,12 +317,14 @@ jobs:
           node-version: 24
           cache-dependency-path: "${{ matrix.changes.directory }}/package-lock.json"
 
-      - name: "install grizzly-ls"
+      - name: "install grizzly-ls and grizzly"
         run: |
-            uv sync --locked --inexact --package grizzly-loadtester-ls --no-dev
-            uv sync --locked --inexact --package grizzly-loadtester --no-dev
-            echo "VIRTUAL_ENV=$PWD/.venv" >> $GITHUB_ENV
-            echo "PATH=$PWD/.venv/bin:$PATH" >> $GITHUB_ENV
+            uv sync --locked -p ${{ matrix.python-version }} --inexact --package grizzly-loadtester-ls --no-dev
+            uv sync --locked -p ${{ matrix.python-version }} --inexact --package grizzly-loadtester --no-dev
+
+      - name: setup environment
+        run: |
+          uv run ./extras/scripts/setup-environment.py
 
       - name: "install ${{ matrix.changes.package }} dev dependencies"
         working-directory: ${{ matrix.changes.directory }}
@@ -297,6 +349,6 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: grizzly-ls-server-logs
+          name: "grizzly-ls-server-logs-${{ matrix.image }}"
           path: "./editor-support/tests/project/grizzly-ls.log"
           if-no-files-found: error

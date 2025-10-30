@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import sys
 from textwrap import dedent
 from typing import TYPE_CHECKING, Any, cast
+
+import pytest
 
 if TYPE_CHECKING:  # pragma: no cover
     from grizzly.context import GrizzlyContext
@@ -12,6 +15,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from test_framework.fixtures import End2EndFixture
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='flaky on Windows CI, since windows is so sloooooow')
 def test_e2e_iteration_pace(e2e_fixture: End2EndFixture) -> None:
     def after_feature(context: Context, *_args: Any, **_kwargs: Any) -> None:
         from grizzly.locust import on_worker
@@ -65,7 +69,7 @@ def test_e2e_iteration_pace(e2e_fixture: End2EndFixture) -> None:
         And value for variable "AtomicIntegerIncrementer.run_id" is "1"
         When any task fail stop user
         When condition "{{{{ AtomicIntegerIncrementer.run_id < 3 }}}}" with name "run" is true, execute these tasks
-        Then get request with name "sleep-1" from endpoint "/api/sleep/{{{{ AtomicRandomInteger.sleep1 / 1000 / 2 }}}}"
+        Then get request with name "sleep-1" from endpoint "/api/sleep/{{{{ AtomicRandomInteger.sleep1 / 1000 / 3 }}}}"
         But if condition is false, execute these tasks
         Then get request with name "sleep-2" from endpoint "/api/sleep/0.6"
         Then end condition

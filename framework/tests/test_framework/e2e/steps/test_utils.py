@@ -39,5 +39,6 @@ def test_e2e_step_utils_fail(e2e_fixture: End2EndFixture) -> None:
             in result
         )
     except AssertionError:
-        print(result)
+        with e2e_fixture.log_file.open('a+') as fd:
+            fd.write(result)
         raise

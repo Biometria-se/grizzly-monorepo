@@ -159,7 +159,10 @@ def run_command(command: list[str], env: dict[str, str] | None = None, cwd: Path
         process.wait()
 
         with suppress(Exception):
-            os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+            if sys.platform != 'win32':
+                os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+            else:
+                os.kill(process.pid, signal.CTRL_BREAK_EVENT)
 
     return process.returncode, output
 

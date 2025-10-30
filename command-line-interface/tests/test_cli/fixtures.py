@@ -11,7 +11,9 @@ from cProfile import Profile
 from getpass import getuser
 from hashlib import sha1
 from os import environ, linesep
+from os.path import pathsep, sep
 from pathlib import Path
+from tempfile import gettempdir
 from textwrap import dedent, indent
 from typing import TYPE_CHECKING, Any, Literal, cast
 
@@ -93,13 +95,18 @@ class End2EndFixture:
     def __init__(self, tmp_path_factory: TempPathFactory, *, distributed: bool) -> None:
         self._tmp_path_factory = tmp_path_factory
         self.cwd = Path.cwd()
-        self._env = {}
+        self._env = environ.copy() if sys.platform == 'win32' else {}
         self._validators = {}
         self._root = None
         self._after_features = {}
         self._before_features = {}
         self._distributed = distributed
         self.profile = None
+
+        temp_dir = environ.get('GRIZZLY_TMP_DIR', gettempdir())
+
+        self.log_file = Path(temp_dir) / 'grizzly.log'
+        self.log_file.unlink(missing_ok=True)
 
     @property
     def mode_root(self) -> Path:
@@ -180,7 +187,7 @@ def step_start_webserver(context: Context) -> None:
 
         virtual_env = environ.get('VIRTUAL_ENV')
 
-        if virtual_env is None or '/hatch/env/virtual' not in virtual_env:
+        if virtual_env is None or f'{sep}hatch{sep}env{sep}virtual' not in virtual_env:
             virtual_env_path = self.root / 'venv'
 
             # create virtualenv
@@ -194,21 +201,21 @@ def step_start_webserver(context: Context) -> None:
             except AssertionError:
                 print(''.join(output))
 
+                with self.log_file.open('a+') as fd:
+                    fd.write(''.join(output))
+
                 raise
         else:
             virtual_env_path = Path(virtual_env)
 
         path = environ.get('PATH', '')
 
-        if sys.platform == 'win32':
-            virtual_env_bin_dir = 'Scripts'
-        else:
-            virtual_env_bin_dir = 'bin'
+        virtual_env_bin_dir = 'Scripts' if sys.platform == 'win32' else 'bin'
 
         self._env.update(
             {
-                'PATH': Path.joinpath(virtual_env_path, virtual_env_bin_dir, path).as_posix(),
-                'VIRTUAL_ENV': virtual_env_path.as_posix(),
+                'PATH': f'{virtual_env_path!s}{sep}{virtual_env_bin_dir}{pathsep}{path}',
+                'VIRTUAL_ENV': f'{virtual_env_path!s}',
                 'PYTHONPATH': environ.get('PYTHONPATH', '.'),
                 'HOME': environ.get('HOME', '/'),
             }
@@ -230,10 +237,11 @@ def step_start_webserver(context: Context) -> None:
             if env_value is not None:
                 self._env.update({env_key: env_value})
 
-        package_path = (Path(__file__).parent / '..' / '..').resolve()
+        repo_root_path = (Path(__file__).parent / '..' / '..' / '..').resolve()
+        command = ['uv', 'sync', '--active', '--locked', '--package', 'grizzly-loadtester']
         rc, output = run_command(
-            ['uv', 'pip', 'install', '.'],
-            cwd=package_path,
+            command,
+            cwd=repo_root_path,
             env=self._env,
         )
 
@@ -241,6 +249,8 @@ def step_start_webserver(context: Context) -> None:
             assert rc == 0
         except AssertionError:
             print(''.join(output))
+            with self.log_file.open('a+') as fd:
+                fd.write(''.join(output))
             raise
 
         return self
@@ -446,14 +456,18 @@ def step_start_webserver(context: Context) -> None:
         if rc != 0:
             print(''.join(output))
 
-            for container in ['master', 'worker'] if self._distributed else []:
-                command = ['docker', 'container', 'logs', f'{self.root.name}-{getuser()}_{container}_1']
-                _, output = run_command(
-                    command,
-                    cwd=self.root,
-                    env=self._env,
-                )
+            with self.log_file.open('a+') as fd:
+                fd.write(''.join(output))
 
-                print(''.join(output))
+                for container in ['master', 'worker'] if self._distributed else []:
+                    command = ['docker', 'container', 'logs', f'{self.root.name}-{getuser()}_{container}_1']
+                    _, output = run_command(
+                        command,
+                        cwd=self.root,
+                        env=self._env,
+                    )
+
+                    print(''.join(output))
+                    fd.write(''.join(output))
 
         return rc, output

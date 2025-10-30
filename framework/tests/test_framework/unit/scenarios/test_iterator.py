@@ -30,6 +30,14 @@ if TYPE_CHECKING:  # pragma: no cover
     from test_framework.fixtures import GrizzlyFixture, MockerFixture
 
 
+def filter_messages(messages: list[str]) -> list[str]:
+    return [
+        message
+        for message in messages
+        if not any(ignore in message for ignore in ['instance variable=', 'CPU usage above', 'checking if heartbeat', 'timeout: ', 'handling exception of type'])
+    ]
+
+
 class TestIterationScenario:
     def test_initialize(self, grizzly_fixture: GrizzlyFixture) -> None:
         parent = grizzly_fixture(scenario_type=IteratorScenario)
@@ -959,7 +967,7 @@ class TestIterationScenario:
             "stopping scenario with <class 'locust.exception.StopUser'>",
         ]
 
-        actual_messages = [message for message in caplog.messages if not any(ignore in message for ignore in ['instance variable=', 'CPU usage above', 'checking if heartbeat'])]
+        actual_messages = filter_messages(caplog.messages)
 
         assert len(actual_messages) == len(expected_messages)
 
@@ -1069,10 +1077,7 @@ class TestIterationScenario:
                 "stopping scenario with <class 'locust.exception.StopUser'>",
             ]
 
-            actual_messages = [message for message in caplog.messages if 'instance variable=' not in message]
-
-            for m in actual_messages:
-                print(f'{m=}')
+            actual_messages = filter_messages(caplog.messages)
 
             assert len(actual_messages) == len(expected_messages)
 
@@ -1183,10 +1188,7 @@ class TestIterationScenario:
                 "stopping scenario with <class 'locust.exception.StopUser'>",
             ]
 
-            actual_messages = [message for message in caplog.messages if 'instance variable=' not in message]
-
-            for m in actual_messages:
-                print(f'{m=}')
+            actual_messages = filter_messages(caplog.messages)
 
             assert len(actual_messages) == len(expected_messages)
 

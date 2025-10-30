@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from argparse import SUPPRESS
 from argparse import Namespace as Arguments
 from getpass import getuser
@@ -71,17 +72,17 @@ def create_parser(sub_parser: ArgumentSubParser) -> None:
 
 
 def getuid() -> int:
-    if os.name == 'nt' or not hasattr(os, 'getuid'):
+    if sys.platform == 'win32':
         return 1000
-
-    return os.getuid()
+    else:  # noqa: RET505
+        return os.getuid()
 
 
 def getgid() -> int:
-    if os.name == 'nt' or not hasattr(os, 'getgid'):
+    if sys.platform == 'win32':
         return 1000
-
-    return os.getuid()
+    else:  # noqa: RET505
+        return os.getuid()
 
 
 def _create_build_command(args: Arguments, containerfile: str, tag: str, context: str) -> list[str]:

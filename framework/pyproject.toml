@@ -17,7 +17,7 @@ dependencies = [
     "locust==2.40.2",
     "roundrobin>=0.0.4",
     "grizzly-loadtester-common",
-    "grizzly-loadtester-extras-async-messaged"
+    "grizzly-loadtester-extras-async-messaged",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
