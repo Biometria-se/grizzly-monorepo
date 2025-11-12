@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from gevent.monkey import patch_all
+try:
+    from gevent.monkey import patch_all
 
-patch_all()
+    patch_all()
+except ModuleNotFoundError:
+    pass
 
 import inspect
 import re

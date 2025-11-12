@@ -5,6 +5,11 @@ on:
     branches: [ main ]
 
   workflow_dispatch:
+    inputs:
+      skip-e2e-tests:
+        type: boolean
+        description: 'Skip E2E tests'
+        default: false
 
 jobs:
   changes:
@@ -141,6 +146,7 @@ jobs:
   uv-test-e2e:
     name: "uv test-e2e / ${{ matrix.changes.package }} / py${{ matrix.python-version }} / ${{ matrix.image }}"
     needs: uv-test
+    if: (inputs.skip-e2e-tests || 'false') != 'true'
     outputs:
       changes_uv: ${{ needs.uv-test.outputs.changes_uv }}
     runs-on: ${{ matrix.image }}
@@ -352,3 +358,39 @@ jobs:
           name: "grizzly-ls-server-logs-${{ matrix.image }}"
           path: "./editor-support/tests/project/grizzly-ls.log"
           if-no-files-found: error
+
+  docs:
+    name: "documentation"
+    needs:
+      - npm-test
+      - uv-test-e2e
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.14"
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: "install grizzly-mkdocs"
+        run: |
+          uv sync --locked --inexact --package grizzly-mkdocs
+
+      - name: "build documentation"
+        run: uv run mkdocs build
+
+      - name: check for @TODO annotations
+        working-directory: ./docs/build
+        run: find . -type f -name '*.html' | xargs -- grep -nHE '@TODO' | awk 'BEGIN{rc=0} !/^$/ {rc=1; print} END{exit rc}'
+
+      - name: check for unclosed code blocks
+        working-directory: ./docs/build
+        run: for file in $(find . -type f -name '*.md'); do awk 'BEGIN{count=0} /```/ {count+=1} END{if (count % 2 != 0) { print FILENAME ", contains uneven number of code-block markers"; exit 1;}}' $file || break; done
+
+      - name: check code block format
+        working-directory: ./docs/build
+        run: for file in $(find . -type f -name '*.md'); do awk 'BEGIN{count=0} /``` / {print FILENAME " " $0; count+=1} END{if (count > 0) { print FILENAME ", there should not be a space between code-block and language specification"; exit 1;}}' $file || break; done
+
