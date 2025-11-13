@@ -622,7 +622,7 @@ def step_start_webserver(context: Context, port: int) -> None:
 
     @property
     def host(self) -> str:
-        hostname = 'master' if self._distributed else 'localhost'
+        hostname = 'master' if self._distributed else '127.0.0.1'
 
         return f'{hostname}:{self.webserver.port}'
 

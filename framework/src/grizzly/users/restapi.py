@@ -233,7 +233,8 @@ class RestApiUser(GrizzlyUser, AsyncRequests, GrizzlyHttpAuthClient, metaclass=R
 
     def _get_error_message(self, response: FastResponseContextManager) -> str:
         if response.text is None:
-            return f'unknown response {type(response)}'
+            error = response.url if response.url is not None else type(response)
+            return f'{error} returned an unknown response'
 
         if len(response.text) < 1:
             text = requests.status_codes._codes.get(response.status_code, ('unknown', None))  # type: ignore[attr-defined]
@@ -258,7 +259,9 @@ class RestApiUser(GrizzlyUser, AsyncRequests, GrizzlyHttpAuthClient, metaclass=R
                 if parser.title is not None:
                     message = parser.title.strip()
 
-        return message
+            message = f'"{message}"'
+
+        return f'{response.url} returned {message}'
 
     def async_request_impl(self, request: RequestTask) -> GrizzlyResponse:
         """Use FastHttpSession instance for each asynchronous requests."""

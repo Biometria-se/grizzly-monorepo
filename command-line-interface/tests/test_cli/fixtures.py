@@ -140,7 +140,7 @@ class End2EndFixture:
 
     @property
     def host(self) -> str:
-        host = 'master' if self._distributed else 'localhost'
+        host = 'master' if self._distributed else '127.0.0.1'
 
         return f'{host}:{self.webserver_port}'
 

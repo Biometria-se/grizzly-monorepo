@@ -28,7 +28,7 @@ from grizzly.types import GrizzlyResponse, RequestMethod, StrDict
 from grizzly.types.locust import Environment, Message
 from grizzly.users import GrizzlyUser
 from locust import task
-from locust.contrib.fasthttp import FastResponse
+from locust.contrib.fasthttp import FastRequest, FastResponse
 from locust.contrib.fasthttp import ResponseContextManager as FastResponseContextManager
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -417,12 +417,15 @@ class regex:
         return hash(self)
 
 
-def create_mocked_fast_response_context_manager(*, content: str, headers: dict[str, str] | None = None, status_code: int = 200) -> FastResponseContextManager:
+def create_mocked_fast_response_context_manager(
+    *, content: str | None, headers: dict[str, str] | None = None, status_code: int = 200, url: str = 'https://localhost:1234/api/mocked'
+) -> FastResponseContextManager:
     ghc_response = MagicMock(spec=HTTPSocketPoolResponse)
     ghc_response.get_code.return_value = status_code
     ghc_response._headers_index = headers or {}
-    response = FastResponse(ghc_response)
-    response._cached_content = content.encode()
+    response = FastResponse(ghc_response, FastRequest(url=url))
+    if content is not None:
+        response._cached_content = content.encode()
 
     context_manager = FastResponseContextManager(response, None, {})
     context_manager._entered = True

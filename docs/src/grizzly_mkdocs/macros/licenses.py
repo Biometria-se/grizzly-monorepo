@@ -149,7 +149,10 @@ def get_licenses_npm(path: str) -> set[License]:
     licenses: set[License] = set()
 
     with NamedTemporaryFile() as fd:
-        _ = command(['npm', 'run', 'licenses', '--', fd.name], cwd=Path(path))
+        cwd = Path(path)
+        _ = command(['npm', 'install'], cwd=cwd)
+
+        _ = command(['npm', 'run', 'licenses', '--', fd.name], cwd=cwd)
         fd.flush()
         fd.seek(0)
 

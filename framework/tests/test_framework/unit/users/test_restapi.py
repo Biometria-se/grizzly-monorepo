@@ -127,35 +127,39 @@ class TestRestApiUser:
         parent = grizzly_fixture(user_type=RestApiUser)
         assert isinstance(parent.user, RestApiUser)
 
-        response_context_manager = create_mocked_fast_response_context_manager(content='', status_code=400)
-        assert parent.user._get_error_message(response_context_manager) == 'bad request'
+        url = 'https://localhost:1234/api/mocked'
 
-        response_context_manager = create_mocked_fast_response_context_manager(content='', status_code=401)
-        assert parent.user._get_error_message(response_context_manager) == 'unauthorized'
+        response_context_manager = create_mocked_fast_response_context_manager(content='', status_code=400, url=url)
+        assert parent.user._get_error_message(response_context_manager) == f'{url} returned bad request'
 
-        response_context_manager = create_mocked_fast_response_context_manager(content='', status_code=403)
-        assert parent.user._get_error_message(response_context_manager) == 'forbidden'
+        response_context_manager = create_mocked_fast_response_context_manager(content='', status_code=401, url=url)
+        assert parent.user._get_error_message(response_context_manager) == f'{url} returned unauthorized'
 
-        response_context_manager = create_mocked_fast_response_context_manager(content='', status_code=404)
-        assert parent.user._get_error_message(response_context_manager) == 'not found'
+        response_context_manager = create_mocked_fast_response_context_manager(content='', status_code=403, url=url)
+        assert parent.user._get_error_message(response_context_manager) == f'{url} returned forbidden'
 
-        response_context_manager = create_mocked_fast_response_context_manager(content='', status_code=405)
-        assert parent.user._get_error_message(response_context_manager) == 'method not allowed'
+        response_context_manager = create_mocked_fast_response_context_manager(content='', status_code=404, url=url)
+        assert parent.user._get_error_message(response_context_manager) == f'{url} returned not found'
 
-        response_context_manager = create_mocked_fast_response_context_manager(content='', status_code=999)
-        assert parent.user._get_error_message(response_context_manager) == 'unknown'
+        response_context_manager = create_mocked_fast_response_context_manager(content='', status_code=405, url=url)
+        assert parent.user._get_error_message(response_context_manager) == f'{url} returned method not allowed'
 
-        response_context_manager = create_mocked_fast_response_context_manager(content='just a simple string', status_code=999)
-        assert parent.user._get_error_message(response_context_manager) == 'just a simple string'
+        response_context_manager = create_mocked_fast_response_context_manager(content='', status_code=999, url=url)
+        assert parent.user._get_error_message(response_context_manager) == f'{url} returned unknown'
 
-        response_context_manager = create_mocked_fast_response_context_manager(content='{"Message": "message\\nproperty\\\\nthat is multiline"}', status_code=999)
-        assert parent.user._get_error_message(response_context_manager) == 'message property'
+        response_context_manager = create_mocked_fast_response_context_manager(content='just a simple string', status_code=999, url=url)
+        assert parent.user._get_error_message(response_context_manager) == f'{url} returned "just a simple string"'
 
-        response_context_manager = create_mocked_fast_response_context_manager(content='{"error_description": "error description\\r\\nthat is multiline"}', status_code=999)
-        assert parent.user._get_error_message(response_context_manager) == 'error description'
+        response_context_manager = create_mocked_fast_response_context_manager(content='{"Message": "message\\nproperty\\\\nthat is multiline"}', status_code=999, url=url)
+        assert parent.user._get_error_message(response_context_manager) == f'{url} returned "message property"'
 
-        response_context_manager = create_mocked_fast_response_context_manager(content='{"success": false}', status_code=999)
-        assert parent.user._get_error_message(response_context_manager) == '{"success": false}'
+        response_context_manager = create_mocked_fast_response_context_manager(
+            content='{"error_description": "error description\\r\\nthat is multiline"}', status_code=999, url=url
+        )
+        assert parent.user._get_error_message(response_context_manager) == f'{url} returned "error description"'
+
+        response_context_manager = create_mocked_fast_response_context_manager(content='{"success": false}', status_code=999, url=url)
+        assert parent.user._get_error_message(response_context_manager) == f'{url} returned "{{"success": false}}"'
 
         response_context_manager = create_mocked_fast_response_context_manager(
             content="""<html>
@@ -167,12 +171,13 @@ class TestRestApiUser:
     </body>
 </html>""",
             status_code=999,
+            url=url,
         )
-        assert parent.user._get_error_message(response_context_manager) == 'what a bummer'
+        assert parent.user._get_error_message(response_context_manager) == f'{url} returned "what a bummer"'
 
         text_mock = mocker.patch('locust.contrib.fasthttp.FastResponse.text', new_callable=mocker.PropertyMock)
         text_mock.return_value = None
-        assert parent.user._get_error_message(response_context_manager) == "unknown response <class 'locust.contrib.fasthttp.ResponseContextManager'>"
+        assert parent.user._get_error_message(response_context_manager) == f'{url} returned an unknown response'
 
     def test_async_request(self, grizzly_fixture: GrizzlyFixture, mocker: MockerFixture) -> None:
         parent = grizzly_fixture(user_type=RestApiUser)
