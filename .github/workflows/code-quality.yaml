@@ -30,8 +30,14 @@ jobs:
     - uses: dorny/paths-filter@v3
       id: filter
       with:
-        base: "${{ vars.DEFAULT_BRANCH || 'main' }}"
-        filters: .github/change-filters.yaml
+        filters: | # https://codesandbox.io/p/sandbox/picomatch-playground-ebjlxm
+          framework: 'framework/**'
+          common: 'common/**'
+          command-line-interface: 'command-line-interface/**'
+          editor-support: 'editor-support/!(clients)/**'
+          editor-support/clients/vscode: 'editor-support/clients/vscode/**'
+          docs: 'docs/**'
+          extras/async-messaged: 'extras/async-messaged/**'
 
     - name: map changed directories to packages
       id: mapper
@@ -41,6 +47,7 @@ jobs:
   uv-lint:
     name: "uv lint / ${{ matrix.changes.package }} / py${{ matrix.python-version }} / ${{ matrix.image }}"
     needs: changes
+    if: needs.changes.outputs.changes_uv != '[]'
     outputs:
       changes_uv: ${{ needs.changes.outputs.changes_uv }}
     runs-on: ${{ matrix.image }}
@@ -90,14 +97,14 @@ jobs:
     if: always()
     continue-on-error: true
     outputs:
-      changes_uv: ${{ needs.uv-lint.outputs.changes_uv }}
+      changes_uv: ${{ needs.uv-lint.outputs.changes_uv || '[]' }}
     runs-on: ${{ matrix.image }}
     strategy:
       fail-fast: false
       matrix:
         image: ["ubuntu-latest", "windows-latest", "macos-15-intel"]
         python-version: ["3.10", "3.13"]
-        changes: ${{ fromJSON(needs.uv-lint.outputs.changes_uv) }}
+        changes: ${{ fromJSON(needs.uv-lint.outputs.changes_uv || '[]') }}
         exclude:
           - image: "windows-latest"
             python-version: "3.10"
@@ -135,14 +142,14 @@ jobs:
     needs: uv-test
     if: always() && (inputs.skip-e2e-tests || 'false') == 'false'
     outputs:
-      changes_uv: ${{ needs.uv-test.outputs.changes_uv }}
+      changes_uv: ${{ needs.uv-test.outputs.changes_uv || '[]' }}
     runs-on: ${{ matrix.image }}
     strategy:
       fail-fast: false
       matrix:
         image: ["ubuntu-latest", "windows-latest", "macos-15-intel"]
         python-version: ["3.13"]
-        changes: ${{ fromJSON(needs.uv-test.outputs.changes_uv) }}
+        changes: ${{ fromJSON(needs.uv-test.outputs.changes_uv || '[]') }}
 
     steps:
     - uses: actions/checkout@v4
@@ -230,12 +237,12 @@ jobs:
     needs: changes
     runs-on: ${{ matrix.image }}
     outputs:
-      changes_npm: ${{ needs.changes.outputs.changes_npm }}
+      changes_npm: ${{ needs.changes.outputs.changes_npm || '[]' }}
     strategy:
       fail-fast: false
       matrix:
         image: ["ubuntu-latest"]
-        changes: ${{ fromJSON(needs.changes.outputs.changes_npm) }}
+        changes: ${{ fromJSON(needs.changes.outputs.changes_npm || '[]') }}
 
     steps:
     - uses: actions/checkout@v4
@@ -266,14 +273,14 @@ jobs:
     needs: npm-lint
     if: always()
     outputs:
-      changes_npm: ${{ needs.npm-lint.outputs.changes_npm }}
+      changes_npm: ${{ needs.npm-lint.outputs.changes_npm || '[]' }}
     runs-on: ${{ matrix.image }}
     strategy:
       fail-fast: false
       matrix:
         image: ["ubuntu-latest", "windows-latest", "macos-15-intel"]
         python-version: ["3.10"]
-        changes: ${{ fromJSON(needs.npm-lint.outputs.changes_npm) }}
+        changes: ${{ fromJSON(needs.npm-lint.outputs.changes_npm || '[]') }}
 
     steps:
     - uses: actions/checkout@v4
@@ -311,7 +318,6 @@ jobs:
       env:
         VERBOSE: true
         VIRTUAL_ENV: ${{ env.VIRTUAL_ENV }}
-      if: vars.DEFAULT_BRANCH || 'main' != 'HEAD'
       with:
         run: |
           npm run tests
