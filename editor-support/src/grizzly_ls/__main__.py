@@ -142,12 +142,12 @@ def setup_debugging(args: argparse.Namespace) -> str | None:
             import debugpy
 
             debugpy.listen(args.debug_port)
-            logging.info('Debugging enabled, listening on port %d', args.debug_port)
+            logging.info('debugging enabled, listening on port %d', args.debug_port)
             if args.debug_wait:
-                logging.info('Waiting for debugger to attach')
+                logging.info('waiting for debugger to attach')
                 debugpy.wait_for_client()
         except ModuleNotFoundError:
-            return 'Debugging requires the debugpy package to be installed'
+            return 'debugging requires the debugpy package to be installed'
     return None
 
 
