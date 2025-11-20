@@ -218,7 +218,7 @@ def test_setup_debugging(mocker: MockerFixture) -> None:
             debug_wait=False,
         )
         err_msg = setup_debugging(arguments)
-        assert err_msg == 'Debugging requires the debugpy package to be installed'
+        assert err_msg == 'debugging requires the debugpy package to be installed'
     finally:
         sys.path = prev_path
 
