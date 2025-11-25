@@ -236,6 +236,7 @@ jobs:
     name: "npm lint / ${{ matrix.changes.package }} / ${{ matrix.image }}"
     needs: changes
     runs-on: ${{ matrix.image }}
+    if: needs.changes.outputs.changes_npm != '[]'
     outputs:
       changes_npm: ${{ needs.changes.outputs.changes_npm || '[]' }}
     strategy:
@@ -271,7 +272,7 @@ jobs:
   npm-test:
     name: "npm test / ${{ matrix.changes.package }} / ${{ matrix.image }}"
     needs: npm-lint
-    if: always()
+    if: needs.npm-lint.outputs.changes_npm != '[]'
     outputs:
       changes_npm: ${{ needs.npm-lint.outputs.changes_npm || '[]' }}
     runs-on: ${{ matrix.image }}
