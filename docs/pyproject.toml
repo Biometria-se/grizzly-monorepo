@@ -3,6 +3,12 @@ name = "grizzly-mkdocs"
 version = "0.1.0"
 description = "Grizzly documentation"
 license = "MIT"
+authors = [
+    { name = "biometria", email="opensource@biometria.se" },
+]
+maintainers = [
+    { name = "Mikael Göransson", email = "github@mgor.se" }
+]
 requires-python = ">=3.10"
 dependencies = [
     "cssselect>=1.3.0",
