@@ -5,6 +5,8 @@ description = "Daemon for handling async messaging [for grizzly] over zmq, due t
 readme = "README.md"
 authors = [
     { name = "biometria", email="opensource@biometria.se" },
+]
+maintainers = [
     { name = "Mikael Göransson", email = "github@mgor.se" }
 ]
 requires-python = ">=3.10"
