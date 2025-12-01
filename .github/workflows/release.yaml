@@ -1,0 +1,190 @@
+# build with uv build --out-dir dist/ --package <package> --wheel --sdist
+# without --wheel and --sdist, the wheel will be built from the source distribution, and the custom hatch build hooks in ../hatch_build.py will be
+# missing.
+name: release
+
+on:
+  workflow_run:
+    workflows: ["code quality"]
+    types:
+      - completed
+    branches:
+      - main
+
+  workflow_dispatch:
+    inputs:
+      pr-number:
+        description: 'PR number to release'
+        required: true
+        type: number
+
+jobs:
+  prerequisites:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    outputs:
+      should-release: ${{ steps.check-pr.outputs.should-release }}
+      version-bump: ${{ steps.check-pr.outputs.version-bump }}
+      pr-number: ${{ steps.check-pr.outputs.pr-number }}
+      commit-sha: ${{ steps.check-pr.outputs.commit-sha }}
+      base-commit-sha: ${{ steps.check-pr.outputs.base-commit-sha }}
+      changes_uv: ${{ steps.mapper.outputs.changes_uv }}
+      changes_npm: ${{ steps.mapper.outputs.changes_npm }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: "run setup-uv-job"
+      uses: ./.github/actions/setup-uv-job
+
+    - name: check pull request
+      id: check-pr
+      uses: actions/github-script@v7
+      with:
+        script: |
+          let pr;
+          let commitSha;
+
+          if (context.eventName === 'workflow_dispatch') {
+            // Manual trigger: get PR by number
+            const prNumber = context.payload.inputs['pr-number'];
+            console.log(`manual trigger for PR #${prNumber}`);
+
+            const prResponse = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+
+            pr = prResponse.data;
+
+            // Verify PR is merged
+            if (!pr.merged) {
+              core.setFailed(`PR #${prNumber} is not merged`);
+              core.setOutput('should-release', 'false');
+              return;
+            }
+
+            commitSha = pr.merge_commit_sha;
+            console.log(`PR #${prNumber} merged at commit: ${commitSha}`);
+          } else {
+            // Automatic trigger: get PR from workflow run commit
+            commitSha = context.payload.workflow_run.head_sha;
+            console.log(`automatic trigger for commit: ${commitSha}`);
+
+            const pulls = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: commitSha
+            });
+
+            if (pulls.data.length === 0) {
+              console.log('no PR found for this commit');
+              core.setOutput('should-release', 'false');
+              return;
+            }
+
+            pr = pulls.data[0];
+          }
+
+          const labels = pr.labels.map(label => label.name);
+          console.log(`PR #${pr.number} labels: ${labels}`);
+
+          // Get the base commit (the commit that the PR was merged onto)
+          const baseCommitSha = pr.base.sha;
+          console.log(`PR base commit: ${baseCommitSha}`);
+
+          // Check for version bump labels
+          const versionLabels = ['major', 'minor', 'patch'];
+          const versionLabel = versionLabels.find(label => labels.includes(label));
+
+          if (versionLabel) {
+            console.log(`found version label: ${versionLabel}`);
+            core.setOutput('should-release', 'true');
+            core.setOutput('version-bump', versionLabel);
+            core.setOutput('pr-number', pr.number);
+            core.setOutput('commit-sha', commitSha);
+            core.setOutput('base-commit-sha', baseCommitSha);
+          } else {
+            console.log('no version release label (major/minor/patch) found');
+            core.setOutput('should-release', 'false');
+            core.setFailed(`no version release label found on PR #${pr.number}`);
+          }
+
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: ./.github/changes-filter.yaml
+        ref: ${{ steps.check-pr.outputs.commit-sha }}
+        base: ${{ steps.check-pr.outputs.base-commit-sha }}
+
+    - name: map changed directories to packages
+      if: steps.filter.outputs.changes != '[]'
+      id: mapper
+      run: |
+        uv run ./extras/scripts/map-changes.py --changes '${{ steps.filter.outputs.changes }}' --force false
+
+  uv-release:
+    name: "release / ${{ matrix.changes.package }}"
+    needs: [prerequisites]
+    if: needs.prerequisites.outputs.should-release == 'true' && needs.prerequisites.outputs.changes_uv != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        changes: ${{ fromJson(needs.prerequisites.outputs.changes_uv) }}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.prerequisites.outputs.commit-sha }}
+        fetch-tags: true
+
+    - name: "run setup-uv-job"
+      uses: ./.github/actions/setup-uv-job
+
+    - name: "get next release version"
+      id: get-next-version
+      run: |
+        uv run python ./extras/scripts/get-next-release-tag.py --project ${{ matrix.changes.directory }} --bump ${{ needs.prerequisites.outputs.version-bump }}
+
+    - name: release info
+      run: |
+        echo "Starting release with version bump: ${{ needs.prerequisites.outputs.version-bump }}"
+        echo "Next release version: ${{ steps.get-next-version.outputs.next-release-version }}"
+        echo "Next release tag: ${{ steps.get-next-version.outputs.next-release-tag }}"
+        # Add build, tag, and publish steps here
+
+  npm-release:
+    name: "release / ${{ matrix.changes.package }}"
+    needs: [prerequisites]
+    if: needs.prerequisites.outputs.should-release == 'true' && needs.prerequisites.outputs.changes_npm != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        changes: ${{ fromJson(needs.prerequisites.outputs.changes_npm) }}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.prerequisites.outputs.commit-sha }}
+        fetch-tags: true
+
+    - name: "run setup-uv-job"
+      uses: ./.github/actions/setup-uv-job
+
+    - name: "get next release version"
+      id: get-next-version
+      run: |
+        uv run python ./extras/scripts/get-next-release-tag.py --project ${{ matrix.changes.directory }} --bump ${{ needs.prerequisites.outputs.version-bump }}
+
+    - name: release info
+      run: |
+        echo "Starting release with version bump: ${{ needs.prerequisites.outputs.version-bump }}"
+        echo "Next release version: ${{ steps.get-next-version.outputs.next-release-version }}"
+        echo "Next release tag: ${{ steps.get-next-version.outputs.next-release-tag }}"
+        # Add build, tag, and publish steps here
+
+
+

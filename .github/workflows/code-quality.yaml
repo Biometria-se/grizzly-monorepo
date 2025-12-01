@@ -30,14 +30,7 @@ jobs:
     - uses: dorny/paths-filter@v3
       id: filter
       with:
-        filters: | # https://codesandbox.io/p/sandbox/picomatch-playground-ebjlxm
-          framework: 'framework/**'
-          common: 'common/**'
-          command-line-interface: 'command-line-interface/**'
-          editor-support: 'editor-support/!(clients)/**'
-          editor-support/clients/vscode: 'editor-support/clients/vscode/**'
-          docs: 'docs/**'
-          extras/async-messaged: 'extras/async-messaged/**'
+        filters: ./.github/changes-filter.yaml
 
     - name: map changed directories to packages
       id: mapper

@@ -22,6 +22,55 @@ all code must be covered with unit tests, using [pytest](https://docs.pytest.org
 builds should be reproducible, meaning that the same source code should always produce the same build output, this is accomplished by using `uv` with a `lock` file, and `--locked` when syncing
 dependencies.
 
+## Development Workflows
+
+### Testing
+```bash
+# Run unit tests for a package
+hatch run test:{package}-unit
+
+# Run e2e tests for a package 
+hatch run test:{package}-e2e
+
+# Run all tests for a package
+hatch run test:{package}-all
+```
+
+### Code Quality
+```bash
+# Format code
+hatch run lint:format
+
+# Run type checking
+hatch run lint:types
+
+# Run linting
+hatch run lint:check
+```
+
+### Dependency Management
+```bash
+# Install dependencies (preserving lock file)
+uv sync --locked -p {python-version} --active --all-packages --all-groups
+```
+
+## Key Development Patterns
+
+1. Package Dependencies:
+   - Keep shared code in `grizzly-loadtester-common`
+   - Use workspace dependencies in `pyproject.toml`
+   - Always preserve `uv.lock` file
+
+2. Testing Strategy:
+   - Unit tests mock external dependencies
+   - E2E tests run against real services
+   - Group tests by functionality
+
+## Common Gotchas
+1. Always use `uv sync --locked` to preserve dependency locks
+2. E2E tests require additional setup (see package READMEs)
+3. VS Code extension requires rebuild after language server changes
+
 ## packages
 
 ### [grizzly-loadtester-common](../common) - common code shared between the other packages

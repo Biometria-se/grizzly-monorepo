@@ -3,7 +3,8 @@ description: Set timezone, checkout repository and set up uv with specified pyth
 inputs:
   python-version:
     description: 'Python version to use'
-    required: true
+    required: false
+    default: '3.13'
 
 runs:
   using: "composite"
@@ -16,6 +17,6 @@ runs:
 
   - uses: astral-sh/setup-uv@v6
     with:
-      version: "0.8.14"
+      version: "0.9.13"
       python-version: ${{ inputs.python-version }}
       enable-cache: true
