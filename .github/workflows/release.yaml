@@ -139,6 +139,7 @@ jobs:
       with:
         ref: ${{ needs.prerequisites.outputs.commit-sha }}
         fetch-tags: true
+        fetch-depth: 0
 
     - name: "run setup-uv-job"
       uses: ./.github/actions/setup-uv-job
@@ -146,7 +147,7 @@ jobs:
     - name: "get next release version"
       id: get-next-version
       run: |
-        uv run python ./extras/scripts/get-next-release-tag.py --project ${{ matrix.changes.directory }} --bump ${{ needs.prerequisites.outputs.version-bump }}
+        uv run ./extras/scripts/get-next-release-tag.py --project ${{ matrix.changes.directory }} --bump ${{ needs.prerequisites.outputs.version-bump }}
 
     - name: release info
       run: |
@@ -170,6 +171,7 @@ jobs:
       with:
         ref: ${{ needs.prerequisites.outputs.commit-sha }}
         fetch-tags: true
+        fetch-depth: 0
 
     - name: "run setup-uv-job"
       uses: ./.github/actions/setup-uv-job
