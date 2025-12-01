@@ -1,7 +1,7 @@
 [project]
 name = "grizzly-loadtester-common"
 dynamic = ["version", "readme"]
-description = "Common functionality for grizzly-loadtester packages"
+description = "Common functionality used in grizzly-loadtester packages"
 license = "MIT"
 license-files = ["LICENSE.md"]
 authors = [
