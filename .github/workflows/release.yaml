@@ -4,10 +4,9 @@
 name: release
 
 on:
-  workflow_run:
-    workflows: ["code quality"]
+  pull_request:
     types:
-      - completed
+      - closed
     branches:
       - main
 
@@ -21,7 +20,12 @@ on:
 jobs:
   prerequisites:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+       (contains(github.event.pull_request.labels.*.name, 'major') ||
+        contains(github.event.pull_request.labels.*.name, 'minor') ||
+        contains(github.event.pull_request.labels.*.name, 'patch')))
     outputs:
       should-release: ${{ steps.check-pr.outputs.should-release }}
       version-bump: ${{ steps.check-pr.outputs.version-bump }}
@@ -68,23 +72,10 @@ jobs:
             commitSha = pr.merge_commit_sha;
             console.log(`PR #${prNumber} merged at commit: ${commitSha}`);
           } else {
-            // Automatic trigger: get PR from workflow run commit
-            commitSha = context.payload.workflow_run.head_sha;
-            console.log(`automatic trigger for commit: ${commitSha}`);
-
-            const pulls = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              commit_sha: commitSha
-            });
-
-            if (pulls.data.length === 0) {
-              console.log('no PR found for this commit');
-              core.setOutput('should-release', 'false');
-              return;
-            }
-
-            pr = pulls.data[0];
+            // Automatic trigger: PR was just merged
+            pr = context.payload.pull_request;
+            commitSha = pr.merge_commit_sha;
+            console.log(`PR #${pr.number} merged at commit: ${commitSha}`);
           }
 
           const labels = pr.labels.map(label => label.name);
@@ -155,6 +146,9 @@ jobs:
         echo "Next release version: ${{ steps.get-next-version.outputs.next-release-version }}"
         echo "Next release tag: ${{ steps.get-next-version.outputs.next-release-tag }}"
         # Add build, tag, and publish steps here
+
+    - name: build
+      run: uv build --package ${{ matrix.changes.package }} --sdist --wheel
 
   npm-release:
     name: "release / ${{ matrix.changes.package }}"
