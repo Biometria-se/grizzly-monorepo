@@ -8,6 +8,22 @@ from packaging.version import Version
 from grizzly_mkdocs.macros.command import command
 
 
+def build_markdown_section(version: str, commits: list[str], repo_url: str, label: str | None) -> list[str]:
+    label = f' {label}' if label is not None else ''
+
+    markdown: list[str] = [f'## {version}{label}', '']
+
+    for line in commits:
+        commit, message = line.split(' ', 1)
+        commit_short = commit[:8]
+
+        markdown.append(f'- <a href="{repo_url}/commit/{commit}" target="_blank">`{commit_short}`</a> {message}')
+
+    markdown.append('')
+
+    return markdown
+
+
 def changelog(package: str, tag_prefix: str) -> str:
     tags = command(f"git tag | grep '^{tag_prefix}@v'").splitlines()
 
@@ -32,7 +48,7 @@ def changelog(package: str, tag_prefix: str) -> str:
         current_version = versions[index - 1]
         current_tag = f'{tag_prefix}@{current_version}' if current_version != f'v{head_version}' else 'HEAD'
 
-        trace(f'generating changelog for {package}: {current_tag} <- {previous_tag}', level='debug')
+        trace(f'generating changelog for {package}: {current_tag} <- {previous_tag}')
 
         cmd = [
             'git',
@@ -50,14 +66,18 @@ def changelog(package: str, tag_prefix: str) -> str:
         ]
         output = command(' '.join(cmd))
 
-        markdown_changelog.extend([f'## {current_version}', ''])
+        raw_commits = output.splitlines()
 
-        for line in output.splitlines():
-            commit, message = line.split(' ', 1)
-            commit_short = commit[:8]
+        if len(raw_commits) < 1:
+            continue
 
-            markdown_changelog.append(f'- <a href="{repo_url}/commit/{commit}" target="_blank">`{commit_short}`</a> {message}')
+        if current_tag == 'HEAD':
+            label = '**unreleased**{.chip-feature .danger}'
+        elif index == 1:
+            label = '**current**{.chip-feature .info}'
+        else:
+            label = None
 
-        markdown_changelog.append('')
+        markdown_changelog.extend(build_markdown_section(current_version, raw_commits, repo_url, label))
 
     return '\n'.join(markdown_changelog)

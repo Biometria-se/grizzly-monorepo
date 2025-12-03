@@ -7,7 +7,7 @@ title: Changelog
 
 <!-- static, generated from old repo -->
 {% raw %}
-## v2.1.20
+## v2.1.20 **legacy**{.chip-feature .info}
 
 - <a href="https://github.com/Biometria-se/grizzly-lsp/commit/843f59625461f1eda88107c3ee7f34baff576370" target="_blank">`843f5962`</a>: fix conflicinting jinja2 dependency version with grizzly (#73)
 - <a href="https://github.com/Biometria-se/grizzly-lsp/commit/2f3d6fa1c47745ee54b5bea84f456ee753022de9" target="_blank">`2f3d6fa1`</a>: do not fail workspace diagnostics if all open files has been closed (#72)

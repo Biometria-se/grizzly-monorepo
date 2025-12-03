@@ -7,7 +7,7 @@ title: Changelog
 
 <!-- static, generated from old repo -->
 {% raw %}
-## v3.2.27
+## v3.2.27 **legacy**{.chip-feature .info}
 
 - <a href="https://github.com/Biometria-se/grizzly-cli/commit/b5c5eae912f507e48d639cfe04ba09d059c5a6d8" target="_blank">`b5c5eae9`</a>: pinned packaging version incompatible with grizzly@main (#114)
 

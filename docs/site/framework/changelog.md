@@ -8,7 +8,7 @@ title: Changelog
 <!-- static, generated from old repo -->
 
 {% raw %}
-## v3.2.5
+## v3.2.5 **legacy**{.chip-feature .info}
 
 - <a href="https://github.com/Biometria-se/grizzly/commit/152d0623a7efe8d0680aa78cdc63c56f5d6a53d1" target="_blank">`152d0623`</a>: revert release workflow to use python 3.12
 
