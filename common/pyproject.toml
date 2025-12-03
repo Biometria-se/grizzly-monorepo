@@ -36,6 +36,8 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython"
 ]
 keywords = [
+    "grizzly",
+    "common",
     "locust",
     "behave",
     "load",
