@@ -16,6 +16,10 @@ on:
         description: 'PR number to release'
         required: true
         type: number
+      dry-run:
+        description: 'dry run (no actual release)'
+        required: false
+        type: boolean
 
 jobs:
   prerequisites:
@@ -132,20 +136,11 @@ jobs:
         fetch-tags: true
         fetch-depth: 0
 
-    - name: "run setup-uv-job"
-      uses: ./.github/actions/setup-uv-job
-
-    - name: "get next release version"
-      id: get-next-version
-      run: |
-        uv run ./extras/scripts/get-next-release-tag.py --project ${{ matrix.changes.directory }} --bump ${{ needs.prerequisites.outputs.version-bump }}
-
-    - name: release info
-      run: |
-        echo "Starting release with version bump: ${{ needs.prerequisites.outputs.version-bump }}"
-        echo "Next release version: ${{ steps.get-next-version.outputs.next-release-version }}"
-        echo "Next release tag: ${{ steps.get-next-version.outputs.next-release-tag }}"
-        # Add build, tag, and publish steps here
+    - name: "setup release"
+      uses: ./.github/actions/setup-release
+      with:
+        project: ${{ matrix.changes.directory }}
+        version-bump: ${{ needs.prerequisites.outputs.version-bump }}
 
     - name: build
       run: uv build --package ${{ matrix.changes.package }} --sdist --wheel
@@ -167,20 +162,28 @@ jobs:
         fetch-tags: true
         fetch-depth: 0
 
-    - name: "run setup-uv-job"
-      uses: ./.github/actions/setup-uv-job
+    - uses: actions/setup-node@v5
+      with:
+        cache: 'npm'
+        node-version: 24
+        cache-dependency-path: "${{ matrix.changes.directory }}/package-lock.json"
 
-    - name: "get next release version"
-      id: get-next-version
-      run: |
-        uv run python ./extras/scripts/get-next-release-tag.py --project ${{ matrix.changes.directory }} --bump ${{ needs.prerequisites.outputs.version-bump }}
+    - name: "setup release"
+      id: setup-release
+      uses: ./.github/actions/setup-release
+      with:
+        project: ${{ matrix.changes.directory }}
+        version-bump: ${{ needs.prerequisites.outputs.version-bump }}
 
-    - name: release info
-      run: |
-        echo "Starting release with version bump: ${{ needs.prerequisites.outputs.version-bump }}"
-        echo "Next release version: ${{ steps.get-next-version.outputs.next-release-version }}"
-        echo "Next release tag: ${{ steps.get-next-version.outputs.next-release-tag }}"
-        # Add build, tag, and publish steps here
+    - name: install dependencies
+      working-directory: ${{ matrix.changes.directory }}
+      run: npm install
+
+    - name: bump package version
+      run: npm version ${{ steps.setup-release.outputs.next-release-version }}
+
+    - name: build
+      run: npx @vscode/vsce package
 
 
 

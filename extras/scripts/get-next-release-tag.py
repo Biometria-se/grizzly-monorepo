@@ -3,7 +3,7 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
-#    "semver==3.0.4",
+#    "semver>=3.0.4",
 # ]
 # ///
 
