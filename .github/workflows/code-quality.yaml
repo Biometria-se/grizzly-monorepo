@@ -338,8 +338,6 @@ jobs:
 
     - name: "setup uv job"
       uses: ./.github/actions/setup-uv-job
-      with:
-        python-version: "3.13"
 
     - uses: actions/setup-node@v5
       with:
@@ -354,7 +352,7 @@ jobs:
       with:
         image: "ubuntu-latest"
 
-    - name: "install grizzly-mkdocs"
+    - name: "install dependencies"
       env:
         LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}
       run: |
