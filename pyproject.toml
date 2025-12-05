@@ -4,14 +4,25 @@
 # - tool.mypy
 [project]
 name = "grizzly-loadtester-monorepo"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Monorepo containing all grizzly related packages"
 readme = "README.md"
 license = "MIT"
+license-files = ["LICENSE.md"]
+authors = [
+    { name = "biometria", email="opensource@biometria.se" },
+]
+maintainers = [
+    { name = "Mikael Göransson", email = "github@mgor.se" }
+]
 requires-python = ">=3.10"
 
 [tool.uv.pip]
 link-mode = "copy"
+
+[build-system]
+requires = ["hatchling==1.27.0", "hatch-vcs==0.5.0"]
+build-backend = "hatchling.build"
 
 [tool.hatch.envs.test]
 detached = true
@@ -62,7 +73,6 @@ all-unit = ["framework-unit", "cli-unit", "common-unit", "ls-unit", "extras-unit
 all-e2e = ["framework-e2e", "cli-e2e", "common-e2e", "ls-e2e", "framework-e2e-dist", "extras-e2e"]
 all = ["all-unit", "all-e2e"]
 
-
 [tool.hatch.envs.lint]
 detached = true
 type = "virtual"
@@ -79,6 +89,18 @@ types = ["install", "python -m mypy"]
 lint = ["install", "ruff check ."]
 format = ["install", "ruff format --check"]
 ruff-fix = ["install", "ruff check . --fix", "ruff format"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+tag_regex = "^bundle@(?P<version>[v]\\d+(?:\\.\\d+){0,2}[^\\+]*?)(?:\\+.*)?$"
+scm.git.describe_command = "git describe --dirty --tags --long --abbrev=40 --match 'bundle@v*[0-9]*'"
+version_scheme = "no-guess-dev"
+local_scheme = "no-local-version"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "./__version__.py"
 
 [tool.uv.workspace]
 members = [

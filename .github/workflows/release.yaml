@@ -196,20 +196,28 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        ref: ${{ needs.prerequisites.outputs.commit-sha }}
         fetch-tags: true
         fetch-depth: 0
-
-    - uses: actions/setup-node@v5
-      with:
-        cache: 'npm'
-        node-version: 24
-        cache-dependency-path: "${{ matrix.changes.directory }}/package-lock.json"
 
     - name: "setup release"
       id: setup-release
       uses: ./.github/actions/setup-release
       with:
-        project: ${{ matrix.changes.directory }}
+        project: .
         version-bump: ${{ needs.prerequisites.outputs.version-bump }}
+
+    - name: "build"
+      run: uv run mkdocs build
+
+    - name: deploy documentation
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: ./docs/build
+        destination_dir: docs/
+        enable_jekyll: false
+        # cname: <a better domain>
+        allow_empty_commit: true
+        commit_message: 'Documentation for release ${{ steps.setup-release.outputs.next-release-tag }}'
 
