@@ -1,0 +1,5160 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://biometria-se.github.io/grizzly/command-line-interface/changelog/">
+      
+      
+        <link rel="prev" href="../usage/metadata/">
+      
+      
+        <link rel="next" href="../licenses/">
+      
+      
+      <link rel="icon" href="../../assets/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.18">
+    
+    
+      
+        <title>Changelog - Grizzly</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../assets/stylesheet.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="brown" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#changelog" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Grizzly" class="md-header__button md-logo" aria-label="Grizzly" data-md-component="logo">
+      
+  <img src="../../assets/logo/grizzly_grasshopper_orange_64px.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Grizzly
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Changelog
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Biometria-se/grizzly" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Grizzly" class="md-nav__button md-logo" aria-label="Grizzly" data-md-component="logo">
+      
+  <img src="../../assets/logo/grizzly_grasshopper_orange_64px.png" alt="logo">
+
+    </a>
+    Grizzly
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Biometria-se/grizzly" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../example/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Example
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../code_of_conduct/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Code of conduct
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Framework
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Framework
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_1" id="__nav_4_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Usage
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1">
+            <span class="md-nav__icon md-icon"></span>
+            Usage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_1_1" id="__nav_4_1_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Authentication
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            Authentication
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/authentication/aad/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AAD
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_1_2" id="__nav_4_1_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Variables
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            Variables
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/variables/environment-configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Environment configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_2_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../framework/usage/variables/testdata/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Testdata
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_1_2_2" id="__nav_4_1_2_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_1_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Testdata
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/variables/testdata/csv_reader/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CSV Reader
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/variables/testdata/csv_writer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CSV Writer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/variables/testdata/date/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Date
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/variables/testdata/directory_contents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Directory Contents
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/variables/testdata/integer_incrementer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Integer Incrementer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/variables/testdata/json_reader/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    JSON Reader
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/variables/testdata/random_integer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Random Integer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/variables/testdata/random_string/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Random String
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_2_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../framework/usage/variables/templating/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Templating
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_1_2_3" id="__nav_4_1_2_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_1_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            Templating
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/variables/templating/filters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Filters
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../framework/usage/users/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Load Users
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_1_3" id="__nav_4_1_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            Load Users
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/users/blobstorage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Blobstorage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/users/dummy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dummy
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/users/iothub/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    IoTHub
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/users/messagequeue/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Messagequeue
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/users/restapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    RestAPI
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/users/servicebus/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Servicebus
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../framework/usage/tasks/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Tasks
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_1_4" id="__nav_4_1_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_1_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            Tasks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_4_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../framework/usage/tasks/clients/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Clients
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_1_4_1" id="__nav_4_1_4_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_1_4_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_4_1">
+            <span class="md-nav__icon md-icon"></span>
+            Clients
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/clients/blobstorage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Blobstorage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/clients/http/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    HTTP
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/clients/messagequeue/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Messagequeue
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/clients/servicebus/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Servicebus
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/async_group/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Async Group
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/async_timer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Async Timer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/conditional/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Conditional
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/date/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Date
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/keystore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Keystore
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/log_message/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Log Message
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/loop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Loop
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/request/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Request
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/set_variable/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Set Variable
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/transformer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/until/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Until
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/wait_between/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Wait Between
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/wait_explicit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Wait Explicit
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/tasks/write_file/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Write File
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../framework/usage/steps/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Steps
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_1_5" id="__nav_4_1_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_1_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            Steps
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_5_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../framework/usage/steps/background/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Background
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_1_5_1" id="__nav_4_1_5_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_1_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            Background
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/background/setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/background/shapes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Shapes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_5_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../framework/usage/steps/scenario/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Scenario
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_1_5_2" id="__nav_4_1_5_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_1_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            Scenario
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_5_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_1_5_2_1" id="__nav_4_1_5_2_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Tasks
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_4_1_5_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_5_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Tasks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/tasks/async_group/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Async Group
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/tasks/async_timer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Async Timer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/tasks/clients/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Clients
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/tasks/conditional/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Conditional
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/tasks/date/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Date
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/tasks/keystore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Keystore
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/tasks/log_message/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Log Message
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/tasks/loop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Loop
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/tasks/request/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Request
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/tasks/transformer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/tasks/until/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Until
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/tasks/wait_between/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Wait Between
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/tasks/wait_explicit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Wait Explicit
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/tasks/write_file/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Write File
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/response/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Response
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Results
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/scenario/user/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    User
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/usage/steps/utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Utils
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../framework/licenses/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Licenses
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Command Line Interface
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Command Line Interface
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../usage/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Usage
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_1" id="__nav_5_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            Usage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/metadata/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Metadata
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+      
+        <!--
+  Copyright (c) 2016-2025 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine title -->
+
+
+
+<!-- Table of contents -->
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+
+  <!--
+    Check whether the content starts with a level 1 headline. If it does, the
+    top-level anchor must be skipped, since it would be redundant to the link
+    to the current page that is located just above the anchor. Therefore we
+    directly continue with the children of the anchor.
+  -->
+  
+  
+  
+    
+  
+
+  <!-- Table of contents title and list -->
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3227post1dev57-unreleased" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.27.post1.dev57 unreleased
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3227-legacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.27 legacy
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3226" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.26
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3225" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.25
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3224" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.24
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3223" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.23
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3222" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.22
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3221" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.21
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3220" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.20
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3219" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.19
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3218" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.18
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3217" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.17
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3216" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.16
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3215" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.15
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3214" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.14
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3213" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.13
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3212" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.12
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3211" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.11
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3210" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.10
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v329" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.9
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v328" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.8
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v327" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.7
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v326" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.6
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v325" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.5
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v324" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.4
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v323" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.3
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v322" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.2
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v321" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.1
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v320" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.0
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v318" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.8
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v317" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.7
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v316" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.6
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v315" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.5
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v314" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.4
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v313" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.3
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v312" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.2
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v311" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.1
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v310" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.0
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3011" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.11
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3010" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.10
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v309" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.9
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v308" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.8
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v307" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.7
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v306" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.6
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v305" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.5
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v304" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.4
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v303" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.3
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v302" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.2
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v301" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.1
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v300" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.0
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v216" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.1.6
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v215" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.1.5
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v214" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.1.4
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v213" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.1.3
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v212" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.1.2
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v211" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.1.1
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v210" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.1.0
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v204" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.0.4
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v203" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.0.3
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v202" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.0.2
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v201" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.0.1
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v200" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.0.0
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v111" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.1.1
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v110" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.1.0
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v109" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.9
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v108" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.8
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v107" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.7
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v106" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.6
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v105" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.5
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v104" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.4
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v103" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.3
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v102" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.2
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v101" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.1
+    </span>
+  </a>
+  
+</li>
+        
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../licenses/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Licenses
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Editor support
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Editor support
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_1" id="__nav_6_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Editors
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1">
+            <span class="md-nav__icon md-icon"></span>
+            Editors
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../editor-support/editors/vscode/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Visual Studio Code
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_1_1" id="__nav_6_1_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            Visual Studio Code
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../editor-support/editors/vscode/changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../editor-support/editors/vscode/licenses/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Licenses
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../editor-support/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Language server
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../editor-support/changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../editor-support/licenses/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Licenses
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <!--
+  Copyright (c) 2016-2025 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine title -->
+
+
+
+<!-- Table of contents -->
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+
+  <!--
+    Check whether the content starts with a level 1 headline. If it does, the
+    top-level anchor must be skipped, since it would be redundant to the link
+    to the current page that is located just above the anchor. Therefore we
+    directly continue with the children of the anchor.
+  -->
+  
+  
+  
+    
+  
+
+  <!-- Table of contents title and list -->
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3227post1dev57-unreleased" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.27.post1.dev57 unreleased
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3227-legacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.27 legacy
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3226" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.26
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3225" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.25
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3224" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.24
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3223" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.23
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3222" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.22
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3221" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.21
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3220" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.20
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3219" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.19
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3218" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.18
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3217" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.17
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3216" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.16
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3215" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.15
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3214" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.14
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3213" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.13
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3212" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.12
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3211" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.11
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3210" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.10
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v329" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.9
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v328" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.8
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v327" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.7
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v326" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.6
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v325" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.5
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v324" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.4
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v323" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.3
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v322" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.2
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v321" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.1
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v320" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.2.0
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v318" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.8
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v317" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.7
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v316" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.6
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v315" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.5
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v314" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.4
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v313" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.3
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v312" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.2
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v311" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.1
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v310" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.1.0
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3011" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.11
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v3010" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.10
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v309" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.9
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v308" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.8
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v307" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.7
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v306" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.6
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v305" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.5
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v304" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.4
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v303" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.3
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v302" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.2
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v301" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.1
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v300" class="md-nav__link">
+    <span class="md-ellipsis">
+      v3.0.0
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v216" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.1.6
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v215" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.1.5
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v214" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.1.4
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v213" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.1.3
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v212" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.1.2
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v211" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.1.1
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v210" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.1.0
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v204" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.0.4
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v203" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.0.3
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v202" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.0.2
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v201" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.0.1
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v200" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.0.0
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v111" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.1.1
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v110" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.1.0
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v109" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.9
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v108" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.8
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v107" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.7
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v106" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.6
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v105" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.5
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v104" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.4
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v103" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.3
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v102" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.2
+    </span>
+  </a>
+  
+</li>
+        
+      
+        
+            
+            <li class="md-nav__item">
+  <a href="#v101" class="md-nav__link">
+    <span class="md-ellipsis">
+      v1.0.1
+    </span>
+  </a>
+  
+</li>
+        
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+
+
+<h1 id="changelog">Changelog</h1>
+<h2 id="v3227post1dev57-unreleased">v3.2.27.post1.dev57 <strong class="chip-feature danger">unreleased</strong></h2>
+<ul>
+<li><a href="https///github.com/Biometria-se/grizzly-monorepo/commit/27ceb0bfd61f6812883360c9f5795982da22429a" target="_blank"><code>27ceb0bf</code></a> grizzly-loadtester-cli changes, only</li>
+<li><a href="https///github.com/Biometria-se/grizzly-monorepo/commit/046b72bb3ff8109ff50f25d8db4ddd12eb9f13f5" target="_blank"><code>046b72bb</code></a> (all) composite steps is not good for overview</li>
+<li><a href="https///github.com/Biometria-se/grizzly-monorepo/commit/fc1e3fe597ebb6840a1a355d2a2d04bfc3c5d012" target="_blank"><code>fc1e3fe5</code></a> (all) code-quality workflow improvements</li>
+<li><a href="https///github.com/Biometria-se/grizzly-monorepo/commit/cabb38fe9f6375d3b4da41a9e7e174b7f94ba790" target="_blank"><code>cabb38fe</code></a> (command-line-interface,framework) fixing distributed framework E2E tests</li>
+<li><a href="https///github.com/Biometria-se/grizzly-monorepo/commit/5c1bd84fcb90b75a86286e7e18a9de0951126482" target="_blank"><code>5c1bd84f</code></a> (monorepo) less jobs, more steps</li>
+<li><a href="https///github.com/Biometria-se/grizzly-monorepo/commit/297ffc860e576a6f12f5beeff29f5696229144b5" target="_blank"><code>297ffc86</code></a> (all) tuning builds</li>
+<li><a href="https///github.com/Biometria-se/grizzly-monorepo/commit/edaf1f9d9310e9de6aa6036db46b8da53a5c1cd7" target="_blank"><code>edaf1f9d</code></a> (docs) replaced old pymark statements with mkdocs-macros</li>
+<li><a href="https///github.com/Biometria-se/grizzly-monorepo/commit/c5c5865ae962f3af7f8133ea3595c4a0b5a97d3b" target="_blank"><code>c5c5865a</code></a> (all): fix problems with running (mainly, framework) E2E tests in vscode</li>
+<li><a href="https///github.com/Biometria-se/grizzly-monorepo/commit/289ee2bb6753d0dd58f6cec2a8efc2834e367149" target="_blank"><code>289ee2bb</code></a> (editor-support) fixing the last E2E tests</li>
+<li><a href="https///github.com/Biometria-se/grizzly-monorepo/commit/633f6621bca9d37465c28844c1180b1b17dc878c" target="_blank"><code>633f6621</code></a> make sure <code>uv sync</code> is executed with <code>--locked</code></li>
+<li><a href="https///github.com/Biometria-se/grizzly-monorepo/commit/6615b79e87f102ec45d70def8543be4f9e1f8e78" target="_blank"><code>6615b79e</code></a> pyproject.toml work</li>
+<li><a href="https///github.com/Biometria-se/grizzly-monorepo/commit/e966fb1ddbb186a4a3d48d2ce9e9b23f8151d607" target="_blank"><code>e966fb1d</code></a> added hatch scripts for linting</li>
+<li><a href="https///github.com/Biometria-se/grizzly-monorepo/commit/c00e2e3009b73570a88b1406f65459831afa7d8f" target="_blank"><code>c00e2e30</code></a> added dynamic versioning with hatch-vcs (setuptools-scm)</li>
+</ul>
+<!-- static, generated from old repo -->
+
+<h2 id="v3227-legacy">v3.2.27 <strong class="chip-feature info">legacy</strong></h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/b5c5eae912f507e48d639cfe04ba09d059c5a6d8" target="_blank"><code>b5c5eae9</code></a>: pinned packaging version incompatible with grizzly@main (#114)</li>
+</ul>
+<h2 id="v3226">v3.2.26</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/b97ce3a22419f025c88c089836eee6fe2290bbba" target="_blank"><code>b97ce3a2</code></a>: pin pyyaml version that is compatible with grizzly (#113)</li>
+</ul>
+<h2 id="v3225">v3.2.25</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/c466cddac86beee3f864bec8edcb91f2fe5b597e" target="_blank"><code>c466cdda</code></a>: if <code>--validate-config</code> is supplied, always return even when it was a success (#112)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/4e247a2fb66ade75b432237d98d3d35fb30a2f33" target="_blank"><code>4e247a2f</code></a>: update jinja2 and requests, to fix CVE's</li>
+</ul>
+<h2 id="v3224">v3.2.24</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/cba03fda0ad9dfcda3ef6397d852b3def0412d84" target="_blank"><code>cba03fda</code></a>: replaced pylint+flake8 with ruff (#110)</li>
+</ul>
+<h2 id="v3223">v3.2.23</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/6869b3f18c8181c00fcbdd45e4039cf2b6dad24e" target="_blank"><code>6869b3f1</code></a>: keyvault improvements (#109)</li>
+</ul>
+<h2 id="v3222">v3.2.22</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/da3aee8c35c538ead952a66fa3e77734085505b0" target="_blank"><code>da3aee8c</code></a>: reference keyvault certificates in environment configuration (#108)</li>
+</ul>
+<h2 id="v3221">v3.2.21</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/fdd3fdb12c830e72ce450759f1f8f540fedc3599" target="_blank"><code>fdd3fdb1</code></a>: get_context_root should look for the "closest" environment.py</li>
+</ul>
+<h2 id="v3220">v3.2.20</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/213f71e6ab52a814e13785224e1a6cf4e5ed756c" target="_blank"><code>213f71e6</code></a>: temporary file permissions (#106)</li>
+</ul>
+<h2 id="v3219">v3.2.19</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/3e8aab14a715066e52157f2d2e0aa5dc2d9f89b8" target="_blank"><code>3e8aab14</code></a>: keyvault configuration bugs (#105)</li>
+</ul>
+<h2 id="v3218">v3.2.18</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/fe71240006d73a25d119a8dfcabcf47c2cb0edb5" target="_blank"><code>fe712400</code></a>: new subcommand for keyvault</li>
+</ul>
+<h2 id="v3217">v3.2.17</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/90bb369960acf13fa8b8a5dbde788e86c4da61f8" target="_blank"><code>90bb3699</code></a>: remove support for python 3.8</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/9aebbf2b67d14a8857f8b6e0257923f3c06a12a5" target="_blank"><code>9aebbf2b</code></a>: store environment configuration in an azure keyvault, as secrets</li>
+</ul>
+<h2 id="v3216">v3.2.16</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/bace69069faeeee56f31e099e1ff9d73f883a090" target="_blank"><code>bace6906</code></a>: strange behavior between github runner py 3.12.9 and devcontainer py 3.12.6</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/4d7dd700af24efda903fac45195ef997c1cf0ab5" target="_blank"><code>4d7dd700</code></a>: show which environment file is used, if specified</li>
+</ul>
+<h2 id="v3215">v3.2.15</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/ebbe24e8c189f47ad796783fda95698628fbcf68" target="_blank"><code>ebbe24e8</code></a>: problems with mq redist 9.4.1.0 which is linked by the short-url.</li>
+</ul>
+<h2 id="v3214">v3.2.14</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/47811737b9f2d7f393fa5acc94b5a79e5efe3ee1" target="_blank"><code>47811737</code></a>: strange locust error when trying to write stats to CSV file, skip it in E2E test for now.</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/3559c352268bbd2a02842931b496f84c1de5ce40" target="_blank"><code>3559c352</code></a>: fix unit tests</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/406346a38319c85c2e2218a1cc2659da94b68fde" target="_blank"><code>406346a3</code></a>: values used to calculate user distribution can contain variables</li>
+</ul>
+<h2 id="v3213">v3.2.13</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/b0ee7c14b34ba071ddc1d7be44ff9d1895df7dba" target="_blank"><code>b0ee7c14</code></a>: update jinja2 to patch cve-2024-22195</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/8f36acafa71f1b1745c106f8f09a4827c995a24c" target="_blank"><code>8f36acaf</code></a>: fix for failing unit tests py &lt; 3.10</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/199402f441543475566a0a210b2de57a77ded36b" target="_blank"><code>199402f4</code></a>: fixed bug Biometria-se/grizzly#347</li>
+</ul>
+<h2 id="v3212">v3.2.12</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/ac2ed000f306fa6b99172fc1e2ac7c1d4819114c" target="_blank"><code>ac2ed000</code></a>: new arguments to get more information from building</li>
+</ul>
+<h2 id="v3211">v3.2.11</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/3ebd7d66b1141cec59c2e03a19574c6d37c33698" target="_blank"><code>3ebd7d66</code></a>: inherit parent feature-file correctly</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/34f858c1a3743943816e22fc00ff5d3fc897139f" target="_blank"><code>34f858c1</code></a>: remove if-statements containing grizzly variables in "root" feature-file.</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/0200a5c36099de5a725a6b0086ee58360a0f4ea5" target="_blank"><code>0200a5c3</code></a>: extract scenario scenario from feature file before rendering</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/3e4e131641632b24c0ba1278740b1a290f7f1557" target="_blank"><code>3e4e1316</code></a>: fixed bug where the conents/body of a if-statement block would be rendered, even though it shouldn't at this point</li>
+</ul>
+<h2 id="v3210">v3.2.10</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/ed93a78f312d3d1911ae07105261c5c0542297e2" target="_blank"><code>ed93a78f</code></a>: support for <code>if</code>-statements in templates</li>
+</ul>
+<h2 id="v329">v3.2.9</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/2503b7919958993b966a3937b06096cf618833b0" target="_blank"><code>2503b791</code></a>: possible fix for conflict between setup-python action and homebrew formulas.</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/32706775b5b7de1223fe07af02335dfdae20b9e9" target="_blank"><code>32706775</code></a>: handle relative paths in nested scenario-tags correctly.</li>
+</ul>
+<h2 id="v328">v3.2.8</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/99fac3a2703b57055c537fb8587ea10f4fbbf356" target="_blank"><code>99fac3a2</code></a>: allow nested <code>{% scenario .. %}</code> tags and special tag variables (<code>{$ .. $}</code>) (#94)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/733e7886caad72139bcdff126f9ac06e7ba06262" target="_blank"><code>733e7886</code></a>: bump devcontainer and dist image to python 3.12 (#93)</li>
+</ul>
+<h2 id="v327">v3.2.7</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/26555784636385faeeef377b64c4efbe8e8ae1dc" target="_blank"><code>26555784</code></a>: remove top-level version element in compose.yaml (#92)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/e2949eb0af51af0ee5cf03a0e59ac0e65386169f" target="_blank"><code>e2949eb0</code></a>: implementation of <code>--dry-run</code> in <code>run</code> command (#91)</li>
+</ul>
+<h2 id="v326">v3.2.6</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/2496d9ee41bd5e9238978793ba253c2803f730ed" target="_blank"><code>2496d9ee</code></a>: support for relative upstream paths for feature files in scenario tag (#90)</li>
+</ul>
+<h2 id="v325">v3.2.5</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/2fa1dd39e9bcdeb33e310dfbab5c0cf79652aba2" target="_blank"><code>2fa1dd39</code></a>: create temporary .lock.feature file</li>
+</ul>
+<h2 id="v324">v3.2.4</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/dcf742aea11d281a34ab23199502628cc19adf4c" target="_blank"><code>dcf742ae</code></a>: remove <code>--stop</code> argument for behave</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/8163280dc421288da4cc9e527129724fdec61851" target="_blank"><code>8163280d</code></a>: new user step that sets user type, host, fixed count</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/6157e7a677dba8fa697676561e71ef7a44f3997c" target="_blank"><code>6157e7a6</code></a>: handle step expressions that assign users to a scenario with a tag</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/89959fd81fb70e6550f5885d4983b10a9f5ce503" target="_blank"><code>89959fd8</code></a>: fixed bug for missing step text and table</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/169e1afa11e1093e69d8bfb6a9e96fd80a3c6808" target="_blank"><code>169e1afa</code></a>: bug with included steps fixed</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/1629fab1fee5a309d0f0ddb17d806adb51bf8207" target="_blank"><code>1629fab1</code></a>: adaptations to grizzly version that supports the new locust dispatcher</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/151de2a0eca044108cc15113354338138447b1ae" target="_blank"><code>151de2a0</code></a>: Scenario tag fix, copying variable substrings to preserve whitespacing (#87)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/9ebf592a5d943d128611274347894d7d32ea6b07" target="_blank"><code>9ebf592a</code></a>: remove norwegian debugging statements</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/87db970ab86d168932d3057f1ed13a104f4ea603" target="_blank"><code>87db970a</code></a>: remove level classvar</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/71833170ace84afdd434993b546d95d5af79b99c" target="_blank"><code>71833170</code></a>: no need for temporary files</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/af9f753ab443995e4d8435b6f0f92d48b4f6f506" target="_blank"><code>af9f753a</code></a>: windows cannot open a file twice</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/0c62cea1a3ee7d03fd8370835e8e41f20ab6b8ea" target="_blank"><code>0c62cea1</code></a>: anything outside of <code>{% scenario ...%}</code> should be treated as data, e.g. plain text.</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/d46da8987836d508dc58a5f5457a8b2c848da634" target="_blank"><code>d46da898</code></a>: custom jinja2 tag to include all steps from a scenario in another feature file</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/17fecd62a9b0d4ee0d008ec3d9270fba2408edf1" target="_blank"><code>17fecd62</code></a>: fix for auto-completing "partial" directories and exact file matches</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/f42ef1663ad9d5eba3d719d16e1ef81679cb7526" target="_blank"><code>f42ef166</code></a>: error detection in distribution_of_users_per_scenario</li>
+</ul>
+<h2 id="v323">v3.2.3</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/a5530234f189ca6ab3c1ed51c97f5a38f8718396" target="_blank"><code>a5530234</code></a>: included missed output in log file when <code>-l/--log-file</code> is used</li>
+</ul>
+<h2 id="v322">v3.2.2</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/0a1eb8998cfe6ecc45839b1e6d906fa61ce9b274" target="_blank"><code>0a1eb899</code></a>: change flask version</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/b21ef107c5d5c025c8b3e78505b09826b70d95bc" target="_blank"><code>b21ef107</code></a>: updated URL to IBM MQ dependencies</li>
+</ul>
+<h2 id="v321">v3.2.1</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/42403257b227e6bfddf14753bbb47add6ed8a6a3" target="_blank"><code>42403257</code></a>: fixed E2E tests</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/b01702d9208aab5666a19a5285be52f30fdc9196" target="_blank"><code>b01702d9</code></a>: stateless authenticator "app"</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/6c0a0b61828673447181fa9d5d2c99f2cc7bc5d7" target="_blank"><code>6c0a0b61</code></a>: add support for sub log directories in <code>requests/logs</code></li>
+</ul>
+<h2 id="v320">v3.2.0</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/01221bb2256aa90baa7a334a63f1b78b79986d6f" target="_blank"><code>01221bb2</code></a>: add python 3.11 support (#78)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/ef90eb6d29a9e4355ac48f34044d024b61f4bccb" target="_blank"><code>ef90eb6d</code></a>: special case for mac os also in log file</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/983cb64e3f4277f93a19fcab7c29aec67c6798f0" target="_blank"><code>983cb64e</code></a>: add run argument to save all output to log file</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/c37efac1a4dff6d2ca8e3da3d4aab575a22a883d" target="_blank"><code>c37efac1</code></a>: fixed node numbering for workers</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/ac6177174f7a92d88905928641ee1e748dbc0c9e" target="_blank"><code>ac617717</code></a>: install wheel package in venv</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/12b7747d1585150d0e5eee28218f79f71ed65f21" target="_blank"><code>12b7747d</code></a>: prefix missed output with master node name, as it would've been done in the <code>docker compose up</code> output</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/e0379bacaaa220c8b1470885cfc20fc0b90f9165" target="_blank"><code>e0379bac</code></a>: do not look for grizzly.returncode= in output</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/c0aa586c8126d8992ea94ae3c1f2cbaa12221e60" target="_blank"><code>c0aa586c</code></a>: wrap results from <code>run_command</code> in a dataclass</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/8aa3ea3aff86f63c4aa1f1312cfca2bb74911b13" target="_blank"><code>8aa3ea3a</code></a>: find output that docker compose hide when aborting a dist run</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/562ab958d91871ae48cdc855a975b6ee7580f342" target="_blank"><code>562ab958</code></a>: cleaner implementation of handling sig traps</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/4f21bf37c575187b443a556d098a217a86f0f673" target="_blank"><code>4f21bf37</code></a>: add signal handler that terminates process</li>
+</ul>
+<h2 id="v318">v3.1.8</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/b43f5c6bea2eb891f3bc4898219c8f9bdeba2182" target="_blank"><code>b43f5c6b</code></a>: added missing e2e test for Biometria-se/grizzly#232 (#75)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/48064a43d4886026f4817b26d30d79d1a5cc9436" target="_blank"><code>48064a43</code></a>: fixes Biometria-se/grizzly#232 (#74)</li>
+</ul>
+<h2 id="v317">v3.1.7</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/0ed37c06aa8d6b1eed02d4d7c89650df9769734e" target="_blank"><code>0ed37c06</code></a>: do not create a default requirements.txt if it doesn't exist</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/633fb212ae8fdd031ad8c1f9071dc6c8bbf3e740" target="_blank"><code>633fb212</code></a>: use compose v2 via <code>docker compose</code> instead of <code>docker-compose</code> (#72)</li>
+</ul>
+<h2 id="v316">v3.1.6</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/f193a1e3ac7969d81c65e841ed78ebfb4271cce4" target="_blank"><code>f193a1e3</code></a>: pip-licenses 4.2.0 is broken, exclude (#71)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/89abf922dadfdb0feb848583d79901e2fb5f91e4" target="_blank"><code>89abf922</code></a>: change constraints for tomli dependency to avoid dependency problems with other dependencies</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/6ab6be0207572decec3a1232d1628a8f06e0c297" target="_blank"><code>6ab6be02</code></a>: removed duplicated packaging dependency</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/ad49973b05218f05229cac9c79b894881db1385f" target="_blank"><code>ad49973b</code></a>: colima docker install needs buildx plugin</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/c3a65880c81b6597dc0d128ab900b38224dda2de" target="_blank"><code>c3a65880</code></a>: fixed mypy errors, due to updated mypy version</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/78e0b36b9940381a1829f7e5a9b11fda340e876c" target="_blank"><code>78e0b36b</code></a>: adaptations for Biometria-se/grizzly#205.</li>
+</ul>
+<h2 id="v315">v3.1.5</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/08d9fb08de8ca8cd2307bf9fe4cc60fc302a2bc3" target="_blank"><code>08d9fb08</code></a>: fixes Biometria-se/grizzly#186</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/7cbcc531685125d8ecb8c50f9aeb9e0c1fa81b44" target="_blank"><code>7cbcc531</code></a>: Update README.md</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/81484ea7e727d83122193297d175bdb21210b9fb" target="_blank"><code>81484ea7</code></a>: updated action versions to get rid of warnings (#66)</li>
+</ul>
+<h2 id="v314">v3.1.4</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/0cfd9e9f408d5511030c114848ab9c3333e3b3b0" target="_blank"><code>0cfd9e9f</code></a>: implemented support for <code>--csv*</code> arguments (#65)</li>
+</ul>
+<h2 id="v313">v3.1.3</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/e211442c52ff77b464366e9384659c91b3a2454d" target="_blank"><code>e211442c</code></a>: grizzly support templating for user weight</li>
+</ul>
+<h2 id="v312">v3.1.2</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/8c7b891533db4edeb16e1646569460108d8b85e9" target="_blank"><code>8c7b8915</code></a>: annotate notices in feature metadata (comments) that grizzly-cli will show</li>
+</ul>
+<h2 id="v311">v3.1.1</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/4df22703c1d5f36191d1a7748f0b96f986179e12" target="_blank"><code>4df22703</code></a>: check for return code in command output</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/da9c0f0d8935bc093c8c7b89fd58b298ee80b8cf" target="_blank"><code>da9c0f0d</code></a>: add <code>wheel</code> as dev dependency</li>
+</ul>
+<h2 id="v310">v3.1.0</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/f0a6b13b620bf10e8cbd2cd615ec572158ef4057" target="_blank"><code>f0a6b13b</code></a>: fixed copy-paste error in publish package step</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/40b83dc578bc001b73bdb1c10c5e1d5b3c9bb0dc" target="_blank"><code>40b83dc5</code></a>: fixed indentation for inputs in release workflow (#61)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/34235b596800758c1e2c38f2df14ae4bc551ebce" target="_blank"><code>34235b59</code></a>: fixed warnings from coverage when running e2e tests (#60)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/771eb3e1470853de13132a6627e223d9feb177f1" target="_blank"><code>771eb3e1</code></a>: implementation of issue #159</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/a9f6982c741cc32f01ab1abdda38a35b7855f7c1" target="_blank"><code>a9f6982c</code></a>: ::set-output deprecated (#58)</li>
+</ul>
+<h2 id="v3011">v3.0.11</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/159b313ad5bf51caea834e658e0e4d17ce4d6559" target="_blank"><code>159b313a</code></a>: v3.0.10 comes after v3.0.1, so latest is v3.0.9 (lexicographic order) -- use <code>sort -r --version-sort</code> (#57)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/5404d7aea0782b5933ddb81be6365e475ec328ba" target="_blank"><code>5404d7ae</code></a>: assume a remote branch if git cat-file fails</li>
+</ul>
+<h2 id="v3010">v3.0.10</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/fb1f2608c9c8be877168195c8c89054458e06a30" target="_blank"><code>fb1f2608</code></a>: set LANG and LC_ALL to C.UTF-8 instead of C</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/bdd0f7a3dd155f9d806164f9214b55e1bcc01091" target="_blank"><code>bdd0f7a3</code></a>: improved grizzly version crawling</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/238a989cf72d5a42cdcc4148467f9bf3a2b2b659" target="_blank"><code>238a989c</code></a>: oooh man... encoding on the windows-latest runner :S</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/924486e6e0f5999b91fe931533d35dd44c21a274" target="_blank"><code>924486e6</code></a>: make End2EndFixture windows compatible</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/35b3b18bb05062688ab915ea4af53cebcbc2f883" target="_blank"><code>35b3b18b</code></a>: remove user and group in grizzly image, if they exists</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/f2f20240d271c5afe8e03b2734564fa50344b90e" target="_blank"><code>f2f20240</code></a>: update versions of github actions checkout and setup-python</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/bf4050e2cc16d5957b07eb93208355850ae050e3" target="_blank"><code>bf4050e2</code></a>: e2e test of grizzly-cli init</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/e96ee3496dbcce0789f20dc0bed76d6e8f76b8e5" target="_blank"><code>e96ee349</code></a>: e2e test for grizzly init</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/9af2236c791a0454156648883cc075787609fd84" target="_blank"><code>9af2236c</code></a>: restructure of tests and added e2e tests</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/0032002cbc44cc7c99a8bb23c1d307f301674f31" target="_blank"><code>0032002c</code></a>: fixed unit tests for windows</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/086df974b63e5679ac2a0c5a819176bcd62da549" target="_blank"><code>086df974</code></a>: optimization of listing files for bash completion</li>
+</ul>
+<h2 id="v309">v3.0.9</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/d91ba37ed2c434cc7f41b701faf7b696a4833c23" target="_blank"><code>d91ba37e</code></a>: workdir changed, correct entrypoint script path (#51)</li>
+</ul>
+<h2 id="v308">v3.0.8</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/61f8699ea9504da6310c6ec7e9882a0b80c7eb88" target="_blank"><code>61f8699e</code></a>: simplified format_text for md-help (#50)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/13c3e80994cb74288afadd72950bd7a2bc896233" target="_blank"><code>13c3e809</code></a>: set workdir to /srv/grizzly</li>
+</ul>
+<h2 id="v307">v3.0.7</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/84590d5cec7fd579c819ebaeee9e7792fd65b86a" target="_blank"><code>84590d5c</code></a>: implementation of grizzly-cli dist clean (#48)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/05c628fbcdf69048792291124e63dad143b57c27" target="_blank"><code>05c628fb</code></a>: changes for being able to use in E2E tests (#47)</li>
+</ul>
+<h2 id="v306">v3.0.6</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/215522a1982a60a3bfa12c4abf0177f104c09d1b" target="_blank"><code>215522a1</code></a>: possibility to inject grizzly-cli command arguments via metadata specified in feature file</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/140f748413fa9f44c1d881d5a0c1e69eb64d906d" target="_blank"><code>140f7484</code></a>: argument to increase how long the master will wait for worker report</li>
+</ul>
+<h2 id="v305">v3.0.5</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/7c3bb2f69d52e5ab8e482016f9bd62d908158d82" target="_blank"><code>7c3bb2f6</code></a>: change version of IBM MQ Redist, and allow it to be overriden</li>
+</ul>
+<h2 id="v304">v3.0.4</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/75690e565cc42e014de53feb12e3250c014b5b02" target="_blank"><code>75690e56</code></a>: pkg-resources is some kind of meta package, ignore in license table (#44)</li>
+</ul>
+<h2 id="v303">v3.0.3</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/6df5c857aa412f7f03e46203dd66769c46463bfc" target="_blank"><code>6df5c857</code></a>: update script that generates licenses information (#43)</li>
+</ul>
+<h2 id="v302">v3.0.2</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/bb270a8202d3c1b2376191a18fb6afb5fb88d9c1" target="_blank"><code>bb270a82</code></a>: changed <code>grizzly_cli.SCENARIOS</code> to a list to get guaranteed insertion order (#42)</li>
+</ul>
+<h2 id="v301">v3.0.1</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/df5a4902aeeb2a063ced089f9877a10f6186f915" target="_blank"><code>df5a4902</code></a>: --yes argument to automagically answer yes on any questions</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/0b57d7394f73edc2e34e817a5758c93ec303825c" target="_blank"><code>0b57d739</code></a>: subcommand is not set for command <code>init</code></li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/43ccba6bac4b163ea4a1427893b393c333359572" target="_blank"><code>43ccba6b</code></a>: do not sort scenarios by name, iterate in the order they are defined</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/dd4b5e7b2d3573079f7a69b031ae2066cad3ded5" target="_blank"><code>dd4b5e7b</code></a>: adaptations for Biometria-se/grizzly#71</li>
+</ul>
+<h2 id="v300">v3.0.0</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/267ee8df5801abad7943b23fa7516bb8adc3efee" target="_blank"><code>267ee8df</code></a>: restructuring commands</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/c1170417042505c44b34cd80f4f2953f63766abf" target="_blank"><code>c1170417</code></a>: step expression for number of users can be singular (#37)</li>
+</ul>
+<h2 id="v216">v2.1.6</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/803b3f3a073ea770e81d51b40d33f6cbda8118a1" target="_blank"><code>803b3f3a</code></a>: users per scenario is calculated incorrectly (#36)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/065b1e5cfcf638b1eeda8890a34448241c32a227" target="_blank"><code>065b1e5c</code></a>: documentation of IBM_MQ_LIB_HOST environment variable (#35)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/e73174b2f86845e5aeb4455da41ea4e793790bd6" target="_blank"><code>e73174b2</code></a>: make sure that it is possible to generate licenses documentation (#34)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/a574b5c4c70eb14aaa462f4a535fd1a95001e625" target="_blank"><code>a574b5c4</code></a>: github action action-push-tag@v1 is broken (#33)</li>
+</ul>
+<h2 id="v215">v2.1.5</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/e3eb90731fb55f8c99299ac4b2ac75a1df906e77" target="_blank"><code>e3eb9073</code></a>: no smoothed timeline in test summary</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/2d706e0f77b51dbeb83489bf1ba26e171e9dd530" target="_blank"><code>2d706e0f</code></a>: --add-host if overridden IBM_MQ_LIB_HOST is using host.docker.internal (#31)</li>
+</ul>
+<h2 id="v214">v2.1.4</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/220924f6a56ea7e4a948c3e8f6536fc8bc114c03" target="_blank"><code>220924f6</code></a>: fix failing tests</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/45fc771858a3662e6a1257b14c1504ca1468e773" target="_blank"><code>45fc7718</code></a>: possible to override host where IBM MQ lib redist package should be downloaded from</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/d34ebbf8460faf84d60bc2e30be769ab8ac04af6" target="_blank"><code>d34ebbf8</code></a>: script for generating a license summary (#29)</li>
+</ul>
+<h2 id="v213">v2.1.3</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/49116c4245da77744ef6acd4f94101a1ddb29474" target="_blank"><code>49116c42</code></a>: check if container image should be built with or without mq libraries</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/50ec4869759829399d9fa7eeed21c7eacba1575e" target="_blank"><code>50ec4869</code></a>: check if grizzly-loadtester is installed with any extras</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/447f677e9bcff1b77b5f6918a1f5ca9f87bd27e4" target="_blank"><code>447f677e</code></a>: Containerfile updated to have MQ libraries as optional</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/64b2131a1fe3440f6c76f12ba0056b70d6cd02df" target="_blank"><code>64b2131a</code></a>: unable to use cache functionality of setup-python@v2</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/241bdb22c5c782fa27a072cd3d7db3fb948d4eec" target="_blank"><code>241bdb22</code></a>: fix for Biometria-se/grizzly#73</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/340cfd18ef06f83d62c2d69d7a0acb1222538f5f" target="_blank"><code>340cfd18</code></a>: only run code quality workflow on 3.10 on windows</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/e11c1b098f0d72e737048f5becaf933f80c32743" target="_blank"><code>e11c1b09</code></a>: docker-compose v2 and v1 compatible in instructions</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/1db75e0bed7ce0f730ac8497d9930f1106d56b4b" target="_blank"><code>1db75e0b</code></a>: base on 3.10-slim instead of alpine</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/a7dc5ce682d89d33c2857ebee59e2300dc235e54" target="_blank"><code>a7dc5ce6</code></a>: add --no-tty argument to run dist</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/8d3d83ee7e7efaa93f0d52fb8143972b5c527d23" target="_blank"><code>8d3d83ee</code></a>: more dynamic creation of sub command parsers</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/03652ae85876f4cc261a7091d5195c68ee1b4aad" target="_blank"><code>03652ae8</code></a>: build package based on metadata only</li>
+</ul>
+<h2 id="v212">v2.1.2</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/344bc53b3f519c5f57166c1640bfcb908e58382d" target="_blank"><code>344bc53b</code></a>: remove debug prints that fell through quality control</li>
+</ul>
+<h2 id="v211">v2.1.1</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/d41cde5c51e7a067825d689632621802bec9c132" target="_blank"><code>d41cde5c</code></a>: added missing dependency (#24)</li>
+</ul>
+<h2 id="v210">v2.1.0</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/4feb4ec5d72b4f095aca1bf4a6dca8af49601557" target="_blank"><code>4feb4ec5</code></a>: build grizzly container image based on locust container image version that the project depends on</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/4e3ec441f7864f8cc6a6b2ba3f0685055050fbe5" target="_blank"><code>4e3ec441</code></a>: implementation of getting dependencies version</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/4ffc453500330308ee88302e08cc25a1b2fa7989" target="_blank"><code>4ffc4535</code></a>: WIP: get grizzly and locust version from project</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/64b5eaef2df1fd3a43f10d57a7ab69e08e64deee" target="_blank"><code>64b5eaef</code></a>: Feature/spring 2022 cleanup (#22)</li>
+</ul>
+<h2 id="v204">v2.0.4</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/c9c0c24bdc3309fa6ca550449c4904e781ad80ac" target="_blank"><code>c9c0c24b</code></a>: fix tty size in container (#20)</li>
+</ul>
+<h2 id="v203">v2.0.3</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/234e9c05d076ed4e786064b045b3b606a4278886" target="_blank"><code>234e9c05</code></a>: getattr retrives value of registry in args, but if it is None (#19)</li>
+</ul>
+<h2 id="v202">v2.0.2</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/37da0e7374da22af5d4f025381f38188e61f19b7" target="_blank"><code>37da0e73</code></a>: Feature/build parser (#18)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/7c64bd0b2c5e26321860f75188465d9cf6d20874" target="_blank"><code>7c64bd0b</code></a>: added arguments for controlling compose health checks (#17)</li>
+</ul>
+<h2 id="v201">v2.0.1</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/83b081123d0831e3c863e6ad6f0df3b1f37a7a7e" target="_blank"><code>83b08112</code></a>: build broken for 2.0.0 (#16)</li>
+</ul>
+<h2 id="v200">v2.0.0</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/d624baa76ca7e02c02b0b049de484f800ddb5c10" target="_blank"><code>d624baa7</code></a>: Feature/run windows 57 (#15)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/f20dccfa4996607483d872ecf6d4ef58a545433f" target="_blank"><code>f20dccfa</code></a>: too greedy gitignore rule resulted in missing new workflow (#14)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/724bd70ee38a76e7e811c22b9349819f2189d6b2" target="_blank"><code>724bd70e</code></a>: Feature/argument refactor (#13)</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/97ab0e45d2e20a3853639d16d39c346495d47b5c" target="_blank"><code>97ab0e45</code></a>: refreshed devcontainer (#12)</li>
+</ul>
+<h2 id="v111">v1.1.1</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/ae46c7a6c2c8dc0ec43b656bae40a5380f153381" target="_blank"><code>ae46c7a6</code></a>: do not expose locust webui port (8089) in compose file (#11)</li>
+</ul>
+<h2 id="v110">v1.1.0</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/9be8b64b2d56ff9b2870cc0a208a09d26a5c6b97" target="_blank"><code>9be8b64b</code></a>: Feature/validate iterations prompt (#10)</li>
+</ul>
+<h2 id="v109">v1.0.9</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/2cd470ae498e2130612a30527a6c4b88fe68790c" target="_blank"><code>2cd470ae</code></a>: remove locust user (uid 1000) when building grizzly container image (#9)</li>
+</ul>
+<h2 id="v108">v1.0.8</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/cca24c6bfe0b65da14d4c61284eb6fc181362927" target="_blank"><code>cca24c6b</code></a>: create a user with uid/gid matching user that executes grizzly-cli (#8)</li>
+</ul>
+<h2 id="v107">v1.0.7</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/4bee4c7b1b002da70024db086d0e572b3349f969" target="_blank"><code>4bee4c7b</code></a>: get IBM MQ client logs when running distributed (#7)</li>
+</ul>
+<h2 id="v106">v1.0.6</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/746d72191cec220b1654d4636759f3dc43545a1c" target="_blank"><code>746d7219</code></a>: expose internal environment variables in execution context (#6)</li>
+</ul>
+<h2 id="v105">v1.0.5</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/824f163d5d1f2b66a80998fff91a96b3e482eb52" target="_blank"><code>824f163d</code></a>: lock locust image version to version of locust used by grizzly</li>
+</ul>
+<h2 id="v104">v1.0.4</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/f8fd5c9d439980ab054d9f9cb7be49d3fab9f8ea" target="_blank"><code>f8fd5c9d</code></a>: ask for value expression can have more than one keyword (#5)</li>
+</ul>
+<h2 id="v103">v1.0.3</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/c0eacc1a0fe8ea96dd38e7c5f649f74df3c46ef7" target="_blank"><code>c0eacc1a</code></a>: set MTU in docker-compose network to the same value as the default bridge has</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/964e699349ddd5826bfd7fa60df7cb5a0cea7b4f" target="_blank"><code>964e6993</code></a>: updated pylint configuration</li>
+</ul>
+<h2 id="v102">v1.0.2</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/0d5ec1baa1d136ebbe2d51236e6a349be08a50d1" target="_blank"><code>0d5ec1ba</code></a>: also get tags</li>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/ffd521597350f9183a688fe4b1fa342d28fa87b8" target="_blank"><code>ffd52159</code></a>: change development version to 0.0.0</li>
+</ul>
+<h2 id="v101">v1.0.1</h2>
+<ul>
+<li><a href="https://github.com/Biometria-se/grizzly-cli/commit/7fc1fa1b97e1a0d107358e6983a7d8c33bd4c6bd" target="_blank"><code>7fc1fa1b</code></a>: set ulimit nofile to min recommended value for locust</li>
+</ul>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tracking", "navigation.top", "navigation.sections", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.92b07e13.min.js"></script>
+      
+        <script src="../../assets/lib/dayjs.min.js"></script>
+      
+        <script src="../../assets/lib/dayjs-relative-time.min.js"></script>
+      
+        <script src="../../assets/javascript.js"></script>
+      
+    
+  </body>
+</html>
