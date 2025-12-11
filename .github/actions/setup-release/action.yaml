@@ -7,37 +7,16 @@ inputs:
   version-bump:
     description: 'Version bump type (major, minor, patch)'
     required: true
+  dry-run:
+    description: 'Dry run mode - if false, push tag in cleanup'
+    required: true
 outputs:
   next-release-version:
     description: 'Next release version'
-    value: ${{ steps.get-next-version.outputs.next-release-version }}
   next-release-tag:
     description: 'Next release tag'
-    value: ${{ steps.get-next-version.outputs.next-release-tag }}
 
 runs:
-  using: "composite"
-  steps:
-  - name: "run setup-uv-job"
-    uses: ./.github/actions/setup-uv-job
-
-  - name: "get next release version"
-    id: get-next-version
-    shell: bash
-    run: |
-      uv run ./extras/scripts/get-next-release-tag.py --project ${{ inputs.project }} --bump ${{ inputs.version-bump }}
-
-  - name: information
-    shell: bash
-    run: |
-      echo "Starting release with version bump: ${{ inputs.version-bump }}"
-      echo "Next release version: ${{ steps.get-next-version.outputs.next-release-version }}"
-      echo "Next release tag: ${{ steps.get-next-version.outputs.next-release-tag }}"
-
-  - name: create tag
-    shell: bash
-    run: |
-      git config user.name "${GITHUB_ACTOR}"
-      git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-
-      git tag -a "${{ steps.get-next-version.outputs.next-release-tag }}" -m "Automatic release ${{ steps.get-next-version.outputs.next-release-version }}"
+  using: 'node24'
+  main: 'index.js'
+  post: 'index.js'

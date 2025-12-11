@@ -3,6 +3,9 @@
 # missing.
 name: release
 
+run-name: |
+  ${{ github.event_name == 'workflow_dispatch' && format('Release PR #{0} (manually)', inputs.pr-number) || format('Release PR #{0} (automatic)', github.event.pull_request.number) }}
+
 on:
   pull_request:
     types:
@@ -141,6 +144,7 @@ jobs:
       with:
         project: ${{ matrix.changes.directory }}
         version-bump: ${{ needs.prerequisites.outputs.version-bump }}
+        dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'false' }}
 
     - name: build
       run: uv build --package ${{ matrix.changes.package }} --sdist --wheel
@@ -174,6 +178,7 @@ jobs:
       with:
         project: ${{ matrix.changes.directory }}
         version-bump: ${{ needs.prerequisites.outputs.version-bump }}
+        dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'false' }}
 
     - name: install dependencies
       working-directory: ${{ matrix.changes.directory }}
@@ -228,8 +233,9 @@ jobs:
       id: setup-release
       uses: ./.github/actions/setup-release
       with:
-        project: .
+        project: "."
         version-bump: ${{ needs.prerequisites.outputs.version-bump }}
+        dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'false' }}
 
     - name: "build"
       run: uv run mkdocs build
