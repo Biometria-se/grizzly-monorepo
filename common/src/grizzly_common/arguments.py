@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from .text import has_sequence
+from grizzly_common.text import has_sequence
 
 
 def split_value(value: str, separator: str = '|') -> tuple[str, str]:
