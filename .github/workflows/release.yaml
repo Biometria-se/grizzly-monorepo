@@ -140,7 +140,7 @@ jobs:
         fetch-depth: 0
 
     - name: "setup release"
-      uses: ./.github/actions/setup-release
+      uses: biometria-se/grizzly-monorepo/.github/actions/setup-release@main
       with:
         project: ${{ matrix.changes.directory }}
         version-bump: ${{ needs.prerequisites.outputs.version-bump }}
@@ -174,7 +174,7 @@ jobs:
 
     - name: "setup release"
       id: setup-release
-      uses: ./.github/actions/setup-release
+      uses: biometria-se/grizzly-monorepo/.github/actions/setup-release@main
       with:
         project: ${{ matrix.changes.directory }}
         version-bump: ${{ needs.prerequisites.outputs.version-bump }}
@@ -231,7 +231,7 @@ jobs:
 
     - name: "setup release"
       id: setup-release
-      uses: ./.github/actions/setup-release
+      uses: biometria-se/grizzly-monorepo/.github/actions/setup-release@main
       with:
         project: "."
         version-bump: ${{ needs.prerequisites.outputs.version-bump }}
