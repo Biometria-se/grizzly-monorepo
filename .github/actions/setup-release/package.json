@@ -1,7 +1,6 @@
 {
   "name": "setup-release-action",
   "version": "1.0.0",
-  "type": "module",
   "description": "Setup release with version bumping and tag creation",
   "main": "index.js",
   "scripts": {},

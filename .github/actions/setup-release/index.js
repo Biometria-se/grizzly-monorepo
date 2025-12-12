@@ -1,13 +1,9 @@
-import * as core from '@actions/core';
-import * as exec from '@actions/exec';
-import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import semver from 'semver';
-import { parse as parseToml } from '@iarna/toml';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const core = require('@actions/core');
+const exec = require('@actions/exec');
+const { readFileSync, existsSync } = require('fs');
+const { join } = require('path');
+const semver = require('semver');
+const { parse: parseToml } = require('@iarna/toml');
 
 /**
  * Get the next release tag based on project configuration
@@ -167,8 +163,8 @@ async function cleanup() {
 }
 
 // CLI mode for testing
-// Check if this file is being run directly (not imported as a module)
-const isCliMode = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+// Check if this file is being run directly (not required as a module)
+const isCliMode = require.main === module;
 
 if (isCliMode) {
   const args = process.argv.slice(2);
