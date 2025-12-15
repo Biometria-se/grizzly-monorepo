@@ -39,3 +39,6 @@ command-line-interface/tests/test_cli/tmp
 editor-support/**/.vscode-test
 editor-support/**/out
 editor-support/**/*.vsix
+
+# actions
+!.github/actions/**/dist/
