@@ -33,6 +33,17 @@ logger = logging.getLogger(__name__)
 
 
 class AuthMethod(Enum):
+    """Azure AD authentication method enumeration.
+
+    Defines the available authentication methods for Azure AD flows.
+
+    Attributes:
+        NONE: No authentication required
+        CLIENT: Client credentials flow (service-to-service authentication)
+        USER: User authentication flow (interactive or delegated authentication)
+
+    """
+
     NONE = 1
     CLIENT = 2
     USER = 3
