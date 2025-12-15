@@ -1,7 +1,7 @@
 # build with uv build --out-dir dist/ --package <package> --wheel --sdist
 # without --wheel and --sdist, the wheel will be built from the source distribution, and the custom hatch build hooks in ../hatch_build.py will be
 # missing.
-name: release
+name: Release
 
 run-name: |
   ${{ github.event_name == 'workflow_dispatch' && format('Release PR #{0} (manually)', inputs.pr-number) || format('Release PR #{0} (automatic)', github.event.pull_request.number) }}
@@ -139,17 +139,17 @@ jobs:
         fetch-tags: true
         fetch-depth: 0
 
-    - name: "setup uv job"
+    - name: "Setup UV job"
       uses: ./.github/actions/setup-uv-job
 
-    - name: "setup release"
+    - name: "Setup release"
       uses: ./.github/actions/setup-release
       with:
         project: ${{ matrix.changes.directory }}
         version-bump: ${{ needs.prerequisites.outputs.version-bump }}
         dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'false' }}
 
-    - name: build
+    - name: Build
       run: uv build --package ${{ matrix.changes.package }} --sdist --wheel
 
   npm-release:
@@ -175,7 +175,7 @@ jobs:
         node-version: 24
         cache-dependency-path: "${{ matrix.changes.directory }}/package-lock.json"
 
-    - name: "setup release"
+    - name: "Setup release"
       id: setup-release
       uses: ./.github/actions/setup-release
       with:
@@ -183,14 +183,14 @@ jobs:
         version-bump: ${{ needs.prerequisites.outputs.version-bump }}
         dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'false' }}
 
-    - name: install dependencies
+    - name: Install dependencies
       working-directory: ${{ matrix.changes.directory }}
       run: npm install
 
-    - name: bump package version
+    - name: Bump package version
       run: npm version ${{ steps.setup-release.outputs.next-release-version }}
 
-    - name: build
+    - name: Build
       run: npx @vscode/vsce package
 
   documentation:
@@ -210,29 +210,29 @@ jobs:
         fetch-tags: true
         fetch-depth: 0
 
-    - name: "setup uv job"
+    - name: "Setup UV job"
       uses: ./.github/actions/setup-uv-job
 
     - uses: actions/setup-node@v5
       with:
         node-version: 24
 
-    - name: setup environment
+    - name: "Setup environment"
       run: |
         uv run ./extras/scripts/setup-environment.py
 
-    - name: install ibm mqm
+    - name: "Install IBM MQM"
       uses: ./.github/actions/setup-ibm-mqm
       with:
         image: "ubuntu-latest"
 
-    - name: "install dependencies"
+    - name: "Install dependencies"
       env:
         LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}
       run: |
         uv sync --locked --all-packages --all-extras --all-groups
 
-    - name: "setup release"
+    - name: "Setup release"
       id: setup-release
       uses: ./.github/actions/setup-release
       with:
@@ -240,10 +240,10 @@ jobs:
         version-bump: ${{ needs.prerequisites.outputs.version-bump }}
         dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'false' }}
 
-    - name: "build"
+    - name: Build
       run: uv run mkdocs build
 
-    - name: deploy documentation
+    - name: "Deploy documentation"
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}

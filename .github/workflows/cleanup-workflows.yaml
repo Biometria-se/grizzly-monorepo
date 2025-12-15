@@ -1,4 +1,4 @@
-name: cleanup workflow runs
+name: "Cleanup workflow runs"
 
 on:
   schedule:
@@ -7,12 +7,12 @@ on:
 
 jobs:
   cleanup-workflows:
-    name: "cleanup workflows"
+    name: "Cleanup workflows"
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
-    - name: remove cancelled or skipped
+    - name: "Remove cancelled or skipped"
       uses: actions/github-script@v8
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -38,7 +38,7 @@ jobs:
             }
           }
 
-    - name: remove old
+    - name: "Remove old"
       uses: actions/github-script@v8
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -94,7 +94,7 @@ jobs:
             }
           }
 
-    - name: remove runs of self
+    - name: "Remove runs of self"
       uses: actions/github-script@v8
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
