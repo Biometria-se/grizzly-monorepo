@@ -139,6 +139,9 @@ jobs:
         fetch-tags: true
         fetch-depth: 0
 
+    - name: "setup uv job"
+      uses: ./.github/actions/setup-uv-job
+
     - name: "setup release"
       uses: ./.github/actions/setup-release
       with:
