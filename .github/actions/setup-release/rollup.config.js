@@ -13,4 +13,11 @@ export default {
     commonjs(),
     nodeResolve({ preferBuiltins: true }),
   ],
+  onwarn(warning, warn) {
+    // suppress eval warnings
+    if (warning.code === 'EVAL') return
+    if (warning.code === 'CIRCULAR_DEPENDENCY' && warning.message.includes('@actions/core')) return
+    if (warning.code === 'CIRCULAR_DEPENDENCY' && warning.message.includes('/semver/')) return
+    warn(warning)
+  }
 };
