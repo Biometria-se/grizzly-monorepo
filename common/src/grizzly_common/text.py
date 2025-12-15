@@ -57,8 +57,8 @@ class PermutationEnum(Enum, metaclass=PermutationMeta):
     """Interface class for getting `__vector__` value from the class that inherits it.
 
     All objects used to represent possible values in step expressions and that has a registered custom `parse` type *should*
-    inherit this class and set appropiate `__vector__` values and make an implementation of `from_string`. This is so
-    [`grizzly-ls`](https://github.com/Biometria-se/grizzly-lsp) can make educated suggestions on possible step expressions.
+    inherit this class and set appropiate `__vector__` values and make an implementation of `from_string`. This is so the
+    language server can make educated suggestions on possible step expressions.
     """
 
     __vector__: tuple[bool, bool] | None
