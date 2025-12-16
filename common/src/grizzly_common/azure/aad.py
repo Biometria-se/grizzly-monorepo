@@ -58,6 +58,16 @@ class AuthMethod(Enum):
 
 
 class AuthType(Enum):
+    """Azure AD token delivery type enumeration.
+
+    Defines how authentication tokens are delivered and stored in the authentication flow.
+
+    Attributes:
+        HEADER: Token delivered in HTTP Authorization header (standard OAuth2 flow)
+        COOKIE: Token delivered and stored in HTTP cookies (browser-based flow)
+
+    """
+
     HEADER = 1
     COOKIE = 2
 

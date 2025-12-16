@@ -36,20 +36,18 @@ export async function getNextReleaseTag(projectPath, bump, logger = core) {
 
         tagPattern = match[1];
     } else {
-        // Check for package.json
-        const packageJsonPath = join(projectPath, 'package.json');
+        // Check for package.local.json
+        const packageJsonPath = join(projectPath, 'package.local.json');
         if (!existsSync(packageJsonPath)) {
             throw new Error('no recognized project file found in the specified directory');
         }
 
         const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-        tagPattern = packageJson.version;
+        tagPattern = packageJson.tag?.pattern;
 
         if (!tagPattern) {
-            throw new Error('no version found in package.json');
+            throw new Error('no version pattern found in package.local.json');
         }
-
-        tagPattern = tagPattern.replace('v0.0.0', 'v*[0-9]*');
     }
 
     logger.info(`Tag pattern: ${tagPattern}`);

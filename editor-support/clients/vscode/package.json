@@ -5,7 +5,7 @@
   "description": "Visual Studio Code extension for grizzly projects, auto-completion of available step expressions, diagnostics and step implementation quick fixes.",
   "author": "Biometria <opensource@biometria.se>",
   "license": "MIT",
-  "version": "ls/vscode@v0.0.0",
+  "version": "0.0.1",
   "icon": "images/icon.png",
   "galleryBanner": {
     "theme": "dark",

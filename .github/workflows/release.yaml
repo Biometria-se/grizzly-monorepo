@@ -69,7 +69,7 @@ jobs:
         uv run ./extras/scripts/map-changes.py --changes '${{ steps.filter.outputs.changes }}' --force false
 
   uv-release:
-    name: "uv-release / ${{ matrix.changes.package }}"
+    name: "uv release / ${{ matrix.changes.package }}"
     needs: [prerequisites]
     if: needs.prerequisites.outputs.should-release == 'true' && needs.prerequisites.outputs.changes_uv != '[]'
     runs-on: ubuntu-latest
@@ -107,7 +107,7 @@ jobs:
       run: uv publish --index testpypi ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run && '--dry-run' || '' }}
 
   npm-release:
-    name: "npm-release / ${{ matrix.changes.package }}"
+    name: "npm release / ${{ matrix.changes.package }}"
     needs: [prerequisites]
     if: needs.prerequisites.outputs.should-release == 'true' && needs.prerequisites.outputs.changes_npm != '[]'
     runs-on: ubuntu-latest
@@ -155,8 +155,8 @@ jobs:
         if [[ "${{ inputs.dry-run }}" == "false" ]]; then
           npx @vscode/vsce publish -p $VSCE_TOKEN
         else
-          ls -l grizzly-loadtester-vscode-${VERSION#v}.vsix
-          unzip -t grizzly-loadtester-vscode-${VERSION#v}.vsix || true
+          ls -l grizzly-loadtester-vscode-*.vsix
+          unzip -t grizzly-loadtester-vscode-*.vsix || true
         fi
 
   documentation:
