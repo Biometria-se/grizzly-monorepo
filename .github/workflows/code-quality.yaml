@@ -22,7 +22,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: "Setup UV job"
+    - name: "Setup uv job"
       uses: ./.github/actions/setup-uv-job
       with:
         python-version: "3.13"
@@ -59,7 +59,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: "Setup UV job"
+    - name: "Setup uv job"
       uses: ./.github/actions/setup-uv-job
       with:
         python-version: ${{ matrix.python-version }}
@@ -107,7 +107,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: "Setup UV job"
+    - name: "Setup uv job"
       uses: ./.github/actions/setup-uv-job
       with:
         python-version: ${{ matrix.python-version }}
@@ -147,7 +147,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: "Setup UV job"
+    - name: "Setup uv job"
       uses: ./.github/actions/setup-uv-job
       with:
         python-version: ${{ matrix.python-version }}
@@ -279,7 +279,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: "Setup UV job"
+    - name: "Setup uv job"
       uses: ./.github/actions/setup-uv-job
       with:
         python-version: ${{ matrix.python-version }}
@@ -336,7 +336,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: "Setup UV job"
+    - name: "Setup uv job"
       uses: ./.github/actions/setup-uv-job
 
     - uses: actions/setup-node@v5

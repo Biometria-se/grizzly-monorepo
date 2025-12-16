@@ -45,69 +45,15 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: "run setup-uv-job"
+    - name: "Setup uv job"
       uses: ./.github/actions/setup-uv-job
 
-    - name: check pull request
+    - name: "Check pull request"
       id: check-pr
-      uses: actions/github-script@v7
+      uses: ./.github/actions/check-pr
       with:
-        script: |
-          let pr;
-          let commitSha;
-
-          if (context.eventName === 'workflow_dispatch') {
-            // Manual trigger: get PR by number
-            const prNumber = context.payload.inputs['pr-number'];
-            console.log(`manual trigger for PR #${prNumber}`);
-
-            const prResponse = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber
-            });
-
-            pr = prResponse.data;
-
-            // Verify PR is merged
-            if (!pr.merged) {
-              core.setFailed(`PR #${prNumber} is not merged`);
-              core.setOutput('should-release', 'false');
-              return;
-            }
-
-            commitSha = pr.merge_commit_sha;
-            console.log(`PR #${prNumber} merged at commit: ${commitSha}`);
-          } else {
-            // Automatic trigger: PR was just merged
-            pr = context.payload.pull_request;
-            commitSha = pr.merge_commit_sha;
-            console.log(`PR #${pr.number} merged at commit: ${commitSha}`);
-          }
-
-          const labels = pr.labels.map(label => label.name);
-          console.log(`PR #${pr.number} labels: ${labels}`);
-
-          // Get the base commit (the commit that the PR was merged onto)
-          const baseCommitSha = pr.base.sha;
-          console.log(`PR base commit: ${baseCommitSha}`);
-
-          // Check for version bump labels
-          const versionLabels = ['major', 'minor', 'patch'];
-          const versionLabel = versionLabels.find(label => labels.includes(label));
-
-          if (versionLabel) {
-            console.log(`found version label: ${versionLabel}`);
-            core.setOutput('should-release', 'true');
-            core.setOutput('version-bump', versionLabel);
-            core.setOutput('pr-number', pr.number);
-            core.setOutput('commit-sha', commitSha);
-            core.setOutput('base-commit-sha', baseCommitSha);
-          } else {
-            console.log('no version release label (major/minor/patch) found');
-            core.setOutput('should-release', 'false');
-            core.setFailed(`no version release label found on PR #${pr.number}`);
-          }
+        pr-number: ${{ inputs.pr-number }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - uses: dorny/paths-filter@v3
       id: filter
@@ -116,7 +62,7 @@ jobs:
         ref: ${{ steps.check-pr.outputs.commit-sha }}
         base: ${{ steps.check-pr.outputs.base-commit-sha }}
 
-    - name: map changed directories to packages
+    - name: "Map changed directories to packages"
       if: steps.filter.outputs.changes != '[]'
       id: mapper
       run: |
@@ -139,7 +85,7 @@ jobs:
         fetch-tags: true
         fetch-depth: 0
 
-    - name: "Setup UV job"
+    - name: "Setup uv job"
       uses: ./.github/actions/setup-uv-job
 
     - name: "Setup release"
@@ -210,7 +156,7 @@ jobs:
         fetch-tags: true
         fetch-depth: 0
 
-    - name: "Setup UV job"
+    - name: "Setup uv job"
       uses: ./.github/actions/setup-uv-job
 
     - uses: actions/setup-node@v5
