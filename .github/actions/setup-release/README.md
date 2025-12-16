@@ -4,7 +4,7 @@ GitHub Action to prepare a release by calculating the next version, creating a g
 
 ## Description
 
-This action automates the release preparation process for packages in a monorepo. It reads the project's configuration (`pyproject.toml` or `package.json`), finds the latest git tag matching the project's tag pattern, bumps the version according to semantic versioning rules, and creates a new annotated git tag. The action includes post-job cleanup to either push the tag (production) or delete it (dry-run mode).
+This action automates the release preparation process for packages in a monorepo. It reads the project's configuration (`pyproject.toml` or `package.local.json`), finds the latest git tag matching the project's tag pattern, bumps the version according to semantic versioning rules, and creates a new annotated git tag. The action includes post-job cleanup to either push the tag (production) or delete it (dry-run mode).
 
 ## Inputs
 
@@ -55,7 +55,7 @@ This action automates the release preparation process for packages in a monorepo
 
 ### Main action (pre-job)
 
-1. Reads project configuration from `pyproject.toml` (Python) or `package.json` (Node.js)
+1. Reads project configuration from `pyproject.toml` (Python) or `package.local.json` (Node.js)
 2. Extracts git tag pattern from project configuration
 3. Finds the latest existing tag matching the pattern
 4. Parses the current version and bumps it according to `version-bump` type
@@ -80,13 +80,15 @@ source = "vcs"
 raw-options.scm.git.describe_command = "git describe --dirty --tags --long --match 'framework@v*[0-9]*'"
 ```
 
-### Node.js projects (package.json)
+### Node.js projects (package.local.json)
 
-Uses version field with placeholder pattern:
+Reads tag pattern from local package configuration:
 
 ```json
 {
-  "version": "v0.0.0"
+  "tag": {
+    "pattern": "ls/vscode@v*[0-9]*"
+  }
 }
 ```
 
@@ -104,8 +106,9 @@ Tags follow the pattern: `<project-prefix>@v<version>`
 
 Examples:
 - `framework@v1.2.3`
-- `command-line-interface@v2.0.0`
-- `editor-support@v0.5.1`
+- `cli@v2.0.0`
+- `ls@v0.5.1`
+- `ls/vscode@v3.5.3`
 
 ## Development
 

@@ -247,7 +247,7 @@ jobs:
         node-version: 24
         cache-dependency-path: "${{ matrix.changes.directory }}/package-lock.json"
 
-    - name: "Install ${{ matrix.changes.package }} dev dependencies"
+    - name: "Install dependencies"
       working-directory: ${{ matrix.changes.directory }}
       run: |
         npm install
@@ -257,9 +257,10 @@ jobs:
       run: |
         npm run lint
 
-    - name: "VSCE build ${{ matrix.changes.package }}"
+    - name: "Build"
       working-directory: ${{ matrix.changes.directory }}
       run: |
+        npm version 1.0.0
         npx @vscode/vsce package
 
   npm-test:
@@ -299,7 +300,7 @@ jobs:
       run: |
         uv run ./extras/scripts/setup-environment.py
 
-    - name: "Install ${{ matrix.changes.package }} dev dependencies"
+    - name: "Install dependencies"
       working-directory: ${{ matrix.changes.directory }}
       env:
         VIRTUAL_ENV: ${{ env.VIRTUAL_ENV }}
@@ -313,9 +314,8 @@ jobs:
         VERBOSE: true
         VIRTUAL_ENV: ${{ env.VIRTUAL_ENV }}
       with:
-        run: |
-          npm run tests
         working-directory: ${{ matrix.changes.directory }}
+        run: npm run tests
 
     - name: "Server logs"
       uses: actions/upload-artifact@v4

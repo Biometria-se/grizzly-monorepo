@@ -1,3 +1,10 @@
+/**
+ * Grizzly Language Server VS Code Extension
+ *
+ * This extension provides language server integration for Grizzly Gherkin feature files.
+ * It manages the lifecycle of the language server, handles Python environment detection,
+ * and provides preview capabilities for Gherkin features.
+ */
 'use strict';
 
 import * as net from 'net';
@@ -15,16 +22,31 @@ import { ConsoleLogOutputChannel } from './log';
 
 const exec = util.promisify(child_process.exec);
 
+/** Output channel for logging extension and language server messages */
 let logger: ConsoleLogOutputChannel;
+
+/** Active language client instance */
 let client: LanguageClient;
+
+/** Python extension API instance */
 let python: PythonExtension;
+
+/** URI of the document that triggered language server activation */
 let documentUri: vscode.Uri;
+
+/** URI of the language server source directory (for hot-reload) */
 let serverUri: vscode.Uri;
 
+/** Flag indicating if language server is currently starting */
 let starting = false;
+
+/** Flag indicating if extension is fully activated */
 let activated = false;
+
+/** Flag to prevent duplicate warning messages about server startup */
 let notifiedAboutWaiting = false;
 
+/** Extension status tracking object */
 const status: ExtensionStatus = {
     isActivated: () => {
         return activated;
@@ -35,6 +57,18 @@ const status: ExtensionStatus = {
 };
 
 
+/**
+ * Creates a language server client using stdio (standard input/output) communication.
+ *
+ * This is the default communication method where the language server runs as a subprocess
+ * and communicates via stdin/stdout.
+ *
+ * @param module - Python module name containing the language server (e.g., 'grizzly_ls')
+ * @param args - Additional command-line arguments to pass to the language server
+ * @param documentSelector - Array of language IDs this server should handle
+ * @param initializationOptions - Extension settings to pass to the server on initialization
+ * @returns Promise resolving to the configured LanguageClient instance
+ */
 async function createStdioLanguageServer(
     module: string,
     args: string[],
@@ -80,6 +114,18 @@ async function createStdioLanguageServer(
     return new LanguageClient(python, serverOptions, clientOptions);
 }
 
+/**
+ * Creates a language server client using socket communication.
+ *
+ * This method connects to an already-running language server via TCP socket,
+ * useful for debugging or when the server is running externally.
+ *
+ * @param host - Hostname or IP address of the language server (e.g., 'localhost')
+ * @param port - Port number the language server is listening on
+ * @param documentSelector - Array of language IDs this server should handle
+ * @param initializationOptions - Extension settings to pass to the server on initialization
+ * @returns Configured LanguageClient instance
+ */
 function createSocketLanguageServer(
     host: string,
     port: number,
@@ -110,6 +156,15 @@ function createSocketLanguageServer(
     return new LanguageClient(`socket language server (${host}:${port})`, serverOptions, clientOptions);
 }
 
+/**
+ * Creates a language server client based on user configuration.
+ *
+ * Reads the `grizzly.server.connection` setting to determine whether to use
+ * stdio or socket communication mode.
+ *
+ * @returns Promise resolving to the configured LanguageClient instance
+ * @throws Error if connection type is invalid
+ */
 async function createLanguageClient(): Promise<LanguageClient> {
     const configuration = vscode.workspace.getConfiguration('grizzly');
     const documentSelector = ['grizzly-gherkin'];
@@ -143,6 +198,15 @@ async function createLanguageClient(): Promise<LanguageClient> {
     return languageClient;
 }
 
+/**
+ * Resolves the path to the Python interpreter to use for the language server.
+ *
+ * Prioritizes the active virtual environment if one exists, otherwise uses
+ * the Python extension's active environment.
+ *
+ * @returns Promise resolving to the absolute path of the Python executable
+ * @throws Error if unable to resolve the environment or find the executable
+ */
 async function getPythonPath(): Promise<string> {
     // make sure all environments are loaded
     await python.environments.refreshEnvironments();
@@ -168,6 +232,13 @@ async function getPythonPath(): Promise<string> {
     return pythonUri.fsPath;
 }
 
+/**
+ * Loads and initializes the Python extension API.
+ *
+ * This must be called before attempting to use Python environment functionality.
+ *
+ * @returns Promise that resolves when the Python extension is loaded
+ */
 async function getPythonExtension(): Promise<void> {
     try {
         python = await PythonExtension.api();
@@ -176,6 +247,15 @@ async function getPythonExtension(): Promise<void> {
     }
 }
 
+/**
+ * Starts the language server.
+ *
+ * Creates a new language client, starts it, and sends the installation request
+ * to ensure dependencies are set up. If a server is already running, it will
+ * be stopped first.
+ *
+ * @returns Promise that resolves when the server is started and initialized
+ */
 async function startLanguageServer(): Promise<void> {
     if (starting) {
         return;
@@ -199,6 +279,13 @@ async function startLanguageServer(): Promise<void> {
     }
 }
 
+/**
+ * Stops the language server and cleans up resources.
+ *
+ * If the server is running, sends a stop request and disposes of the client instance.
+ *
+ * @returns Promise that resolves when the server is stopped
+ */
 async function stopLanguageServer(): Promise<void> {
     if (!client) {
         return;
@@ -214,6 +301,19 @@ async function stopLanguageServer(): Promise<void> {
     client = undefined;
 }
 
+/**
+ * Activates the Grizzly extension.
+ *
+ * This function is called by VS Code when the extension is activated. It:
+ * - Initializes the logger and preview functionality
+ * - Loads the Python extension
+ * - Registers all commands and event handlers
+ * - Sets up auto-start when Grizzly Gherkin files are opened
+ * - Configures hot-reload for language server development
+ *
+ * @param context - VS Code extension context for registering subscriptions
+ * @returns Promise resolving to the extension status object, or undefined if Python extension fails to load
+ */
 export async function activate(context: vscode.ExtensionContext): Promise<ExtensionStatus | undefined> {
     logger = new ConsoleLogOutputChannel('Grizzly Language Server', {log: true});
 
@@ -374,6 +474,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<Extens
     return status;
 }
 
+/**
+ * Deactivates the Grizzly extension.
+ *
+ * This function is called by VS Code when the extension is deactivated.
+ * It ensures the language server is properly stopped.
+ *
+ * @returns Promise that resolves when deactivation is complete
+ */
 export function deactivate(): Thenable<void> {
     return stopLanguageServer();
 }
