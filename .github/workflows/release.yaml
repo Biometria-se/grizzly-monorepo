@@ -73,6 +73,11 @@ jobs:
     needs: [prerequisites]
     if: needs.prerequisites.outputs.should-release == 'true' && needs.prerequisites.outputs.changes_uv != '[]'
     runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+    permissions:
+      id-token: write
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -97,6 +102,9 @@ jobs:
 
     - name: Build
       run: uv build --package ${{ matrix.changes.package }} --sdist --wheel
+
+    - name: "Publish${{ github.event_name == 'workflow_dispatch' && inputs.dry-run && ' (dry-run)' || '' }}"
+      run: uv publish --index testpypi ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run && '--dry-run' || '' }}
 
   npm-release:
     name: "npm-release / ${{ matrix.changes.package }}"
@@ -133,11 +141,23 @@ jobs:
       working-directory: ${{ matrix.changes.directory }}
       run: npm install
 
-    - name: Bump package version
+    - name: Update version
+      working-directory: ${{ matrix.changes.directory }}
       run: npm version ${{ steps.setup-release.outputs.next-release-version }}
 
     - name: Build
+      working-directory: ${{ matrix.changes.directory }}
       run: npx @vscode/vsce package
+
+    - name: Publish
+      working-directory: ${{ matrix.changes.directory }}
+      run: |
+        if [[ "${{ inputs.dry-run }}" == "false" ]]; then
+          npx @vscode/vsce publish -p $VSCE_TOKEN
+        else
+          ls -l grizzly-loadtester-vscode-${VERSION#v}.vsix
+          unzip -t grizzly-loadtester-vscode-${VERSION#v}.vsix || true
+        fi
 
   documentation:
     name: "documentation"
