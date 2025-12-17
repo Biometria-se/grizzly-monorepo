@@ -1,6 +1,10 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { checkPullRequest } from '../src/index.js';
+import { checkPullRequest, run } from '../src/index.js';
+
+// Note: The run() function uses process.env.GITHUB_TOKEN
+// which is automatically available in GitHub Actions.
+// Tests focus on checkPullRequest() which accepts octokit via dependency injection.
 
 describe('checkPullRequest', () => {
     // Create stub logger to suppress output during tests
@@ -225,6 +229,288 @@ describe('checkPullRequest', () => {
 
             expect(result.versionBump).to.equal('patch');
             sinon.assert.calledWith(mockLogger.info, sinon.match(/bug, patch, documentation/));
+        });
+    });
+});
+
+describe('run', () => {
+    let coreStub;
+    let githubStub;
+    let octokitStub;
+
+    beforeEach(() => {
+        // Setup core stub
+        coreStub = {
+            getInput: sinon.stub(),
+            setOutput: sinon.stub(),
+            info: sinon.stub(),
+            setFailed: sinon.stub(),
+        };
+
+        // Setup octokit mock
+        octokitStub = {
+            rest: {
+                pulls: {
+                    get: sinon.stub(),
+                },
+            },
+        };
+
+        // Setup github stub
+        githubStub = {
+            getOctokit: sinon.stub().returns(octokitStub),
+            context: {
+                repo: {
+                    owner: 'test-owner',
+                    repo: 'test-repo',
+                },
+                payload: {
+                    pull_request: null,
+                },
+            },
+        };
+    });
+
+    afterEach(() => {
+        sinon.restore();
+    });
+
+    describe('environment variable handling', () => {
+        it('should fail when GITHUB_TOKEN is missing', async () => {
+            const env = {};
+
+            coreStub.getInput.withArgs('pr-number').returns('');
+
+            await run({
+                core: coreStub,
+                github: githubStub,
+                env,
+            });
+
+            expect(coreStub.setFailed.calledOnce).to.be.true;
+            expect(coreStub.setFailed.firstCall.args[0]).to.equal('GITHUB_TOKEN environment variable is required');
+            expect(coreStub.setOutput.calledWith('should-release', 'false')).to.be.true;
+        });
+
+        it('should use GITHUB_TOKEN from environment', async () => {
+            const env = {
+                GITHUB_TOKEN: 'test-token-123',
+            };
+
+            coreStub.getInput.withArgs('pr-number').returns('');
+
+            githubStub.context.payload.pull_request = {
+                number: 123,
+                merged: true,
+                merge_commit_sha: 'abc123',
+                base: { sha: 'base123' },
+                labels: [{ name: 'patch' }],
+            };
+
+            await run({
+                core: coreStub,
+                github: githubStub,
+                env,
+            });
+
+            expect(githubStub.getOctokit.calledOnce).to.be.true;
+            expect(githubStub.getOctokit.calledWith('test-token-123')).to.be.true;
+        });
+    });
+
+    describe('automatic trigger', () => {
+        it('should set all outputs correctly for automatic trigger', async () => {
+            const env = {
+                GITHUB_TOKEN: 'test-token',
+            };
+
+            coreStub.getInput.withArgs('pr-number').returns('');
+
+            githubStub.context.payload.pull_request = {
+                number: 456,
+                merged: true,
+                merge_commit_sha: 'def456',
+                base: { sha: 'base456' },
+                labels: [{ name: 'minor' }],
+            };
+
+            await run({
+                core: coreStub,
+                github: githubStub,
+                env,
+            });
+
+            expect(coreStub.setOutput.calledWith('should-release', 'true')).to.be.true;
+            expect(coreStub.setOutput.calledWith('version-bump', 'minor')).to.be.true;
+            expect(coreStub.setOutput.calledWith('pr-number', '456')).to.be.true;
+            expect(coreStub.setOutput.calledWith('commit-sha', 'def456')).to.be.true;
+            expect(coreStub.setOutput.calledWith('base-commit-sha', 'base456')).to.be.true;
+            expect(coreStub.setFailed.called).to.be.false;
+        });
+
+        it('should log info messages', async () => {
+            const env = {
+                GITHUB_TOKEN: 'test-token',
+            };
+
+            coreStub.getInput.withArgs('pr-number').returns('');
+
+            githubStub.context.payload.pull_request = {
+                number: 789,
+                merged: true,
+                merge_commit_sha: 'ghi789',
+                base: { sha: 'base789' },
+                labels: [{ name: 'major' }],
+            };
+
+            await run({
+                core: coreStub,
+                github: githubStub,
+                env,
+            });
+
+            expect(coreStub.info.calledWith('Checking pull request for version bump labels...')).to.be.true;
+            expect(coreStub.info.calledWith('Pull request check completed successfully')).to.be.true;
+        });
+    });
+
+    describe('manual trigger', () => {
+        it('should set all outputs correctly for manual trigger', async () => {
+            const env = {
+                GITHUB_TOKEN: 'test-token',
+            };
+
+            coreStub.getInput.withArgs('pr-number').returns('999');
+
+            const mockPR = {
+                number: 999,
+                merged: true,
+                merge_commit_sha: 'jkl999',
+                base: { sha: 'base999' },
+                labels: [{ name: 'patch' }],
+            };
+
+            octokitStub.rest.pulls.get.resolves({ data: mockPR });
+
+            await run({
+                core: coreStub,
+                github: githubStub,
+                env,
+            });
+
+            expect(coreStub.setOutput.calledWith('should-release', 'true')).to.be.true;
+            expect(coreStub.setOutput.calledWith('version-bump', 'patch')).to.be.true;
+            expect(coreStub.setOutput.calledWith('pr-number', '999')).to.be.true;
+            expect(coreStub.setOutput.calledWith('commit-sha', 'jkl999')).to.be.true;
+            expect(coreStub.setOutput.calledWith('base-commit-sha', 'base999')).to.be.true;
+            expect(coreStub.setFailed.called).to.be.false;
+        });
+
+        it('should call GitHub API with correct PR number', async () => {
+            const env = {
+                GITHUB_TOKEN: 'test-token',
+            };
+
+            coreStub.getInput.withArgs('pr-number').returns('111');
+
+            const mockPR = {
+                number: 111,
+                merged: true,
+                merge_commit_sha: 'mno111',
+                base: { sha: 'base111' },
+                labels: [{ name: 'minor' }],
+            };
+
+            octokitStub.rest.pulls.get.resolves({ data: mockPR });
+
+            await run({
+                core: coreStub,
+                github: githubStub,
+                env,
+            });
+
+            expect(octokitStub.rest.pulls.get.calledOnce).to.be.true;
+            expect(octokitStub.rest.pulls.get.calledWith({
+                owner: 'test-owner',
+                repo: 'test-repo',
+                pull_number: 111,
+            })).to.be.true;
+        });
+    });
+
+    describe('error handling', () => {
+        it('should set should-release to false on error', async () => {
+            const env = {
+                GITHUB_TOKEN: 'test-token',
+            };
+
+            coreStub.getInput.withArgs('pr-number').returns('');
+
+            githubStub.context.payload.pull_request = {
+                number: 222,
+                merged: true,
+                merge_commit_sha: 'pqr222',
+                base: { sha: 'base222' },
+                labels: [], // No version label
+            };
+
+            await run({
+                core: coreStub,
+                github: githubStub,
+                env,
+            });
+
+            expect(coreStub.setOutput.calledWith('should-release', 'false')).to.be.true;
+            expect(coreStub.setFailed.calledOnce).to.be.true;
+            expect(coreStub.setFailed.firstCall.args[0]).to.include('no version release label found');
+        });
+
+        it('should handle unmerged PR error', async () => {
+            const env = {
+                GITHUB_TOKEN: 'test-token',
+            };
+
+            coreStub.getInput.withArgs('pr-number').returns('333');
+
+            const mockPR = {
+                number: 333,
+                merged: false,
+                merge_commit_sha: null,
+                base: { sha: 'base333' },
+                labels: [{ name: 'patch' }],
+            };
+
+            octokitStub.rest.pulls.get.resolves({ data: mockPR });
+
+            await run({
+                core: coreStub,
+                github: githubStub,
+                env,
+            });
+
+            expect(coreStub.setOutput.calledWith('should-release', 'false')).to.be.true;
+            expect(coreStub.setFailed.calledOnce).to.be.true;
+            expect(coreStub.setFailed.firstCall.args[0]).to.equal('PR #333 is not merged');
+        });
+
+        it('should handle API errors', async () => {
+            const env = {
+                GITHUB_TOKEN: 'test-token',
+            };
+
+            coreStub.getInput.withArgs('pr-number').returns('444');
+
+            octokitStub.rest.pulls.get.rejects(new Error('API rate limit exceeded'));
+
+            await run({
+                core: coreStub,
+                github: githubStub,
+                env,
+            });
+
+            expect(coreStub.setOutput.calledWith('should-release', 'false')).to.be.true;
+            expect(coreStub.setFailed.calledOnce).to.be.true;
+            expect(coreStub.setFailed.firstCall.args[0]).to.equal('API rate limit exceeded');
         });
     });
 });

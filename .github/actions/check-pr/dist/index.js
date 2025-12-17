@@ -27300,7 +27300,7 @@ var core$1 = /*#__PURE__*/_mergeNamespaces({
 	default: core
 }, [coreExports]);
 
-var github = {};
+var github$2 = {};
 
 var context = {};
 
@@ -31215,9 +31215,9 @@ function requireUtils () {
 var hasRequiredGithub;
 
 function requireGithub () {
-	if (hasRequiredGithub) return github;
+	if (hasRequiredGithub) return github$2;
 	hasRequiredGithub = 1;
-	var __createBinding = (github && github.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+	var __createBinding = (github$2 && github$2.__createBinding) || (Object.create ? (function(o, m, k, k2) {
 	    if (k2 === undefined) k2 = k;
 	    var desc = Object.getOwnPropertyDescriptor(m, k);
 	    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -31228,23 +31228,23 @@ function requireGithub () {
 	    if (k2 === undefined) k2 = k;
 	    o[k2] = m[k];
 	}));
-	var __setModuleDefault = (github && github.__setModuleDefault) || (Object.create ? (function(o, v) {
+	var __setModuleDefault = (github$2 && github$2.__setModuleDefault) || (Object.create ? (function(o, v) {
 	    Object.defineProperty(o, "default", { enumerable: true, value: v });
 	}) : function(o, v) {
 	    o["default"] = v;
 	});
-	var __importStar = (github && github.__importStar) || function (mod) {
+	var __importStar = (github$2 && github$2.__importStar) || function (mod) {
 	    if (mod && mod.__esModule) return mod;
 	    var result = {};
 	    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
 	    __setModuleDefault(result, mod);
 	    return result;
 	};
-	Object.defineProperty(github, "__esModule", { value: true });
-	github.getOctokit = github.context = void 0;
+	Object.defineProperty(github$2, "__esModule", { value: true });
+	github$2.getOctokit = github$2.context = void 0;
 	const Context = __importStar(requireContext());
 	const utils_1 = requireUtils();
-	github.context = new Context.Context();
+	github$2.context = new Context.Context();
 	/**
 	 * Returns a hydrated octokit ready to use for GitHub Actions
 	 *
@@ -31255,12 +31255,18 @@ function requireGithub () {
 	    const GitHubWithPlugins = utils_1.GitHub.plugin(...additionalPlugins);
 	    return new GitHubWithPlugins((0, utils_1.getOctokitOptions)(token, options));
 	}
-	github.getOctokit = getOctokit;
+	github$2.getOctokit = getOctokit;
 	
-	return github;
+	return github$2;
 }
 
 var githubExports = requireGithub();
+var github = /*@__PURE__*/getDefaultExportFromCjs(githubExports);
+
+var github$1 = /*#__PURE__*/_mergeNamespaces({
+	__proto__: null,
+	default: github
+}, [githubExports]);
 
 /**
  * Check pull request for version bump labels
@@ -31326,32 +31332,50 @@ async function checkPullRequest(context, octokit, prNumber = null, logger = core
     }
 }
 
-async function run() {
-    try {
-        const prNumberInput = coreExports.getInput('pr-number');
-        const token = coreExports.getInput('github-token', { required: true });
+/**
+ * Run the action in GitHub Actions mode
+ * @param {object} dependencies - Dependency injection object
+ * @param {object} dependencies.core - GitHub Actions core module
+ * @param {object} dependencies.github - GitHub Actions github module
+ * @param {object} dependencies.env - Environment variables object (defaults to process.env)
+ * @returns {Promise<void>}
+ */
+async function run(dependencies = {}) {
+    const {
+        core: coreModule = core$1,
+        github: githubModule = github$1,
+        env = process.env,
+    } = dependencies;
 
-        const octokit = githubExports.getOctokit(token);
-        const context = githubExports.context;
+    try {
+        const prNumberInput = coreModule.getInput('pr-number');
+        const token = env.GITHUB_TOKEN;
+
+        if (!token) {
+            throw new Error('GITHUB_TOKEN environment variable is required');
+        }
+
+        const octokit = githubModule.getOctokit(token);
+        const context = githubModule.context;
 
         // Determine if this is a manual or automatic trigger
         const prNumber = prNumberInput ? parseInt(prNumberInput, 10) : null;
 
-        coreExports.info('Checking pull request for version bump labels...');
+        coreModule.info('Checking pull request for version bump labels...');
 
-        const result = await checkPullRequest(context, octokit, prNumber);
+        const result = await checkPullRequest(context, octokit, prNumber, coreModule);
 
         // Set outputs
-        coreExports.setOutput('should-release', result.shouldRelease.toString());
-        coreExports.setOutput('version-bump', result.versionBump);
-        coreExports.setOutput('pr-number', result.prNumber.toString());
-        coreExports.setOutput('commit-sha', result.commitSha);
-        coreExports.setOutput('base-commit-sha', result.baseCommitSha);
+        coreModule.setOutput('should-release', result.shouldRelease.toString());
+        coreModule.setOutput('version-bump', result.versionBump);
+        coreModule.setOutput('pr-number', result.prNumber.toString());
+        coreModule.setOutput('commit-sha', result.commitSha);
+        coreModule.setOutput('base-commit-sha', result.baseCommitSha);
 
-        coreExports.info('Pull request check completed successfully');
+        coreModule.info('Pull request check completed successfully');
     } catch (error) {
-        coreExports.setOutput('should-release', 'false');
-        coreExports.setFailed(error.message);
+        coreModule.setOutput('should-release', 'false');
+        coreModule.setFailed(error.message);
     }
 }
 
@@ -31424,4 +31448,4 @@ if (isMainModule) {
     }
 }
 
-export { checkPullRequest };
+export { checkPullRequest, run };

@@ -67,32 +67,50 @@ export async function checkPullRequest(context, octokit, prNumber = null, logger
     }
 }
 
-async function run() {
-    try {
-        const prNumberInput = core.getInput('pr-number');
-        const token = core.getInput('github-token', { required: true });
+/**
+ * Run the action in GitHub Actions mode
+ * @param {object} dependencies - Dependency injection object
+ * @param {object} dependencies.core - GitHub Actions core module
+ * @param {object} dependencies.github - GitHub Actions github module
+ * @param {object} dependencies.env - Environment variables object (defaults to process.env)
+ * @returns {Promise<void>}
+ */
+export async function run(dependencies = {}) {
+    const {
+        core: coreModule = core,
+        github: githubModule = github,
+        env = process.env,
+    } = dependencies;
 
-        const octokit = github.getOctokit(token);
-        const context = github.context;
+    try {
+        const prNumberInput = coreModule.getInput('pr-number');
+        const token = env.GITHUB_TOKEN;
+
+        if (!token) {
+            throw new Error('GITHUB_TOKEN environment variable is required');
+        }
+
+        const octokit = githubModule.getOctokit(token);
+        const context = githubModule.context;
 
         // Determine if this is a manual or automatic trigger
         const prNumber = prNumberInput ? parseInt(prNumberInput, 10) : null;
 
-        core.info('Checking pull request for version bump labels...');
+        coreModule.info('Checking pull request for version bump labels...');
 
-        const result = await checkPullRequest(context, octokit, prNumber);
+        const result = await checkPullRequest(context, octokit, prNumber, coreModule);
 
         // Set outputs
-        core.setOutput('should-release', result.shouldRelease.toString());
-        core.setOutput('version-bump', result.versionBump);
-        core.setOutput('pr-number', result.prNumber.toString());
-        core.setOutput('commit-sha', result.commitSha);
-        core.setOutput('base-commit-sha', result.baseCommitSha);
+        coreModule.setOutput('should-release', result.shouldRelease.toString());
+        coreModule.setOutput('version-bump', result.versionBump);
+        coreModule.setOutput('pr-number', result.prNumber.toString());
+        coreModule.setOutput('commit-sha', result.commitSha);
+        coreModule.setOutput('base-commit-sha', result.baseCommitSha);
 
-        core.info('Pull request check completed successfully');
+        coreModule.info('Pull request check completed successfully');
     } catch (error) {
-        core.setOutput('should-release', 'false');
-        core.setFailed(error.message);
+        coreModule.setOutput('should-release', 'false');
+        coreModule.setFailed(error.message);
     }
 }
 

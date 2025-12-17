@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
-import { getNextReleaseTag } from '../src/index.js';
+import { getNextReleaseTag, cleanup } from '../src/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -96,3 +96,539 @@ describe('getNextReleaseTag', () => {
   });
 });
 
+describe('cleanup', () => {
+  let coreStub;
+  let execStub;
+  let octokitStub;
+  let githubStub;
+
+  beforeEach(() => {
+    // Setup core stub
+    coreStub = {
+      getState: sinon.stub(),
+      info: sinon.stub(),
+      error: sinon.stub(),
+      setFailed: sinon.stub(),
+    };
+
+    // Setup exec stub
+    execStub = {
+      exec: sinon.stub().resolves(),
+    };
+
+    // Setup octokit mock
+    octokitStub = {
+      rest: {
+        actions: {
+          listJobsForWorkflowRun: sinon.stub(),
+        },
+      },
+    };
+
+    // Setup github stub
+    githubStub = {
+      getOctokit: sinon.stub().returns(octokitStub),
+    };
+  });
+
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  describe('job status checking', () => {
+    it('should push tag when job succeeded and not dry-run', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              name: 'test-job',
+              status: 'completed',
+              conclusion: 'success',
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+        GITHUB_JOB: 'test-job',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.true;
+      expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'])).to.be.false;
+    });
+
+    it('should push tag when job is in_progress and not dry-run', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              name: 'test-job',
+              status: 'in_progress',
+              conclusion: null,
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+        GITHUB_JOB: 'test-job',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.true;
+      expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'])).to.be.false;
+    });
+
+    it('should delete tag when job failed', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              name: 'test-job',
+              status: 'completed',
+              conclusion: 'failure',
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+        GITHUB_JOB: 'test-job',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
+      expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
+    });
+
+    it('should delete tag when job was cancelled', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              name: 'test-job',
+              status: 'completed',
+              conclusion: 'cancelled',
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+        GITHUB_JOB: 'test-job',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
+      expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
+    });
+
+    it('should delete tag in dry-run mode even if job succeeded', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('true');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              name: 'test-job',
+              status: 'completed',
+              conclusion: 'success',
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+        GITHUB_JOB: 'test-job',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
+      expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
+    });
+
+    it('should check job status even in dry-run mode', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('true');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              name: 'test-job',
+              status: 'completed',
+              conclusion: 'success',
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+        GITHUB_JOB: 'test-job',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(octokitStub.rest.actions.listJobsForWorkflowRun.calledOnce).to.be.true;
+      expect(octokitStub.rest.actions.listJobsForWorkflowRun.calledWith({
+        owner: 'owner',
+        repo: 'repo',
+        run_id: 12345,
+      })).to.be.true;
+    });
+
+    it('should parse GITHUB_REPOSITORY correctly', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              name: 'test-job',
+              status: 'completed',
+              conclusion: 'success',
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '99999',
+        GITHUB_REPOSITORY: 'my-org/my-repo',
+        GITHUB_JOB: 'test-job',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(octokitStub.rest.actions.listJobsForWorkflowRun.calledWith({
+        owner: 'my-org',
+        repo: 'my-repo',
+        run_id: 99999,
+      })).to.be.true;
+    });
+  });
+
+  describe('error handling', () => {
+    it('should fail when next-release-tag is missing', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('');
+      coreStub.getState.withArgs('dry-run').returns('false');
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+        GITHUB_JOB: 'test-job',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.setFailed.called).to.be.true;
+      expect(coreStub.setFailed.firstCall.args[0]).to.include('no next-release-tag found');
+    });
+
+    it('should fail when GITHUB_TOKEN is missing', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+
+      const env = {
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+        GITHUB_JOB: 'test-job',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.setFailed.called).to.be.true;
+      expect(coreStub.setFailed.firstCall.args[0]).to.include('Missing required environment variables');
+    });
+
+    it('should fail when GITHUB_RUN_ID is missing', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_REPOSITORY: 'owner/repo',
+        GITHUB_JOB: 'test-job',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.setFailed.called).to.be.true;
+      expect(coreStub.setFailed.firstCall.args[0]).to.include('Missing required environment variables');
+    });
+
+    it('should fail when GITHUB_REPOSITORY is missing', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_JOB: 'test-job',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.setFailed.called).to.be.true;
+      expect(coreStub.setFailed.firstCall.args[0]).to.include('Missing required environment variables');
+    });
+
+    it('should fail when current job is not found', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              name: 'other-job',
+              status: 'completed',
+              conclusion: 'success',
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+        GITHUB_JOB: 'test-job',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.setFailed.called).to.be.true;
+      expect(coreStub.setFailed.firstCall.args[0]).to.include('Could not find current job');
+    });
+
+    it('should fail when GitHub API call fails', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.rejects(new Error('API error'));
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+        GITHUB_JOB: 'test-job',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.setFailed.called).to.be.true;
+      expect(coreStub.setFailed.firstCall.args[0]).to.include('API error');
+    });
+  });
+
+  describe('logging', () => {
+    it('should log job status information', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              name: 'test-job',
+              status: 'completed',
+              conclusion: 'success',
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+        GITHUB_JOB: 'test-job',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.info.calledWith('Running post-job cleanup...')).to.be.true;
+      expect(coreStub.info.calledWith('Checking job status for run 12345...')).to.be.true;
+      expect(coreStub.info.calledWith('Job status: completed, conclusion: success')).to.be.true;
+      expect(coreStub.info.calledWith('Pushing tag framework@v1.2.3 to remote')).to.be.true;
+    });
+
+    it('should log error when job fails', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              name: 'test-job',
+              status: 'completed',
+              conclusion: 'failure',
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+        GITHUB_JOB: 'test-job',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.error.calledWith('Job completed with conclusion: failure')).to.be.true;
+      expect(coreStub.info.calledWith('Deleting tag framework@v1.2.3 (job failed or was cancelled)')).to.be.true;
+    });
+
+    it('should log dry-run reason when deleting tag', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('true');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              name: 'test-job',
+              status: 'completed',
+              conclusion: 'success',
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+        GITHUB_JOB: 'test-job',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.info.calledWith('Deleting tag framework@v1.2.3 (dry-run mode)')).to.be.true;
+    });
+  });
+});

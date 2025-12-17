@@ -11,7 +11,8 @@ This action inspects a pull request to determine if it should trigger a release 
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
 | `pr-number` | PR number for manual workflow_dispatch triggers | No | - |
-| `github-token` | GitHub token for API access | Yes | `${{ github.token }}` |
+
+**Note**: The action uses the `GITHUB_TOKEN` environment variable which is automatically available in GitHub Actions workflows.
 
 ## Outputs
 
@@ -31,8 +32,6 @@ This action inspects a pull request to determine if it should trigger a release 
 - name: Check pull request
   id: check-pr
   uses: ./.github/actions/check-pr
-  with:
-    github-token: ${{ secrets.GITHUB_TOKEN }}
 
 - name: Use outputs
   if: steps.check-pr.outputs.should-release == 'true'
@@ -49,7 +48,6 @@ This action inspects a pull request to determine if it should trigger a release 
   uses: ./.github/actions/check-pr
   with:
     pr-number: ${{ inputs.pr-number }}
-    github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Behavior

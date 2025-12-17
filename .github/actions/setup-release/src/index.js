@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
+import * as github from '@actions/github';
 import { readFileSync, existsSync } from 'fs';
 import { join, resolve } from 'path';
 import * as semver from 'semver';
@@ -132,32 +133,87 @@ async function run() {
     }
 }
 
-async function cleanup() {
+/**
+ * Cleanup function to push or delete tags based on job status
+ * @param {object} dependencies - Dependency injection object
+ * @param {object} dependencies.core - GitHub Actions core module
+ * @param {object} dependencies.exec - GitHub Actions exec module
+ * @param {object} dependencies.github - GitHub Actions github module
+ * @param {object} dependencies.env - Environment variables object (defaults to process.env)
+ * @returns {Promise<void>}
+ */
+export async function cleanup(dependencies = {}) {
+    const {
+        core: coreModule = core,
+        exec: execModule = exec,
+        github: githubModule = github,
+        env = process.env,
+    } = dependencies;
+
     try {
-        const nextTag = core.getState('next-release-tag');
-        const dryRun = core.getState('dry-run') === 'true';
+        const nextTag = coreModule.getState('next-release-tag');
+        const dryRun = coreModule.getState('dry-run') === 'true';
 
-        if (nextTag) {
-            core.info('Running post-job cleanup...');
-
-            if (dryRun) {
-                // Dry run: delete the tag
-                core.info(`deleting temporary tag ${nextTag}`);
-                await exec.exec('git', ['tag', '-d', nextTag], {
-                    ignoreReturnCode: true
-                });
-            } else {
-                // Production: push the tag
-                core.info(`Pushing tag ${nextTag} to remote`);
-                await exec.exec('git', ['push', 'origin', nextTag]);
-            }
-
-            core.info('Cleanup completed');
-        } else {
+        if (!nextTag) {
             throw new Error('no next-release-tag found in state for cleanup');
         }
+
+        coreModule.info('Running post-job cleanup...');
+
+        let shouldPushTag = false;
+
+        // Always check job status
+        const token = env.GITHUB_TOKEN;
+        const runId = env.GITHUB_RUN_ID;
+        const repository = env.GITHUB_REPOSITORY;
+        const jobName = env.GITHUB_JOB;
+
+        if (!token || !runId || !repository) {
+            throw new Error('Missing required environment variables (GITHUB_TOKEN, GITHUB_RUN_ID, or GITHUB_REPOSITORY)');
+        }
+
+        const [owner, repo] = repository.split('/');
+        const octokit = githubModule.getOctokit(token);
+
+        coreModule.info(`Checking job status for run ${runId}...`);
+
+        // Get jobs for this workflow run
+        const { data: { jobs } } = await octokit.rest.actions.listJobsForWorkflowRun({
+            owner,
+            repo,
+            run_id: parseInt(runId, 10),
+        });
+
+        // Find the current job
+        const currentJob = jobs.find(job => job.name === jobName);
+
+        if (!currentJob) {
+            throw new Error(`Could not find current job '${jobName}' in workflow run`);
+        }
+
+        coreModule.info(`Job status: ${currentJob.status}, conclusion: ${currentJob.conclusion || 'none'}`);
+
+        if (currentJob.conclusion === 'success' || currentJob.status === 'in_progress') {
+            // Job succeeded or still running (all steps so far passed)
+            shouldPushTag = !dryRun;
+        } else {
+            // Job failed or was cancelled
+            coreModule.error(`Job ${currentJob.status} with conclusion: ${currentJob.conclusion}`);
+            shouldPushTag = false;
+        }
+
+        if (shouldPushTag) {
+            coreModule.info(`Pushing tag ${nextTag} to remote`);
+            await execModule.exec('git', ['push', 'origin', nextTag]);
+        } else {
+            const reason = dryRun ? 'dry-run mode' : 'job failed or was cancelled';
+            coreModule.info(`Deleting tag ${nextTag} (${reason})`);
+            await execModule.exec('git', ['tag', '-d', nextTag], {
+                ignoreReturnCode: true
+            });
+        }
     } catch (error) {
-        core.warning(`Cleanup failed: ${error.message}`);
+        coreModule.setFailed(`Cleanup failed: ${error.message}`);
     }
 }
 
