@@ -84,11 +84,7 @@ export async function run(dependencies = {}) {
 
     try {
         const prNumberInput = coreModule.getInput('pr-number');
-        const token = env.GITHUB_TOKEN;
-
-        if (!token) {
-            throw new Error('GITHUB_TOKEN environment variable is required');
-        }
+        const token = coreModule.getInput('github-token', { required: true });
 
         const octokit = githubModule.getOctokit(token);
         const context = githubModule.context;

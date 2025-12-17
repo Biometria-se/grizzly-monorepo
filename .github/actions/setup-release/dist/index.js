@@ -36267,8 +36267,10 @@ async function run() {
     try {
         const project = coreExports.getInput('project', { required: true });
         const versionBump = coreExports.getInput('version-bump', { required: true });
-        const dryRun = coreExports.getInput('dry-run') === 'true';
+        const dryRun = coreExports.getInput('dry-run') === 'true';        const token = coreExports.getInput('github-token', { required: true });
 
+        // Store token in state for cleanup phase
+        coreExports.saveState('github-token', token);
         coreExports.info(`Starting release with version bump: ${versionBump}`);
         coreExports.info(`Dry run mode: ${dryRun}`);
 
@@ -36326,7 +36328,7 @@ async function cleanup(dependencies = {}) {
         let shouldPushTag = false;
 
         // Always check job status
-        const token = env.GITHUB_TOKEN;
+        const token = coreModule.getState('github-token');
         const runId = env.GITHUB_RUN_ID;
         const repository = env.GITHUB_REPOSITORY;
         const jobName = env.GITHUB_JOB;

@@ -104,8 +104,10 @@ async function run() {
     try {
         const project = core.getInput('project', { required: true });
         const versionBump = core.getInput('version-bump', { required: true });
-        const dryRun = core.getInput('dry-run') === 'true';
+        const dryRun = core.getInput('dry-run') === 'true';        const token = core.getInput('github-token', { required: true });
 
+        // Store token in state for cleanup phase
+        core.saveState('github-token', token);
         core.info(`Starting release with version bump: ${versionBump}`);
         core.info(`Dry run mode: ${dryRun}`);
 
@@ -155,7 +157,7 @@ export async function cleanup(dependencies = {}) {
         const dryRun = coreModule.getState('dry-run') === 'true';
 
         if (!nextTag) {
-            throw new Error('no next-release-tag found in state for cleanup');
+            throw new Error('No next-release-tag found in state for cleanup');
         }
 
         coreModule.info('Running post-job cleanup...');
@@ -163,7 +165,7 @@ export async function cleanup(dependencies = {}) {
         let shouldPushTag = false;
 
         // Always check job status
-        const token = env.GITHUB_TOKEN;
+        const token = coreModule.getState('github-token');
         const runId = env.GITHUB_RUN_ID;
         const repository = env.GITHUB_REPOSITORY;
         const jobName = env.GITHUB_JOB;

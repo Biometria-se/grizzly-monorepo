@@ -8,18 +8,21 @@ This action automates the release preparation process for packages in a monorepo
 
 ## Inputs
 
-| Input | Description | Required | Default |
-|-------|-------------|----------|---------|
-| `project` | Project directory to release | Yes | - |
-| `version-bump` | Version bump type (`major`, `minor`, or `patch`) | Yes | - |
-| `dry-run` | Dry run mode - if `false`, push tag in cleanup; if `true`, delete tag | Yes | - |
+| Input          | Description                                                           | Required | Default |
+|----------------|-----------------------------------------------------------------------|----------|---------|
+| `project`      | Project directory to release                                          | Yes      | -       |
+| `version-bump` | Version bump type (`major`, `minor`, or `patch`)                      | Yes      | -       |
+| `dry-run`      | Dry run mode - if `false`, push tag in cleanup; if `true`, delete tag | Yes      | -       |
+| `github-token` | GitHub token for API access (used in cleanup to check job status)     | No*      | -       |
+
+\* **Note**: While `github-token` is marked as not required in the action definition (to avoid validation warnings during the post-execution phase), it must always be provided when using this action. The token is saved to state during the main phase and retrieved during cleanup to check job status via the GitHub API.
 
 ## Outputs
 
-| Output | Description |
-|--------|-------------|
-| `next-release-version` | Next release version (e.g., `1.2.3`) |
-| `next-release-tag` | Next release tag (e.g., `framework@v1.2.3`) |
+| Output                 | Description                                  |
+|------------------------|----------------------------------------------|
+| `next-release-version` | Next release version (e.g., `1.2.3`)         |
+| `next-release-tag`     | Next release tag (e.g., `framework@v1.2.3`)  |
 
 ## Usage
 
@@ -33,6 +36,7 @@ This action automates the release preparation process for packages in a monorepo
     project: ./framework
     version-bump: patch
     dry-run: 'false'
+    github-token: ${{ secrets.GITHUB_TOKEN }}
 
 - name: Use outputs
   run: |
@@ -49,6 +53,7 @@ This action automates the release preparation process for packages in a monorepo
     project: ./command-line-interface
     version-bump: minor
     dry-run: 'true'  # Tag will be deleted after job completes
+    github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Behavior

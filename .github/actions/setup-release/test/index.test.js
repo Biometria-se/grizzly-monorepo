@@ -139,6 +139,7 @@ describe('cleanup', () => {
     it('should push tag when job succeeded and not dry-run', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
 
       octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
         data: {
@@ -173,6 +174,7 @@ describe('cleanup', () => {
     it('should push tag when job is in_progress and not dry-run', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
 
       octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
         data: {
@@ -207,6 +209,7 @@ describe('cleanup', () => {
     it('should delete tag when job failed', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
 
       octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
         data: {
@@ -241,6 +244,7 @@ describe('cleanup', () => {
     it('should delete tag when job was cancelled', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
 
       octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
         data: {
@@ -275,6 +279,7 @@ describe('cleanup', () => {
     it('should delete tag in dry-run mode even if job succeeded', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('true');
+      coreStub.getState.withArgs('github-token').returns('test-token');
 
       octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
         data: {
@@ -309,6 +314,7 @@ describe('cleanup', () => {
     it('should check job status even in dry-run mode', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('true');
+      coreStub.getState.withArgs('github-token').returns('test-token');
 
       octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
         data: {
@@ -347,6 +353,7 @@ describe('cleanup', () => {
     it('should parse GITHUB_REPOSITORY correctly', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
 
       octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
         data: {
@@ -386,6 +393,7 @@ describe('cleanup', () => {
     it('should fail when next-release-tag is missing', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('');
       coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
 
       const env = {
         GITHUB_TOKEN: 'test-token',
@@ -405,9 +413,10 @@ describe('cleanup', () => {
       expect(coreStub.setFailed.firstCall.args[0]).to.include('no next-release-tag found');
     });
 
-    it('should fail when GITHUB_TOKEN is missing', async () => {
+    it('should fail when github-token is missing from state', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns(''); // Empty token from state
 
       const env = {
         GITHUB_RUN_ID: '12345',
@@ -429,6 +438,7 @@ describe('cleanup', () => {
     it('should fail when GITHUB_RUN_ID is missing', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
 
       const env = {
         GITHUB_TOKEN: 'test-token',
@@ -450,6 +460,7 @@ describe('cleanup', () => {
     it('should fail when GITHUB_REPOSITORY is missing', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
 
       const env = {
         GITHUB_TOKEN: 'test-token',
@@ -471,6 +482,7 @@ describe('cleanup', () => {
     it('should fail when current job is not found', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
 
       octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
         data: {
@@ -505,6 +517,7 @@ describe('cleanup', () => {
     it('should fail when GitHub API call fails', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
 
       octokitStub.rest.actions.listJobsForWorkflowRun.rejects(new Error('API error'));
 
@@ -531,6 +544,7 @@ describe('cleanup', () => {
     it('should log job status information', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
 
       octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
         data: {
@@ -567,6 +581,7 @@ describe('cleanup', () => {
     it('should log error when job fails', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
 
       octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
         data: {
@@ -601,6 +616,7 @@ describe('cleanup', () => {
     it('should log dry-run reason when deleting tag', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('true');
+      coreStub.getState.withArgs('github-token').returns('test-token');
 
       octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
         data: {

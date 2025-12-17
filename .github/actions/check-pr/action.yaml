@@ -4,6 +4,9 @@ inputs:
   pr-number:
     description: 'PR number (for manual workflow_dispatch)'
     required: false
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
 outputs:
   should-release:
     description: 'Whether the PR should trigger a release'

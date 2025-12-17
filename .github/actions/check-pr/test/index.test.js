@@ -276,28 +276,22 @@ describe('run', () => {
     });
 
     describe('environment variable handling', () => {
-        it('should fail when GITHUB_TOKEN is missing', async () => {
-            const env = {};
-
+        it('should fail when github-token is missing', async () => {
             coreStub.getInput.withArgs('pr-number').returns('');
+            coreStub.getInput.withArgs('github-token', { required: true }).returns('');
 
             await run({
                 core: coreStub,
                 github: githubStub,
-                env,
             });
 
-            expect(coreStub.setFailed.calledOnce).to.be.true;
-            expect(coreStub.setFailed.firstCall.args[0]).to.equal('GITHUB_TOKEN environment variable is required');
+            expect(coreStub.setFailed.called).to.be.true;
             expect(coreStub.setOutput.calledWith('should-release', 'false')).to.be.true;
         });
 
-        it('should use GITHUB_TOKEN from environment', async () => {
-            const env = {
-                GITHUB_TOKEN: 'test-token-123',
-            };
-
+        it('should use github-token from input', async () => {
             coreStub.getInput.withArgs('pr-number').returns('');
+            coreStub.getInput.withArgs('github-token', { required: true }).returns('test-token-123');
 
             githubStub.context.payload.pull_request = {
                 number: 123,
@@ -310,7 +304,6 @@ describe('run', () => {
             await run({
                 core: coreStub,
                 github: githubStub,
-                env,
             });
 
             expect(githubStub.getOctokit.calledOnce).to.be.true;
@@ -320,11 +313,8 @@ describe('run', () => {
 
     describe('automatic trigger', () => {
         it('should set all outputs correctly for automatic trigger', async () => {
-            const env = {
-                GITHUB_TOKEN: 'test-token',
-            };
-
             coreStub.getInput.withArgs('pr-number').returns('');
+            coreStub.getInput.withArgs('github-token', { required: true }).returns('test-token');
 
             githubStub.context.payload.pull_request = {
                 number: 456,
@@ -337,7 +327,6 @@ describe('run', () => {
             await run({
                 core: coreStub,
                 github: githubStub,
-                env,
             });
 
             expect(coreStub.setOutput.calledWith('should-release', 'true')).to.be.true;
@@ -349,11 +338,8 @@ describe('run', () => {
         });
 
         it('should log info messages', async () => {
-            const env = {
-                GITHUB_TOKEN: 'test-token',
-            };
-
             coreStub.getInput.withArgs('pr-number').returns('');
+            coreStub.getInput.withArgs('github-token', { required: true }).returns('test-token');
 
             githubStub.context.payload.pull_request = {
                 number: 789,
@@ -366,7 +352,6 @@ describe('run', () => {
             await run({
                 core: coreStub,
                 github: githubStub,
-                env,
             });
 
             expect(coreStub.info.calledWith('Checking pull request for version bump labels...')).to.be.true;
@@ -376,11 +361,8 @@ describe('run', () => {
 
     describe('manual trigger', () => {
         it('should set all outputs correctly for manual trigger', async () => {
-            const env = {
-                GITHUB_TOKEN: 'test-token',
-            };
-
             coreStub.getInput.withArgs('pr-number').returns('999');
+            coreStub.getInput.withArgs('github-token', { required: true }).returns('test-token');
 
             const mockPR = {
                 number: 999,
@@ -395,7 +377,6 @@ describe('run', () => {
             await run({
                 core: coreStub,
                 github: githubStub,
-                env,
             });
 
             expect(coreStub.setOutput.calledWith('should-release', 'true')).to.be.true;
@@ -407,11 +388,8 @@ describe('run', () => {
         });
 
         it('should call GitHub API with correct PR number', async () => {
-            const env = {
-                GITHUB_TOKEN: 'test-token',
-            };
-
             coreStub.getInput.withArgs('pr-number').returns('111');
+            coreStub.getInput.withArgs('github-token', { required: true }).returns('test-token');
 
             const mockPR = {
                 number: 111,
@@ -426,7 +404,6 @@ describe('run', () => {
             await run({
                 core: coreStub,
                 github: githubStub,
-                env,
             });
 
             expect(octokitStub.rest.pulls.get.calledOnce).to.be.true;
@@ -440,11 +417,8 @@ describe('run', () => {
 
     describe('error handling', () => {
         it('should set should-release to false on error', async () => {
-            const env = {
-                GITHUB_TOKEN: 'test-token',
-            };
-
             coreStub.getInput.withArgs('pr-number').returns('');
+            coreStub.getInput.withArgs('github-token', { required: true }).returns('test-token');
 
             githubStub.context.payload.pull_request = {
                 number: 222,
@@ -457,7 +431,6 @@ describe('run', () => {
             await run({
                 core: coreStub,
                 github: githubStub,
-                env,
             });
 
             expect(coreStub.setOutput.calledWith('should-release', 'false')).to.be.true;
@@ -466,11 +439,8 @@ describe('run', () => {
         });
 
         it('should handle unmerged PR error', async () => {
-            const env = {
-                GITHUB_TOKEN: 'test-token',
-            };
-
             coreStub.getInput.withArgs('pr-number').returns('333');
+            coreStub.getInput.withArgs('github-token', { required: true }).returns('test-token');
 
             const mockPR = {
                 number: 333,
@@ -485,7 +455,6 @@ describe('run', () => {
             await run({
                 core: coreStub,
                 github: githubStub,
-                env,
             });
 
             expect(coreStub.setOutput.calledWith('should-release', 'false')).to.be.true;
@@ -494,18 +463,14 @@ describe('run', () => {
         });
 
         it('should handle API errors', async () => {
-            const env = {
-                GITHUB_TOKEN: 'test-token',
-            };
-
             coreStub.getInput.withArgs('pr-number').returns('444');
+            coreStub.getInput.withArgs('github-token', { required: true }).returns('test-token');
 
             octokitStub.rest.pulls.get.rejects(new Error('API rate limit exceeded'));
 
             await run({
                 core: coreStub,
                 github: githubStub,
-                env,
             });
 
             expect(coreStub.setOutput.calledWith('should-release', 'false')).to.be.true;

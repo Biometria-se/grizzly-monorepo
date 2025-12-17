@@ -53,6 +53,7 @@ jobs:
       uses: ./.github/actions/check-pr
       with:
         pr-number: ${{ inputs.pr-number }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - uses: dorny/paths-filter@v3
       id: filter
@@ -98,6 +99,7 @@ jobs:
         project: ${{ matrix.changes.directory }}
         version-bump: ${{ needs.prerequisites.outputs.version-bump }}
         dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'false' }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build
       run: uv build --package ${{ matrix.changes.package }} --sdist --wheel
@@ -135,6 +137,7 @@ jobs:
         project: ${{ matrix.changes.directory }}
         version-bump: ${{ needs.prerequisites.outputs.version-bump }}
         dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'false' }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Install dependencies
       working-directory: ${{ matrix.changes.directory }}
@@ -205,6 +208,7 @@ jobs:
         project: "."
         version-bump: ${{ needs.prerequisites.outputs.version-bump }}
         dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'false' }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build
       run: uv run mkdocs build
