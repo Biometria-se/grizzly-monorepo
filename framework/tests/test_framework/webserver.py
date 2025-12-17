@@ -5,8 +5,9 @@ from __future__ import annotations
 import csv
 import json
 import logging
+import socket
 from pathlib import Path
-from time import perf_counter
+from time import perf_counter, time
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 import gevent
@@ -327,9 +328,20 @@ class Webserver:
     def auth_provider_uri(self) -> str:
         return '/oauth2/v2.0'
 
+    def wait_for_start(self, timeout: int = 10) -> None:
+        start_time = time()
+        while time() - start_time < timeout:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                if sock.connect_ex(('127.0.0.1', self.port)) == 0:
+                    return
+                gevent.sleep(0.5)
+
+        message = f'webserver did not start on port {self.port}'
+        raise RuntimeError(message)
+
     def start(self) -> None:
         self._greenlet = gevent.spawn(lambda: self._web_server.serve_forever())
-        gevent.sleep(0.01)
+        self.wait_for_start()
         logger.debug('started webserver on port %d', self.port)
 
     def __enter__(self) -> Self:
