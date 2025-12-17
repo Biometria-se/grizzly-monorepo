@@ -57,10 +57,9 @@ This action inspects a pull request to determine if it should trigger a release 
 - **Automatic mode**: Uses the PR from the event payload (`context.payload.pull_request`)
 - **Manual mode**: Fetches the PR by number using the GitHub API
 - Validates that the PR is merged (only for manual mode)
-- **Validates all status checks have passed** - checks must have `success`, `skipped`, or `neutral` conclusion
 - Checks for version bump labels (`major`, `minor`, `patch`) - exactly one is required
 - Extracts merge commit SHA and base commit SHA
-- Sets `should-release` to `false` and fails if no version label is found or checks failed
+- Sets `should-release` to `false` and fails if no version label is found
 
 ## Development
 
@@ -93,6 +92,5 @@ node src/index.js 123
 
 The action will fail with `should-release: false` if:
 - The PR is not merged (manual mode only)
-- Any status checks have failed (conclusion is not `success`, `skipped`, or `neutral`)
 - No version bump label (`major`, `minor`, `patch`) is found on the PR
 - The PR does not exist (manual mode only)

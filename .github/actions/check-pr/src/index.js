@@ -48,29 +48,6 @@ export async function checkPullRequest(context, octokit, prNumber = null, logger
     const baseCommitSha = pr.base.sha;
     logger.info(`PR base commit: ${baseCommitSha}`);
 
-    // Check all PR checks have passed
-    logger.info('Checking PR status checks...');
-    const checksResponse = await octokit.rest.checks.listForRef({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        ref: commitSha
-    });
-
-    const checks = checksResponse.data.check_runs;
-    const failedChecks = checks.filter(check =>
-        check.conclusion !== 'success' &&
-        check.conclusion !== 'skipped' &&
-        check.conclusion !== 'neutral'
-    );
-
-    if (failedChecks.length > 0) {
-        const failedNames = failedChecks.map(check => `${check.name} (${check.conclusion})`).join(', ');
-        logger.error(`Failed checks: ${failedNames}`);
-        throw new Error(`PR #${pr.number} has ${failedChecks.length} failing check(s): ${failedNames}`);
-    }
-
-    logger.info(`All ${checks.length} check(s) passed`);
-
     // Check for version bump labels
     const versionLabels = ['major', 'minor', 'patch'];
     const versionLabel = versionLabels.find(label => labels.includes(label));

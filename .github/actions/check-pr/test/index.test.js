@@ -34,16 +34,6 @@ describe('checkPullRequest', () => {
             rest: {
                 pulls: {
                     get: sinon.stub()
-                },
-                checks: {
-                    listForRef: sinon.stub().resolves({
-                        data: {
-                            check_runs: [
-                                { name: 'test-check', conclusion: 'success' },
-                                { name: 'lint-check', conclusion: 'success' }
-                            ]
-                        }
-                    })
                 }
             }
         };
@@ -235,122 +225,6 @@ describe('checkPullRequest', () => {
 
             expect(result.versionBump).to.equal('patch');
             sinon.assert.calledWith(mockLogger.info, sinon.match(/bug, patch, documentation/));
-        });
-    });
-
-    describe('status checks validation', () => {
-        it('should pass when all checks are successful', async () => {
-            const mockPR = {
-                number: 666,
-                merged: true,
-                merge_commit_sha: 'xyz666',
-                base: { sha: 'base666' },
-                labels: [{ name: 'patch' }]
-            };
-
-            mockOctokit.rest.pulls.get.resolves({ data: mockPR });
-            mockOctokit.rest.checks.listForRef.resolves({
-                data: {
-                    check_runs: [
-                        { name: 'test', conclusion: 'success' },
-                        { name: 'lint', conclusion: 'success' },
-                        { name: 'build', conclusion: 'success' }
-                    ]
-                }
-            });
-
-            const result = await checkPullRequest(mockContext, mockOctokit, 666, mockLogger);
-
-            expect(result.shouldRelease).to.be.true;
-            sinon.assert.calledWith(mockOctokit.rest.checks.listForRef, {
-                owner: 'test-owner',
-                repo: 'test-repo',
-                ref: 'xyz666'
-            });
-        });
-
-        it('should pass when checks are skipped or neutral', async () => {
-            const mockPR = {
-                number: 777,
-                merged: true,
-                merge_commit_sha: 'abc777',
-                base: { sha: 'base777' },
-                labels: [{ name: 'minor' }]
-            };
-
-            mockOctokit.rest.pulls.get.resolves({ data: mockPR });
-            mockOctokit.rest.checks.listForRef.resolves({
-                data: {
-                    check_runs: [
-                        { name: 'test', conclusion: 'success' },
-                        { name: 'optional', conclusion: 'skipped' },
-                        { name: 'advisory', conclusion: 'neutral' }
-                    ]
-                }
-            });
-
-            const result = await checkPullRequest(mockContext, mockOctokit, 777, mockLogger);
-
-            expect(result.shouldRelease).to.be.true;
-        });
-
-        it('should throw error when checks have failed', async () => {
-            const mockPR = {
-                number: 888,
-                merged: true,
-                merge_commit_sha: 'def888',
-                base: { sha: 'base888' },
-                labels: [{ name: 'patch' }]
-            };
-
-            mockOctokit.rest.pulls.get.resolves({ data: mockPR });
-            mockOctokit.rest.checks.listForRef.resolves({
-                data: {
-                    check_runs: [
-                        { name: 'test', conclusion: 'success' },
-                        { name: 'lint', conclusion: 'failure' }
-                    ]
-                }
-            });
-
-            try {
-                await checkPullRequest(mockContext, mockOctokit, 888, mockLogger);
-                expect.fail('Should have thrown an error');
-            } catch (error) {
-                expect(error.message).to.include('has 1 failing check(s)');
-                expect(error.message).to.include('lint (failure)');
-            }
-        });
-
-        it('should throw error when multiple checks have failed', async () => {
-            const mockPR = {
-                number: 999,
-                merged: true,
-                merge_commit_sha: 'ghi999',
-                base: { sha: 'base999' },
-                labels: [{ name: 'major' }]
-            };
-
-            mockOctokit.rest.pulls.get.resolves({ data: mockPR });
-            mockOctokit.rest.checks.listForRef.resolves({
-                data: {
-                    check_runs: [
-                        { name: 'test', conclusion: 'failure' },
-                        { name: 'lint', conclusion: 'failure' },
-                        { name: 'build', conclusion: 'action_required' }
-                    ]
-                }
-            });
-
-            try {
-                await checkPullRequest(mockContext, mockOctokit, 999, mockLogger);
-                expect.fail('Should have thrown an error');
-            } catch (error) {
-                expect(error.message).to.include('has 3 failing check(s)');
-                expect(error.message).to.include('test (failure)');
-                expect(error.message).to.include('lint (failure)');
-                expect(error.message).to.include('build (action_required)');
-            }
         });
     });
 });
