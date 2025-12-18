@@ -1205,13 +1205,31 @@ def run(context: Context) -> int:  # noqa: C901, PLR0915, PLR0912
 
                 if isinstance(runner, MasterRunner):
                     runner.send_message('grizzly_worker_quit', None)
+
+                    logger.info('wait for all workers to stop')
+
+                    from locust.runners import logger as runner_logger  # noqa: PLC0415
+
+                    runner_level = runner_logger.getEffectiveLevel()
+
+                    try:
+                        # shut up locust.logger while we wait for workers to stop
+                        runner_logger.setLevel(logging.ERROR)
+
+                        # wait for all clients to quit
+                        # when worker receives `grizzly_worker_quit`, it will runner.stop(), runner._send_stats(), and then
+                        # then `client_stopped` back to master.
+                        # when master received this message, it will remove the worker from its list of clients
+                        while len(runner.clients) > 0:
+                            workers = list(iter(runner.clients))
+                            logger.debug('remaining workers: %s', ', '.join(workers))
+                            gevent.sleep(0.5)
+
+                        logger.info('all workers stopped, stopping master')
+                    finally:
+                        runner_logger.setLevel(runner_level)
+
                     runner.stop(send_stop_to_client=False)
-                    logger.info('stop all remaining workers')
-
-                    # wait for all clients to quit
-                    while len(runner.clients.all) > 0:
-                        gevent.sleep(0.5)
-
                     runner.greenlet.kill(block=True)
                 else:
                     logger.info('stopping worker on %s', gethostname())

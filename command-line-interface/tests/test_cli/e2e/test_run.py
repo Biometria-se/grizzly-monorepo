@@ -22,7 +22,7 @@ def prepare_example_project(e2e_fixture: End2EndFixture) -> Path:
 
     example_root.mkdir()
 
-    rc, _ = run_command(
+    rc, output = run_command(
         [
             'git',
             'init',
@@ -30,9 +30,13 @@ def prepare_example_project(e2e_fixture: End2EndFixture) -> Path:
         cwd=example_root,
     )
 
-    assert rc == 0
+    try:
+        assert rc == 0
+    except AssertionError:
+        print(''.join(output))
+        raise
 
-    rc, _ = run_command(
+    rc, output = run_command(
         [
             'git',
             'remote',
@@ -44,9 +48,13 @@ def prepare_example_project(e2e_fixture: End2EndFixture) -> Path:
         cwd=example_root,
     )
 
-    assert rc == 0
+    try:
+        assert rc == 0
+    except AssertionError:
+        print(''.join(output))
+        raise
 
-    rc, _ = run_command(
+    rc, output = run_command(
         [
             'git',
             'sparse-checkout',
@@ -55,9 +63,13 @@ def prepare_example_project(e2e_fixture: End2EndFixture) -> Path:
         cwd=example_root,
     )
 
-    assert rc == 0
+    try:
+        assert rc == 0
+    except AssertionError:
+        print(''.join(output))
+        raise
 
-    rc, _ = run_command(
+    rc, output = run_command(
         [
             'git',
             'sparse-checkout',
@@ -67,9 +79,13 @@ def prepare_example_project(e2e_fixture: End2EndFixture) -> Path:
         cwd=example_root,
     )
 
-    assert rc == 0
+    try:
+        assert rc == 0
+    except AssertionError:
+        print(''.join(output))
+        raise
 
-    rc, _ = run_command(
+    rc, output = run_command(
         [
             'git',
             'pull',
@@ -79,7 +95,11 @@ def prepare_example_project(e2e_fixture: End2EndFixture) -> Path:
         cwd=example_root,
     )
 
-    assert rc == 0
+    try:
+        assert rc == 0
+    except AssertionError:
+        print(''.join(output))
+        raise
 
     rm_rf(example_root / '.git')
 
