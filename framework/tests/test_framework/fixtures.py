@@ -556,7 +556,10 @@ def step_start_webserver(context: Context, port: int) -> None:
     if not on_master(context):
         return
 
+    import logging
     from importlib.machinery import SourceFileLoader
+
+    logger = logging.getLogger('webserver')
 
     w = SourceFileLoader(
         'steps.webserver',
@@ -564,7 +567,9 @@ def step_start_webserver(context: Context, port: int) -> None:
     ).load_module('steps.webserver')
 
     webserver = w.Webserver(port)
-    webserver.start()
+    logger.info('starting webserver')
+    webserver.start(logger)
+    logger.info('webserver started')
 """
 
     _tmp_path_factory: TempPathFactory

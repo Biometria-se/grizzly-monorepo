@@ -15,7 +15,6 @@ from grizzly.listeners import (
     init,
     init_statistics_listener,
     locust_test_start,
-    locust_test_stop,
     spawning_complete,
     validate_result,
 )
@@ -75,7 +74,6 @@ def test_init_master(caplog: LogCaptureFixture, grizzly_fixture: GrizzlyFixture)
         assert grizzly.state.spawning_complete.locked()
         assert grizzly.state.producer is not None
         assert grizzly.state.locust.custom_messages == {
-            'produce_testdata': (grizzly.state.producer.handle_request, True),
             'produce_token': (RefreshTokenDistributor.handle_request, True),
         }
 
@@ -110,7 +108,6 @@ def test_init_master(caplog: LogCaptureFixture, grizzly_fixture: GrizzlyFixture)
             'dict[str, tuple[Callable, bool]]',
             {
                 'test_message': (callback, True),
-                'produce_testdata': (grizzly.state.producer.handle_request, True),
                 'produce_token': (RefreshTokenDistributor.handle_request, True),
             },
         )
@@ -200,7 +197,6 @@ def test_init_local(grizzly_fixture: GrizzlyFixture) -> None:
     assert grizzly.state.producer is not None
     assert grizzly.state.locust.custom_messages == {
         'consume_testdata': (TestdataConsumer.handle_response, True),
-        'produce_testdata': (grizzly.state.producer.handle_request, True),
         'consume_token': (RefreshTokenDistributor.handle_response, True),
         'produce_token': (RefreshTokenDistributor.handle_request, True),
     }
@@ -224,7 +220,6 @@ def test_init_local(grizzly_fixture: GrizzlyFixture) -> None:
         'dict[str, tuple[Callable, bool]]',
         {
             'consume_testdata': (TestdataConsumer.handle_response, True),
-            'produce_testdata': (grizzly.state.producer.handle_request, True),
             'consume_token': (RefreshTokenDistributor.handle_response, True),
             'produce_token': (RefreshTokenDistributor.handle_request, True),
             'test_message': (callback, True),
@@ -315,28 +310,6 @@ def test_locust_test_start(grizzly_fixture: GrizzlyFixture, caplog: LogCaptureFi
         locust_test_start()(grizzly.state.locust.environment)
 
     assert caplog.messages == []
-
-
-@pytest.mark.usefixtures('_listener_test_mocker')
-def test_locust_test_stop(mocker: MockerFixture, grizzly_fixture: GrizzlyFixture) -> None:
-    grizzly_fixture()
-
-    grizzly = grizzly_fixture.grizzly
-
-    grizzly.state.producer = TestdataProducer(
-        runner=cast('LocalRunner', grizzly.state.locust),
-        testdata={},
-    )
-
-    on_test_stop_mock = mocker.patch.object(
-        grizzly.state.producer,
-        'on_test_stop',
-        return_value=None,
-    )
-
-    locust_test_stop(grizzly)(grizzly.state.locust.environment)
-
-    on_test_stop_mock.assert_called_once_with()
 
 
 def test_spawning_complete(grizzly_fixture: GrizzlyFixture) -> None:

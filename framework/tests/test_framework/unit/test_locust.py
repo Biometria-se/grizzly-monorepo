@@ -394,7 +394,7 @@ def test_setup_environment_listeners(behave_fixture: BehaveFixture, mocker: Mock
 
         assert len(environment.events.init._handlers) == 1
         assert len(environment.events.test_start._handlers) == 1
-        assert len(environment.events.test_stop._handlers) == 1
+        assert len(environment.events.test_stop._handlers) == 0
         assert len(environment.events.spawning_complete._handlers) == 1
         assert len(environment.events.quitting._handlers) == 0
 
@@ -405,7 +405,7 @@ def test_setup_environment_listeners(behave_fixture: BehaveFixture, mocker: Mock
 
         assert len(environment.events.init._handlers) == 2
         assert len(environment.events.test_start._handlers) == 1
-        assert len(environment.events.test_stop._handlers) == 1
+        assert len(environment.events.test_stop._handlers) == 0
         assert len(environment.events.spawning_complete._handlers) == 1
         assert len(environment.events.quitting._handlers) == 0
         assert grizzly.state.locust.environment is environment
@@ -435,7 +435,7 @@ def test_setup_environment_listeners(behave_fixture: BehaveFixture, mocker: Mock
         setup_environment_listeners(behave, dependencies=set(), testdata=testdata)
         assert len(environment.events.init._handlers) == 1
         assert len(environment.events.test_start._handlers) == 1
-        assert len(environment.events.test_stop._handlers) == 1
+        assert len(environment.events.test_stop._handlers) == 0
         assert len(environment.events.spawning_complete._handlers) == 1
         assert len(environment.events.quitting._handlers) == 0
 
@@ -446,7 +446,7 @@ def test_setup_environment_listeners(behave_fixture: BehaveFixture, mocker: Mock
         setup_environment_listeners(behave, dependencies=set(), testdata=testdata)
         assert len(environment.events.init._handlers) == 2
         assert len(environment.events.test_start._handlers) == 1
-        assert len(environment.events.test_stop._handlers) == 1
+        assert len(environment.events.test_stop._handlers) == 0
         assert len(environment.events.spawning_complete._handlers) == 1
         assert len(environment.events.quitting._handlers) == 0
 
@@ -456,7 +456,7 @@ def test_setup_environment_listeners(behave_fixture: BehaveFixture, mocker: Mock
         setup_environment_listeners(behave, dependencies=set(), testdata=testdata)
         assert len(environment.events.init._handlers) == 2
         assert len(environment.events.test_start._handlers) == 1
-        assert len(environment.events.test_stop._handlers) == 1
+        assert len(environment.events.test_stop._handlers) == 0
         assert len(environment.events.spawning_complete._handlers) == 1
         assert len(environment.events.quitting._handlers) == 1
 

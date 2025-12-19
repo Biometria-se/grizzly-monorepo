@@ -38,7 +38,7 @@ assert GRIZZLY_PROJECT.is_dir()
 # give E2E tests a little bit more time
 def pytest_collection_modifyitems(items: list[pytest.Function]) -> None:
     for item in items:
-        if '/e2e/' in item.path.as_posix() and item.get_closest_marker('timeout') is None:
+        if 'e2e' in item.path.as_posix() and item.get_closest_marker('timeout') is None:
             item.add_marker(pytest.mark.timeout(300))
 
 

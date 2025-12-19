@@ -40,7 +40,6 @@ def init(grizzly: GrizzlyContext, dependencies: GrizzlyDependencies, testdata: T
                     runner=runner,
                     testdata=testdata,
                 )
-                runner.register_message('produce_testdata', grizzly.state.producer.handle_request, concurrent=True)
             else:
                 logger.error('there is no test data!')
         else:
@@ -96,14 +95,6 @@ def locust_test_start() -> Callable[Concatenate[Environment, P], None]:
     return cast('Callable[Concatenate[Environment, P], None]', gtest_start)
 
 
-def locust_test_stop(grizzly: GrizzlyContext) -> Callable[Concatenate[Environment, P], None]:
-    def gtest_stop(environment: Environment, *_args: P.args, **_kwargs: P.kwargs) -> None:  # noqa: ARG001
-        if grizzly.state.producer is not None:
-            grizzly.state.producer.on_test_stop()
-
-    return cast('Callable[Concatenate[Environment, P], None]', gtest_stop)
-
-
 def spawning_complete(grizzly: GrizzlyContext) -> Callable[Concatenate[int, P], None]:
     def gspawning_complete(user_count: int, *_args: P.args, **_kwargs: P.kwargs) -> None:
         logger.debug('spawning of %d users completed', user_count)
@@ -124,9 +115,8 @@ def grizzly_worker_quit(environment: Environment, msg: Message, **_kwargs: Any) 
     if isinstance(runner, WorkerRunner):
         runner.stop()
         runner._send_stats()
-        runner.client.send(Message('client_stopped', None, runner.client_id))
-
         runner.greenlet.kill(block=True)
+        runner.client.send(Message('client_stopped', None, runner.client_id))
 
         if environment.process_exit_code is not None:
             code = environment.process_exit_code

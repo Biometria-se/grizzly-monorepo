@@ -55,12 +55,12 @@ def test_e2e_version(pip_module: str, grizzly_version: str, locust_version: str,
 
         result = ''.join(output)
 
-        assert rc == 0
         expected = f"""grizzly-cli {CURRENT_VERSION}
 ├── grizzly-common {CURRENT_COMMON_VERSION}
 └── grizzly {grizzly_version}
     └── locust {locust_version}
 """
+        assert rc == 0
         assert expected in ''.join(output)
     except AssertionError:
         if result is not None:

@@ -166,7 +166,9 @@ class UntilRequestTask(GrizzlyTask):
                         parent.logger.debug('payload=%r, condition=%r, matches=%r', payload, condition_rendered, matches)
                         number_of_matches = len(matches)
                     except Exception as e:
-                        parent.logger.exception('%s: retry=%d, endpoint=%s', task_name, retry, endpoint_rendered)
+                        log = parent.logger.error if isinstance(e, TransformerError) else parent.logger.exception
+                        log('%s: retry=%d, endpoint=%s', task_name, retry, endpoint_rendered)
+
                         if exception is None:
                             exception = e
                         number_of_matches = 0
@@ -186,6 +188,7 @@ class UntilRequestTask(GrizzlyTask):
                 if error_count_after > error_count_before:
                     error_keys: list[str] = []
                     for error_key, error in parent.user.environment.stats.errors.items():
+                        parent.user.logger.info('until: error.name="%s"', error.name)
                         if error.name == f'{parent.user._scenario.identifier} {self.request.name}':
                             error_keys.append(error_key)
 
