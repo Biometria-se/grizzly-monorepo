@@ -563,8 +563,10 @@ class TestdataProducer:
         self.grizzly = grizzly
 
         self.async_timers = AsyncTimersProducer(self.grizzly, self.semaphore)
+        self.runner.register_message('produce_testdata', self.handle_request, concurrent=True)
+        self.runner.environment.events.test_stop.add_listener(self.on_test_stop)
 
-    def on_test_stop(self) -> None:
+    def on_test_stop(self, environment: Environment, *_args: Any, **_kwargs: Any) -> None:  # noqa: ARG002
         self.logger.debug('test stopping')
         with self.semaphore:
             self.persist_data()
@@ -576,6 +578,7 @@ class TestdataProducer:
             return
 
         try:
+            self.logger.info('persisting test data...')
             variables_state: dict[str, dict[str, str | StrDict]] = {}
 
             for scenario_name, testdata in self.testdata.items():
@@ -601,6 +604,8 @@ class TestdataProducer:
                 self._persist_file.write_text(jsondumps(variables_state, indent=2))
                 self.logger.info('feature file data persisted in %s', self._persist_file)
                 self.has_persisted = True
+            else:
+                self.logger.info('no data to persist for feature file, skipping')
         except:
             self.logger.exception('failed to persist feature file data')
 

@@ -28,7 +28,7 @@ from locust.util.timespan import parse_timespan
 from roundrobin import smooth
 
 from . import __common_version__, __locust_version__, __version__
-from .listeners import init, init_statistics_listener, locust_test_start, locust_test_stop, spawning_complete, validate_result, worker_report
+from .listeners import init, init_statistics_listener, locust_test_start, spawning_complete, validate_result, worker_report
 from .testdata.utils import initialize_testdata
 from .testdata.variables.csv_writer import open_files
 from .types import RequestType, StrDict, TestdataType
@@ -779,7 +779,6 @@ def setup_environment_listeners(context: Context, *, dependencies: GrizzlyDepend
 
     environment.events.init.add_listener(init(grizzly, dependencies, testdata))
     environment.events.test_start.add_listener(locust_test_start())
-    environment.events.test_stop.add_listener(locust_test_stop(grizzly))
 
     environment.events.spawning_complete.add_listener(spawning_complete(grizzly))
     # And save statistics to "..."

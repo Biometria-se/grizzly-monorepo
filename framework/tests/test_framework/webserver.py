@@ -6,11 +6,13 @@ import csv
 import json
 import logging
 import socket
+from contextlib import suppress
 from pathlib import Path
 from time import perf_counter, time
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 import gevent
+import requests
 from flask import Flask, jsonify, request
 from flask import Request as FlaskRequest
 from flask import Response as FlaskResponse
@@ -52,6 +54,11 @@ root_dir = (
 ).resolve()
 
 logger.info('root_dir=%s', root_dir.as_posix())
+
+
+@app.route('/health')
+def app_health() -> FlaskResponse:
+    return jsonify({'status': 'ok'})
 
 
 @app.route('/api/v1/resources/dogs')
@@ -339,9 +346,29 @@ class Webserver:
         message = f'webserver did not start on port {self.port}'
         raise RuntimeError(message)
 
-    def start(self) -> None:
+    def wait_for_health(self, timeout: int = 300) -> None:
+        start_time = time()
+        while time() - start_time < timeout:
+            with suppress(Exception):
+                response = requests.get(f'http://127.0.0.1:{self.port}/health', timeout=2.0)
+                if response.status_code == 200:
+                    return
+
+            logger.error('webserver not healthy yet, retrying...')
+
+            gevent.sleep(1.0)
+
+        message = 'webserver did not start responding to requests in due time'
+        raise RuntimeError(message)
+
+    def start(self, logger_: logging.Logger | None = None) -> None:
+        if logger_ is not None:
+            global logger  # noqa: PLW0603
+            logger = logger_
+
         self._greenlet = gevent.spawn(lambda: self._web_server.serve_forever())
         self.wait_for_start()
+        self.wait_for_health()
         logger.debug('started webserver on port %d', self.port)
 
     def __enter__(self) -> Self:

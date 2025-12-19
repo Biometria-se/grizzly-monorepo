@@ -614,6 +614,7 @@ value3,value4
                 testdata=testdata,
             )
 
+            assert grizzly.state.locust.custom_messages.get('produce_testdata', None) == (grizzly.state.producer.handle_request, True)
             assert isinstance(grizzly.state.producer.async_timers, AsyncTimersProducer)
             assert grizzly.state.producer.async_timers.on_worker_report not in grizzly.state.locust.environment.events.worker_report._handlers
 
@@ -627,7 +628,6 @@ value3,value4
                 responses[uid].set(response)
 
             grizzly.state.locust.register_message('consume_testdata', handle_consume_data)
-            grizzly.state.locust.register_message('produce_testdata', grizzly.state.producer.handle_request)
 
             def request_testdata() -> StrDict | None:
                 uid = id(parent.user)
@@ -928,7 +928,6 @@ value3,value4
                 responses[uid].set(response)
 
             grizzly.state.locust.register_message('consume_testdata', handle_consume_data)
-            grizzly.state.locust.register_message('produce_testdata', grizzly.state.producer.handle_request)
 
             def request_testdata() -> StrDict | None:
                 uid = id(parent.user)
@@ -975,7 +974,7 @@ value3,value4
                 'test-scenario-2': 5,
             }
 
-            grizzly.state.producer.on_test_stop()
+            grizzly.state.producer.on_test_stop(grizzly.state.locust.environment)
 
             for scenario, count in grizzly.state.producer.scenarios_iteration.items():
                 assert count == 0, f'iteration count for {scenario} was not reset'
@@ -1005,7 +1004,10 @@ value3,value4
         try:
             with caplog.at_level(logging.DEBUG):
                 TestdataProducer(cast('LocalRunner', grizzly.state.locust), {}).stop()
-            assert caplog.messages == ['serving:\n{}']
+
+            del grizzly.state.locust.custom_messages['produce_testdata']
+
+            assert caplog.messages == ['serving:\n{}', 'persisting test data...', 'no data to persist for feature file, skipping']
             assert not persistent_file.exists()
 
             i = AtomicIntegerIncrementer(scenario=scenario1, variable='foobar', value='1 | step=1, persist=True')
@@ -1030,6 +1032,7 @@ value3,value4
 
             assert caplog.messages[-1] == f'feature file data persisted in {persistent_file}'
             caplog.clear()
+            del grizzly.state.locust.custom_messages['produce_testdata']
 
             assert persistent_file.exists()
 
@@ -1058,6 +1061,7 @@ value3,value4
 
             assert caplog.messages[-1] == f'feature file data persisted in {persistent_file}'
             caplog.clear()
+            del grizzly.state.locust.custom_messages['produce_testdata']
 
             assert persistent_file.exists()
 
@@ -1095,7 +1099,6 @@ value3,value4
                 responses[uid].set(response)
 
             grizzly.state.locust.register_message('consume_testdata', handle_consume_data)
-            grizzly.state.locust.register_message('produce_testdata', grizzly.state.producer.handle_request)
 
             def request_keystore(action: str, key: str, value: Any | None = None, message: str = 'keystore') -> StrDict | None:
                 uid = id(parent.user)

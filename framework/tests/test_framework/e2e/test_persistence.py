@@ -23,7 +23,7 @@ def test_e2e_persistence(e2e_fixture: End2EndFixture) -> None:
 
         persist_file = Path(context.config.base_dir) / 'persistent' / f'{Path(feature.filename).stem}.json'
 
-        assert persist_file.exists()
+        assert persist_file.exists(), f'{persist_file.as_posix()} does not exist'
 
         persistance = jsonloads(persist_file.read_text())
 
@@ -67,11 +67,17 @@ def test_e2e_persistence(e2e_fixture: End2EndFixture) -> None:
 
     result = ''.join(output)
 
-    assert rc == 0
-    assert 'persistent=1' in result
-    assert "foobar=['hello', '1']" in result
-    assert 'persistent=2' in result
-    assert "foobar=['hello', '2']" in result
+    try:
+        assert rc == 0
+        assert 'persistent=1' in result
+        assert "foobar=['hello', '1']" in result
+        assert 'persistent=2' in result
+        assert "foobar=['hello', '2']" in result
+    except AssertionError:
+        print(result)
+        for pfile in (e2e_fixture.root / 'persistent').glob('*.json'):
+            print(f'!! {pfile.as_posix()}')
+        raise
 
     actual_feature_file = e2e_fixture.root / feature_file
     contents = actual_feature_file.read_text()
@@ -82,9 +88,13 @@ def test_e2e_persistence(e2e_fixture: End2EndFixture) -> None:
 
     result = ''.join(output)
 
-    assert rc == 0
-    assert 'Exception ignored in' not in result
-    assert 'persistent=3' in result
-    assert "foobar=['hello', '3']" in result
-    assert 'persistent=4' in result
-    assert "foobar=['hello', '4']" in result
+    try:
+        assert rc == 0
+        assert 'Exception ignored in' not in result
+        assert 'persistent=3' in result
+        assert "foobar=['hello', '3']" in result
+        assert 'persistent=4' in result
+        assert "foobar=['hello', '4']" in result
+    except AssertionError:
+        print(result)
+        raise

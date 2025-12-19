@@ -188,6 +188,7 @@ class UntilRequestTask(GrizzlyTask):
                 if error_count_after > error_count_before:
                     error_keys: list[str] = []
                     for error_key, error in parent.user.environment.stats.errors.items():
+                        parent.user.logger.info('until: error.name="%s"', error.name)
                         if error.name == f'{parent.user._scenario.identifier} {self.request.name}':
                             error_keys.append(error_key)
 
