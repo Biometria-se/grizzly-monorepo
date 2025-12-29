@@ -82,7 +82,13 @@ class AzureAadError(Exception):
 
 
 class AzureAadFlowError(AzureAadError):
-    pass
+    """Exception raised for errors during Azure Entra ID authentication flows.
+
+    Raised when authentication flow operations fail, such as during user or client
+    authentication processes. This includes errors from unexpected HTTP status codes,
+    service exceptions, token acquisition failures, and other flow-related issues.
+
+    """
 
 
 class CookieTokenPayload(TypedDict):
