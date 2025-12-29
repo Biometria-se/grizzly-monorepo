@@ -126,13 +126,6 @@ def after_feature(context: Context, feature: Feature, *_args: Any, **_kwargs: An
     cause: str
     has_exceptions = hasattr(context, 'exceptions') and len(context.exceptions) > 0
 
-    reporter: SummaryReporter
-
-    for possible_reporter in context.config.reporters:
-        if isinstance(possible_reporter, SummaryReporter):
-            reporter = possible_reporter
-            break
-
     # all scenarios has been processed, let's run locust
     if feature.status == Status.passed and not has_exceptions:
         status: Status | None = None
@@ -140,6 +133,7 @@ def after_feature(context: Context, feature: Feature, *_args: Any, **_kwargs: An
         try:
             return_code = locustrun(context)
         except Exception as e:
+            logger.exception('locust run failed')
             has_exceptions = True
             context.exceptions.update({None: [*context.exceptions.get(None, []), FeatureError(e)]})
             return_code = 1
@@ -163,6 +157,8 @@ def after_feature(context: Context, feature: Feature, *_args: Any, **_kwargs: An
 
     if on_worker(context):
         return
+
+    reporter: SummaryReporter = next(iter([possible_reporter for possible_reporter in context.config.reporters if isinstance(possible_reporter, SummaryReporter)]))
 
     # show start and stop date time
     stopped = datetime.now().astimezone()
@@ -202,12 +198,8 @@ def after_feature(context: Context, feature: Feature, *_args: Any, **_kwargs: An
         buffer: list[str] = []
 
         for scenario_name, exceptions in cast('dict[str | None, list[AssertionError]]', context.exceptions).items():
-            if scenario_name is not None:
-                buffer.append(f'Scenario: {scenario_name}')
-            else:
-                buffer.append('')
-            buffer.extend([str(exception).replace('\n', '\n    ') for exception in exceptions])
-            buffer.append('')
+            buffer_header = f'Scenario: {scenario_name}' if scenario_name is not None else ''
+            buffer.extend([buffer_header] + [str(exception).replace('\n', '\n    ') for exception in exceptions] + [''])
 
         failure_summary = indent('\n'.join(buffer), '    ')
         reporter.stream.write(f'\nFailure summary:\n{failure_summary}')

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, cast
+from typing import TYPE_CHECKING, Concatenate, ParamSpec, cast
 from urllib.parse import urlparse
 
 from locust.stats import (
@@ -17,7 +17,7 @@ from locust.stats import (
 from grizzly.testdata.communication import GrizzlyDependencies, TestdataConsumer, TestdataProducer
 from grizzly.types import MessageDirection, RequestType, StrDict, TestdataType
 from grizzly.types.behave import Status
-from grizzly.types.locust import Environment, LocustRunner, MasterRunner, Message, WorkerRunner
+from grizzly.types.locust import Environment, LocustRunner, MasterRunner, WorkerRunner
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
@@ -42,9 +42,6 @@ def init(grizzly: GrizzlyContext, dependencies: GrizzlyDependencies, testdata: T
                 )
             else:
                 logger.error('there is no test data!')
-        else:
-            logger.debug('registered message "grizzly_worker_quit"')
-            runner.register_message('grizzly_worker_quit', grizzly_worker_quit)
 
         if not isinstance(runner, MasterRunner):
             for message_type, callback in grizzly.setup.locust.messages.get(MessageDirection.SERVER_CLIENT, {}).items():
@@ -105,29 +102,6 @@ def spawning_complete(grizzly: GrizzlyContext) -> Callable[Concatenate[int, P], 
 
 def worker_report(client_id: str, data: StrDict) -> None:  # noqa: ARG001
     logger.debug('received worker_report from %s', client_id)
-
-
-def grizzly_worker_quit(environment: Environment, msg: Message, **_kwargs: Any) -> None:
-    logger.info('received quit message from master: msg=%r', msg)
-    runner = environment.runner
-    code: int = 1
-
-    if isinstance(runner, WorkerRunner):
-        runner.stop()
-        runner._send_stats()
-        runner.greenlet.kill(block=True)
-        runner.client.send(Message('client_stopped', None, runner.client_id))
-
-        if environment.process_exit_code is not None:
-            code = environment.process_exit_code
-        elif len(runner.errors) > 0 or len(runner.exceptions) > 0:
-            code = 3
-        else:
-            code = 0
-    else:
-        logger.error('received grizzly_worker_quit message on a non WorkerRunner?!')
-
-    raise SystemExit(code)
 
 
 def validate_result(grizzly: GrizzlyContext) -> Callable[Concatenate[Environment, P], None]:

@@ -11,7 +11,6 @@ import pytest
 from grizzly.auth import RefreshTokenDistributor
 from grizzly.context import GrizzlyContextScenarioResponseTimePercentile
 from grizzly.listeners import (
-    grizzly_worker_quit,
     init,
     init_statistics_listener,
     locust_test_start,
@@ -23,9 +22,7 @@ from grizzly.types import MessageDirection
 from grizzly.types.behave import Scenario, Status
 from grizzly.types.locust import Environment, LocalRunner, MasterRunner, Message, WorkerRunner
 from locust.runners import STATE_RUNNING, WorkerNode
-from locust.stats import RequestStats, StatsError
-
-from test_framework.helpers import SOME
+from locust.stats import RequestStats
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
@@ -142,7 +139,6 @@ def test_init_worker(grizzly_fixture: GrizzlyFixture) -> None:
         assert runner.custom_messages == cast(
             'dict[str, tuple[Callable, bool]]',
             {
-                'grizzly_worker_quit': (grizzly_worker_quit, False),
                 'consume_testdata': (TestdataConsumer.handle_response, True),
                 'consume_token': (RefreshTokenDistributor.handle_response, True),
             },
@@ -167,7 +163,6 @@ def test_init_worker(grizzly_fixture: GrizzlyFixture) -> None:
         assert grizzly.state.locust.custom_messages == cast(
             'dict[str, tuple[Callable, bool]]',
             {
-                'grizzly_worker_quit': (grizzly_worker_quit, False),
                 'consume_testdata': (TestdataConsumer.handle_response, True),
                 'consume_token': (RefreshTokenDistributor.handle_response, True),
                 'test_message_ack': (callback_ack, True),
@@ -428,71 +423,3 @@ def test_validate_result(mocker: MockerFixture, caplog: LogCaptureFixture, grizz
 
     grizzly.scenario.validation.response_time_percentile = None
     grizzly.scenario.behave.set_status(Status.passed)
-
-
-def test_grizzly_worker_quit_non_worker(locust_fixture: LocustFixture, caplog: LogCaptureFixture) -> None:
-    environment = locust_fixture.environment
-
-    message = Message(message_type='test', data=None, node_id=None)
-
-    with caplog.at_level(logging.DEBUG), pytest.raises(SystemExit) as se:
-        grizzly_worker_quit(environment, message)
-    assert se.value.code == 1
-
-    assert len(caplog.messages) == 2
-    assert caplog.messages[0] == f'received quit message from master: msg={message!r}'
-    assert caplog.messages[1] == 'received grizzly_worker_quit message on a non WorkerRunner?!'
-
-
-@pytest.mark.usefixtures('_listener_test_mocker')
-def test_grizzly_worker_quit_worker(locust_fixture: LocustFixture, caplog: LogCaptureFixture, mocker: MockerFixture) -> None:
-    environment = locust_fixture.environment
-    environment.runner = WorkerRunner(environment=environment, master_host='localhost', master_port=1337)
-
-    runner_stop_mock = mocker.patch.object(environment.runner, 'stop', autospec=True)
-    runner_send_stat_mock = mocker.patch.object(environment.runner, '_send_stats', autospec=True)
-    runner_client_send = mocker.patch('locust.runners.rpc.Client.send', return_value=None)
-
-    message = Message(message_type='test', data=None, node_id=None)
-
-    environment.process_exit_code = None
-    environment.runner.stats.errors = {}
-    environment.runner.exceptions = {}
-
-    with caplog.at_level(logging.DEBUG), pytest.raises(SystemExit) as se:
-        grizzly_worker_quit(environment, message)
-    assert se.value.code == 0
-
-    log_messages = list(filter(lambda m: 'CPU usage' not in m, caplog.messages))
-
-    assert log_messages == [f'received quit message from master: msg={message!r}']
-    caplog.clear()
-
-    runner_stop_mock.assert_called_once()
-    runner_send_stat_mock.assert_called_once()
-    runner_client_send.assert_called_once_with(
-        SOME(Message, type='client_stopped', data=None, node_id=environment.runner.client_id),
-    )
-
-    environment.process_exit_code = 1337
-
-    with caplog.at_level(logging.DEBUG), pytest.raises(SystemExit) as se:
-        grizzly_worker_quit(environment, message)
-    assert se.value.code == 1337
-
-    log_messages = list(filter(lambda m: 'CPU usage' not in m, caplog.messages))
-
-    assert log_messages == [f'received quit message from master: msg={message!r}']
-    caplog.clear()
-
-    environment.process_exit_code = None
-    environment.runner.errors.update({'test': StatsError('GET', 'test', 'something', 1)})
-
-    with caplog.at_level(logging.DEBUG), pytest.raises(SystemExit) as se:
-        grizzly_worker_quit(environment, message)
-    assert se.value.code == 3
-
-    log_messages = list(filter(lambda m: 'CPU usage' not in m, caplog.messages))
-
-    assert log_messages == [f'received quit message from master: msg={message!r}']
-    caplog.clear()

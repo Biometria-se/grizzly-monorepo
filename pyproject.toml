@@ -16,6 +16,7 @@ maintainers = [
     { name = "Mikael Göransson", email = "github@mgor.se" }
 ]
 requires-python = ">=3.10"
+dependencies = []
 
 [tool.uv.pip]
 link-mode = "copy"
