@@ -135,7 +135,7 @@ jobs:
     name: "uv test-e2e / ${{ matrix.changes.package }} / py${{ matrix.python-version }} / ${{ matrix.image }}"
     needs: uv-test
     if: always() && (inputs.skip-e2e-tests || 'false') == 'false'
-    timeout-minutes: 120
+    timeout-minutes: 40
     outputs:
       changes_uv: ${{ needs.uv-test.outputs.changes_uv || '[]' }}
     runs-on: ${{ matrix.image }}

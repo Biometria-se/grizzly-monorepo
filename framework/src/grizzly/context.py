@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from os import environ
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import yaml
 from gevent.lock import Semaphore
@@ -102,6 +102,7 @@ class GrizzlyContextState:
     locust: MasterRunner | WorkerRunner | LocalRunner = field(init=False, repr=False)
     producer: TestdataProducer | None = field(init=False, repr=False, default=None)
     profile: Profile | None = field(init=False, repr=False, default=None)
+    run_mode: Literal['local', 'distributed'] = field(init=False, default=cast('Literal["local", "distributed"]', environ.get('GRIZZLY_RUN_MODE', 'local')))
 
 
 @dataclass

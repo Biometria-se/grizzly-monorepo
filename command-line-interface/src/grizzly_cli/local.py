@@ -37,6 +37,8 @@ def local_run(args: Arguments, environ: dict, run_arguments: dict[str, list[str]
         if key not in os.environ:
             os.environ[key] = value
 
+    os.environ['GRIZZLY_RUN_MODE'] = 'local'
+
     command = [
         'behave',
     ]
