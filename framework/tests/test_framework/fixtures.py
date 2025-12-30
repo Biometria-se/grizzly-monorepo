@@ -6,7 +6,6 @@ import inspect
 import re
 import sys
 from contextlib import suppress
-from cProfile import Profile
 from getpass import getuser
 from hashlib import sha1
 from json import dumps as jsondumps
@@ -588,7 +587,6 @@ def step_start_webserver(context: Context, port: int) -> None:
     test_tmp_dir: Path
     _tmp_path_factory_basetemp: Path | None
     webserver: Webserver
-    profile: Profile | None
 
     def __init__(self, tmp_path_factory: TempPathFactory, webserver: Webserver, *, distributed: bool) -> None:
         self.test_tmp_dir = (Path(__file__) / '..' / '..' / '..' / '.pytest_tmp').resolve()
@@ -640,10 +638,6 @@ def step_start_webserver(context: Context, port: int) -> None:
         return self._has_pymqi
 
     def __enter__(self) -> Self:  # noqa: PLR0915
-        if environ.get('PROFILE', None) is not None:
-            self.profile = Profile()
-            self.profile.enable()
-
         project_name = 'test-project'
         virtual_env = environ.get('VIRTUAL_ENV')
 
@@ -804,10 +798,6 @@ def step_start_webserver(context: Context, port: int) -> None:
     ) -> Literal[True]:
         # reset fixture basetemp
         self._tmp_path_factory._basetemp = self._tmp_path_factory_basetemp
-
-        if self.profile is not None:
-            self.profile.disable()
-            self.profile.dump_stats('grizzly-e2e-tests.hprof')
 
         if exc is None:
             if self._distributed and not self.keep_files:
@@ -1055,6 +1045,9 @@ def step_start_webserver(context: Context, port: int) -> None:
 
             if dry_run:
                 command.append('--dry-run')
+
+            if environ.get('PROFILE', 'false').lower() == 'true':
+                command.append('--profile')
 
             if self._distributed:
                 command = [*command[:2], '--project-name', project_name, *command[2:]]

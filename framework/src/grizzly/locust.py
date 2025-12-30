@@ -928,8 +928,8 @@ def stop_locust(runner: LocustRunner) -> None:
         runner.send_message('locust_quit')
 
         # wait for all clients to quit
-        # when worker receives `quit`, it will runner.stop(), runner._send_stats(), and then
-        # then `client_stopped` back to master.
+        # when worker receives `locust_quit`, it will runner.stop(), runner._send_stats(), and then
+        # then `quit` back to master.
         # when master received this message, it will remove the worker from its list of clients
         count = 0
         start = perf_counter()

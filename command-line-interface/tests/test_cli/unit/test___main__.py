@@ -189,6 +189,7 @@ def test__create_parser() -> None:  # noqa: PLR0915
                 '--log-file',
                 '--dump',
                 '--dry-run',
+                '--profile',
             ]
         )
         assert sorted([action.dest for action in run_parser._actions if len(action.option_strings) == 0]) == ['file']

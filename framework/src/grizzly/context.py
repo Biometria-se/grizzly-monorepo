@@ -22,6 +22,8 @@ from grizzly.types import MessageCallback, MessageDirection, StrDict
 from grizzly.utils import flatten, merge_dicts
 
 if TYPE_CHECKING:  # pragma: no cover
+    from cProfile import Profile
+
     from locust.dispatch import UsersDispatcher
 
     from grizzly.events import GrizzlyEvents
@@ -99,6 +101,7 @@ class GrizzlyContextState:
     verbose: bool = field(default=False)
     locust: MasterRunner | WorkerRunner | LocalRunner = field(init=False, repr=False)
     producer: TestdataProducer | None = field(init=False, repr=False, default=None)
+    profile: Profile | None = field(init=False, repr=False, default=None)
 
 
 @dataclass

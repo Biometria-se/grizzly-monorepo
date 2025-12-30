@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import logging
 from contextlib import suppress
+from cProfile import Profile
 from datetime import datetime
 from json import loads as jsonloads
 from os import environ
 from pathlib import Path
+from platform import node as gethostname
 from textwrap import indent
 from time import perf_counter as time
 from typing import TYPE_CHECKING, Any, cast
@@ -44,6 +46,8 @@ except ModuleNotFoundError:
 ABORTED_RETURN_CODE = 15
 IN_CORRECT_SECTION_ATTRIBUTE = 'location_status'
 
+profile: Profile | None = None
+
 
 def before_feature(context: Context, feature: Feature, *_args: Any, **_kwargs: Any) -> None:
     # identify as grizzly, instead of behave
@@ -65,6 +69,11 @@ def before_feature(context: Context, feature: Feature, *_args: Any, **_kwargs: A
 
     grizzly = grizzly_context.grizzly
     grizzly.state.verbose = context.config.verbose
+
+    if environ.get('GRIZZLY_PROFILE', None) is not None:
+        grizzly.state.profile = Profile()
+        grizzly.state.profile.enable()
+        logger.info('profiling enabled')
 
     persistent_file = Path(context.config.base_dir) / 'persistent' / f'{Path(feature.filename).stem}.json'
     persistent: dict[str, dict[str, str]] = {}
@@ -137,6 +146,7 @@ def after_feature(context: Context, feature: Feature, *_args: Any, **_kwargs: An
     cause_title: str
     causes: set[str] = set()
     has_exceptions = hasattr(context, 'exceptions') and len(context.exceptions) > 0
+    grizzly = cast('GrizzlyContext', context.grizzly)
 
     # all scenarios has been processed, let's run locust
     if feature.status == Status.passed and not has_exceptions:
@@ -167,6 +177,13 @@ def after_feature(context: Context, feature: Feature, *_args: Any, **_kwargs: An
         return_code = 1
         cause_title = 'failed to prepare locust test'
 
+    if grizzly.state.profile is not None:
+        grizzly.state.profile.disable()
+        suffix = f'worker-{gethostname()}' if on_worker(context) else 'master'
+        hprof_file = Path(context.config.base_dir) / f'grizzly-{feature.name}-{suffix}.prof'
+        grizzly.state.profile.dump_stats(hprof_file)
+        logger.info('profiling data saved to %s', hprof_file)
+
     if on_worker(context):
         return
 
@@ -174,8 +191,6 @@ def after_feature(context: Context, feature: Feature, *_args: Any, **_kwargs: An
 
     # show start and stop date time
     stopped = datetime.now().astimezone()
-
-    grizzly = cast('GrizzlyContext', context.grizzly)
 
     if grizzly.state.producer is not None and len(grizzly.state.producer.async_timers.timers) > 0:
         feature.set_status(Status.failed)
