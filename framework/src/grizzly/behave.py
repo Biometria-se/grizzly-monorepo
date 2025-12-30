@@ -86,15 +86,17 @@ def before_feature(context: Context, feature: Feature, *_args: Any, **_kwargs: A
             grizzly_scenario.variables.persistent.update(persistent.get(grizzly_scenario.class_name, {}))
 
 
-def after_feature_master(return_code: int, status: Status | None, context: Context, feature: Feature) -> int:
-    """Master should validate locust request statistics to determine if feature was successful or not."""
+def validate_statistics(return_code: int, status: Status | None, context: Context, feature: Feature) -> tuple[int, set[str]]:
+    """Non-worker should validate locust request statistics to determine if feature was successful or not."""
+    causes: set[str] = set()
+
     if on_worker(context):
-        return return_code
+        return return_code, causes
 
     grizzly = cast('GrizzlyContext', context.grizzly)
 
     if not hasattr(grizzly.state, 'locust'):
-        return 0
+        return 0, causes
 
     stats = grizzly.state.locust.environment.stats
 
@@ -115,15 +117,25 @@ def after_feature_master(return_code: int, status: Status | None, context: Conte
 
         if scenario_stat.num_failures > 0 or scenario_stat.num_requests != grizzly_scenario.iterations or total_errors > 0:
             behave_scenario.set_status(status)
+            if scenario_stat.num_failures > 0:
+                causes.add('scenario failures')
+
+            if scenario_stat.num_requests != grizzly_scenario.iterations:
+                causes.add('incorrect number of iterations')
+
+            if total_errors > 0:
+                causes.add('error report')
+
             if return_code == 0:
                 return_code = 1
 
-    return return_code
+    return return_code, causes
 
 
 def after_feature(context: Context, feature: Feature, *_args: Any, **_kwargs: Any) -> None:  # noqa: PLR0912, C901, PLR0915
     return_code: int
-    cause: str
+    cause_title: str
+    causes: set[str] = set()
     has_exceptions = hasattr(context, 'exceptions') and len(context.exceptions) > 0
 
     # all scenarios has been processed, let's run locust
@@ -144,16 +156,16 @@ def after_feature(context: Context, feature: Feature, *_args: Any, **_kwargs: An
 
         # optional checks, that should not be executed when it's a dry run
         if environ.get('GRIZZLY_DRY_RUN', 'false').lower() != 'true':
-            return_code = after_feature_master(return_code, status, context, feature)
+            return_code, causes = validate_statistics(return_code, status, context, feature)
 
             if pymqi.__name__ != 'grizzly_common.dummy_pymqi' and not on_worker(context):
                 mq_client_logs(context)
 
         if return_code != 0:
-            cause = 'locust test failed' if return_code != ABORTED_RETURN_CODE else 'locust test aborted'
+            cause_title = 'locust test failed' if return_code != ABORTED_RETURN_CODE else 'locust test aborted'
     else:
         return_code = 1
-        cause = 'failed to prepare locust test'
+        cause_title = 'failed to prepare locust test'
 
     if on_worker(context):
         return
@@ -215,7 +227,10 @@ def after_feature(context: Context, feature: Feature, *_args: Any, **_kwargs: An
         feature.scenarios[-1].steps[-1].duration = duration
 
     if return_code != 0:
-        raise RuntimeError(cause)
+        if len(causes) > 0:
+            cause_title = f'{cause_title}: {", ".join(causes)}'
+
+        raise RuntimeError(cause_title)
 
 
 def before_scenario(context: Context, scenario: Scenario, *_args: Any, **_kwargs: Any) -> None:

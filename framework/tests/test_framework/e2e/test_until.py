@@ -30,8 +30,8 @@ def test_e2e_until(e2e_fixture: End2EndFixture) -> None:
             ('001 request-task, w=1.0s, r=2, em=1', 'UNTL', 0, 1),
             ('002 HttpClientTask', 'SCEN', 0, 1),
             ('002 HttpClientTask', 'TSTD', 0, 1),
-            ('002 http-client-task, w=1.0s, r=3, em=1', 'UNTL', 0, 1),
             ('002 http-client-task', 'CLTSK', 1, 2),
+            ('002 http-client-task, w=1.0s, r=3, em=1', 'UNTL', 0, 1),
         ]
 
         assert len(stats.errors) == 0, f'expected 0 logged errors, got {len(stats.errors)}'

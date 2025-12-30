@@ -925,18 +925,27 @@ def cleanup_resources(processes: dict[str, subprocess.Popen], greenlet: gevent.G
 def stop_locust(runner: LocustRunner) -> None:
     if isinstance(runner, MasterRunner):
         runner.stop(send_stop_to_client=False)
-        runner.send_message('quit')
+        runner.send_message('locust_quit')
 
         # wait for all clients to quit
         # when worker receives `quit`, it will runner.stop(), runner._send_stats(), and then
         # then `client_stopped` back to master.
         # when master received this message, it will remove the worker from its list of clients
+        count = 0
+        start = perf_counter()
         while len(runner.clients) > 0:
             workers = list(iter(runner.clients))
-            logger.debug('remaining workers: %s', ', '.join(workers))
-            gevent.sleep(0.5)
+            count += 1
 
-        logger.info('all workers stopped, stopping master')
+            if count % 10 == 0:
+                logger.debug('remaining workers: %s', ', '.join(workers))
+                count = 0
+
+            gevent.sleep(1.0)
+
+        delta = perf_counter() - start
+
+        logger.info('all workers stopped (took %.2f seconds), stopping master', delta)
 
         runner.greenlet.kill(block=True)
     elif isinstance(runner, LocalRunner):
@@ -947,7 +956,7 @@ def stop_locust(runner: LocustRunner) -> None:
 def execute_dry_run(runner: LocustRunner, grizzly: GrizzlyContext) -> None:
     if isinstance(runner, MasterRunner):
         logger.info('dry-run starting locust-%s via grizzly-%s, with grizzly-common-%s', __locust_version__, __version__, __common_version__)
-        runner.send_message('quit', None)
+        runner.send_message('quit')
 
     if not isinstance(runner, WorkerRunner):
         for scenario in grizzly.scenarios:
