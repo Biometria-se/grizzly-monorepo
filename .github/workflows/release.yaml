@@ -66,7 +66,7 @@ jobs:
       if: steps.filter.outputs.changes != '[]'
       id: mapper
       run: |
-        uv run ./extras/scripts/map-changes.py --changes '${{ steps.filter.outputs.changes }}' --force false
+        uv run ./extras/scripts/map-changes.py --changes '${{ steps.filter.outputs.changes }}' --force false --release
 
   uv-release:
     name: "uv release / ${{ matrix.changes.package }}"
