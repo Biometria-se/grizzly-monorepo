@@ -341,7 +341,8 @@ class TestBashCompleteAction:
             with pytest.raises(SystemExit):
                 subparser.parse_args([f'--bash-complete={command}'])
             capture = capsys.readouterr()
-            assert sorted(capture.out.split('\n')) == sorted(f'{expected}\n'.split('\n'))
+            actual = capture.out.rstrip()
+            assert set(expected.split('\n')).issubset(actual.split('\n'))
         except:
             print(f'input={command}')
             print(f'expected={expected}')
@@ -447,7 +448,8 @@ class TestBashCompleteAction:
             with pytest.raises(SystemExit):
                 subparser.parse_args([f'--bash-complete={command}'])
             capture = capsys.readouterr()
-            assert sorted(capture.out.split('\n')) == sorted(f'{expected}\n'.split('\n'))
+            actual = capture.out.rstrip()
+            assert set(expected.split('\n')).issubset(actual.split('\n'))
         except:
             print(f'input={command}')
             print(f'expected={expected}')

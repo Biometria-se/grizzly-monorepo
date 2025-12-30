@@ -54,12 +54,12 @@ from typing import TYPE_CHECKING, ClassVar, cast
 
 from geventhttpclient import Session
 from grizzly_common.transformer import TransformerContentType
-from locust.exception import CatchResponseError
 
 from grizzly.auth import AAD, GrizzlyHttpAuthClient, RefreshTokenDistributor, refresh_token
 from grizzly.tasks import RequestTaskResponse
 from grizzly.testdata.utils import read_file
 from grizzly.types import GrizzlyResponse, RequestDirection, RequestMethod, StrDict, bool_type
+from grizzly.types.locust import ResponseError
 from grizzly.utils import has_template, is_file, merge_dicts
 from grizzly.utils.protocols import http_populate_cookiejar, ssl_context_factory
 
@@ -196,8 +196,8 @@ class HttpClientTask(ClientTask, GrizzlyHttpAuthClient):
 
         if response.status_code not in self.response.status_codes or response.url != url:
             parent.logger.error('%s returned %d', response.url, response.status_code)
-            message = f'{response.status_code} not in {self.response.status_codes}: {payload}'
-            exception = CatchResponseError(message)
+            message = f'{response.status_code} not in {self.response.status_codes}: {response.url} returned "{payload}"'
+            exception = ResponseError(message)
         else:
             if self.payload_variable is not None:
                 parent.user.set_variable(self.payload_variable, payload)

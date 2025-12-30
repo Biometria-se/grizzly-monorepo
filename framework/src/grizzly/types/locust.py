@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from locust.env import Environment
-from locust.exception import CatchResponseError, LocustError, StopUser
+from locust.exception import CatchResponseError, LocustError, ResponseError, StopUser
 from locust.rpc.protocol import Message
 from locust.runners import LocalRunner, MasterRunner, WorkerRunner
 
@@ -21,6 +21,7 @@ __all__ = [
     'MasterRunner',
     'Message',
     'MessageHandler',
+    'ResponseError',
     'StopUser',
     'WorkerRunner',
 ]

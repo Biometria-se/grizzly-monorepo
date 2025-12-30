@@ -127,6 +127,12 @@ def create_parser(sub_parser: ArgumentSubParser, parent: str) -> None:
         help='Will setup and run anything up until when locust should start. Useful for debugging feature files when developing new tests',
     )
     run_parser.add_argument(
+        '--profile',
+        action='store_true',
+        required=False,
+        help='Enable profiling of grizzly execution, generates a .hprof file upon completion',
+    )
+    run_parser.add_argument(
         'file',
         nargs='+',
         type=BashCompletionTypes.File('*.feature'),
@@ -184,6 +190,9 @@ def update_grizzly_environment(args: Arguments, environ: dict) -> None:
 
     if args.log_dir is not None:
         environ.update({'GRIZZLY_LOG_DIR': args.log_dir})
+
+    if args.profile:
+        environ.update({'GRIZZLY_PROFILE': 'true'})
 
 
 def build_run_arguments(args: Arguments) -> dict[str, list[str]]:

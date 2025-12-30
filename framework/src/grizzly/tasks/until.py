@@ -48,9 +48,11 @@ from time import perf_counter
 from typing import TYPE_CHECKING, Any, cast
 
 from gevent import sleep as gsleep
+from gevent.event import Event
 from grizzly_common.arguments import get_unsupported_arguments, parse_arguments, split_value
 from grizzly_common.text import has_separator
 from grizzly_common.transformer import Transformer, TransformerContentType, TransformerError, transformer
+from locust.stats import StatsError
 
 from grizzly.exceptions import StopScenario
 from grizzly.testdata.utils import resolve_variable
@@ -113,6 +115,18 @@ class UntilRequestTask(GrizzlyTask):
             assert self.retries > 0, 'retries argument cannot be less than 1'
             assert self.wait >= 0.1, 'wait argument cannot be less than 0.1 seconds'
 
+    def remove_errors(self, parent: GrizzlyScenario, errors: dict[str, Any]) -> None:
+        error_keys: set[str] = set()
+        for error_key, error_item in errors.items():
+            error = error_item.serialize() if isinstance(error_item, StatsError) else error_item
+
+            parent.user.logger.info('until: error.name="%s"', error['name'])
+            if error['name'] == f'{parent.user._scenario.identifier} {self.request.name}':
+                error_keys.add(error_key)
+
+        for error_key in error_keys:
+            safe_del(errors, error_key)
+
     def __call__(self) -> grizzlytask:  # noqa: C901, PLR0915
         if self.transform is None:
             message = f'could not find a transformer for {self.request.content_type.name}'
@@ -144,9 +158,27 @@ class UntilRequestTask(GrizzlyTask):
 
             start = perf_counter()
 
-            try:
+            is_distributed = parent.grizzly.state.run_mode == 'distributed'
+            parent.user.logger.info('until: is_distributed=%r, run_mode=%s', is_distributed, parent.grizzly.state.run_mode)
+
+            report_to_master_event = Event()
+
+            def on_report_to_master(client_id: str, data: dict[str, Any]) -> None:
+                """Locust will clear all (local) errors when reporting to master, so we need to remove
+                any errors related to this until task to avoid that the error is cleared before we
+                have finished our retries.
+                """
+                parent.user.logger.debug('until: on_report_to_master called from %s, errors=%r', client_id, data['errors'])
+
+                self.remove_errors(parent, data['errors'])
+                report_to_master_event.set()
+
+            if is_distributed:
+                parent.user.environment.events.report_to_master.add_listener(on_report_to_master)
+            else:
                 error_count_before = len(parent.user.environment.stats.errors.keys())
 
+            try:
                 while retry < self.retries:
                     number_of_matches = 0
 
@@ -182,18 +214,6 @@ class UntilRequestTask(GrizzlyTask):
 
                     if number_of_matches == self.expected_matches:
                         break
-
-                # remove any errors produced during until loop
-                error_count_after = len(parent.user.environment.stats.errors.keys())
-                if error_count_after > error_count_before:
-                    error_keys: list[str] = []
-                    for error_key, error in parent.user.environment.stats.errors.items():
-                        parent.user.logger.info('until: error.name="%s"', error.name)
-                        if error.name == f'{parent.user._scenario.identifier} {self.request.name}':
-                            error_keys.append(error_key)
-
-                    for error_key in error_keys:
-                        safe_del(parent.user.environment.stats.errors, error_key)
             except Exception as e:
                 parent.logger.exception('%s: error retry=%d', task_name, retry)
                 if exception is None:
@@ -202,6 +222,15 @@ class UntilRequestTask(GrizzlyTask):
                 # restore original
                 if original_failure_exception is not None:
                     parent.user._scenario.failure_handling.update({None: original_failure_exception})
+
+                if is_distributed:
+                    # wait for at least one report to master to be sent
+                    report_to_master_event.wait()
+                    parent.user.environment.events.report_to_master.remove_listener(on_report_to_master)
+                else:
+                    error_count_after = len(parent.user.environment.stats.errors.keys())
+                    if error_count_after > error_count_before:
+                        self.remove_errors(parent, parent.user.environment.stats.errors)
 
                 response_time = int((perf_counter() - start) * 1000)
 

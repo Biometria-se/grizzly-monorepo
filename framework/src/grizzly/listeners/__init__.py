@@ -104,8 +104,8 @@ def locust_quit(environment: Environment, msg: Message, **_kwargs: Any) -> None:
     if isinstance(runner, WorkerRunner):
         runner.stop()
         runner._send_stats()
-        runner.greenlet.kill(block=True)
         runner.send_message('quit')
+        runner.greenlet.kill(block=True)
 
         if environment.process_exit_code is not None:
             code = environment.process_exit_code

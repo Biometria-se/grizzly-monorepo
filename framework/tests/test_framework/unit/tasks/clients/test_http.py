@@ -15,7 +15,7 @@ import pytest
 from grizzly.exceptions import RestartScenario
 from grizzly.tasks.clients import HttpClientTask
 from grizzly.types import RequestDirection
-from grizzly.types.locust import CatchResponseError, StopUser
+from grizzly.types.locust import ResponseError, StopUser
 from grizzly_common.transformer import TransformerContentType
 from requests import Response
 from requests.structures import CaseInsensitiveDict
@@ -154,7 +154,7 @@ class TestHttpClientTask:
                 response_time=ANY(float, int),
                 response_length=len(jsondumps({'hello': 'world'}).encode()),
                 context=parent.user._context,
-                exception=ANY(CatchResponseError, message='400 not in [200]: {"hello": "world"}'),
+                exception=ANY(ResponseError, message='400 not in [200]: http://example.org returned "{"hello": "world"}"'),
             )
             request_fire_spy.reset_mock()
 
@@ -391,7 +391,7 @@ class TestHttpClientTask:
 
         assert 0  # noqa: PT015
 
-    def test_request_to(self, grizzly_fixture: GrizzlyFixture, mocker: MockerFixture) -> None:
+    def test_request_to(self, grizzly_fixture: GrizzlyFixture, mocker: MockerFixture) -> None:  # noqa: PLR0915
         grizzly = grizzly_fixture.grizzly
 
         test_cls = type('HttpClientTestTask', (HttpClientTask,), {'__scenario__': grizzly_fixture.grizzly.scenario})
@@ -461,7 +461,7 @@ class TestHttpClientTask:
             response_time=ANY(float, int),
             response_length=len(b'foobar'),
             context=parent.user._context,
-            exception=ANY(CatchResponseError, message='500 not in [200]: foobar'),
+            exception=ANY(ResponseError, message='500 not in [200]: http://example.org returned "foobar"'),
         )
         request_fire_spy.reset_mock()
 
@@ -490,6 +490,9 @@ class TestHttpClientTask:
         task_factory.response.add_status_code(-500)
 
         # make sure b64encode filter is loaded
+        from grizzly.testdata.filters import b64encode as _b64encode_filter
+
+        _b64encode_filter('dummy')
 
         task_factory = test_cls(
             RequestDirection.TO,

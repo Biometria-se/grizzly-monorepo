@@ -233,6 +233,7 @@ def write_env_file(fd: IO[bytes], environ: dict, args: Arguments) -> None:
     fd.write(f'COLUMNS={os.environ["COLUMNS"]}\n'.encode())
     fd.write(f'LINES={os.environ["LINES"]}\n'.encode())
     fd.write(f'GRIZZLY_CONTAINER_TTY={os.environ["GRIZZLY_CONTAINER_TTY"]}\n'.encode())
+    fd.write(b'GRIZZLY_RUN_MODE="distributed"\n')
 
     if args.wait_for_worker is not None:
         fd.write(f'LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP="{args.wait_for_worker}"'.encode())
