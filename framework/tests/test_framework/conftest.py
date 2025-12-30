@@ -57,7 +57,7 @@ def run_before_and_after_tests(tmp_path_factory: TempPathFactory) -> Generator[N
 # if we're only running E2E tests, set global timeout
 def pytest_configure(config: Config) -> None:
     target = getattr(config.known_args_namespace, 'file_or_dir', ['foobar'])
-    if len(target) > 0 and 'tests/e2e' in target[0]:
+    if len(target) > 0 and 'e2e' in target[0]:
         config._inicache['timeout'] = PYTEST_TIMEOUT
 
 

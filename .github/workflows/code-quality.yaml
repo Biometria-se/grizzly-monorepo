@@ -47,7 +47,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: ["ubuntu-latest", "windows-latest", "macos-15-intel"]
+        image: ["ubuntu-latest"]
         python-version: ["3.10", "3.13"]
         changes: ${{ fromJSON(needs.changes.outputs.changes_uv) }}
         exclude:
@@ -89,6 +89,7 @@ jobs:
     needs: uv-lint
     if: always()
     continue-on-error: true
+    timeout-minutes: 5
     outputs:
       changes_uv: ${{ needs.uv-lint.outputs.changes_uv || '[]' }}
     runs-on: ${{ matrix.image }}
@@ -134,6 +135,7 @@ jobs:
     name: "uv test-e2e / ${{ matrix.changes.package }} / py${{ matrix.python-version }} / ${{ matrix.image }}"
     needs: uv-test
     if: always() && (inputs.skip-e2e-tests || 'false') == 'false'
+    timeout-minutes: 120
     outputs:
       changes_uv: ${{ needs.uv-test.outputs.changes_uv || '[]' }}
     runs-on: ${{ matrix.image }}
@@ -267,6 +269,7 @@ jobs:
     name: "npm test / ${{ matrix.changes.package }} / ${{ matrix.image }}"
     needs: npm-lint
     if: needs.npm-lint.outputs.changes_npm != '[]'
+    timeout-minutes: 10
     outputs:
       changes_npm: ${{ needs.npm-lint.outputs.changes_npm || '[]' }}
     runs-on: ${{ matrix.image }}

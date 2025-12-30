@@ -11,11 +11,10 @@ import pytest
 from grizzly.auth import RefreshTokenDistributor
 from grizzly.context import GrizzlyContextScenarioResponseTimePercentile
 from grizzly.listeners import (
-    grizzly_worker_quit,
     init,
     init_statistics_listener,
+    locust_quit,
     locust_test_start,
-    locust_test_stop,
     spawning_complete,
     validate_result,
 )
@@ -75,7 +74,6 @@ def test_init_master(caplog: LogCaptureFixture, grizzly_fixture: GrizzlyFixture)
         assert grizzly.state.spawning_complete.locked()
         assert grizzly.state.producer is not None
         assert grizzly.state.locust.custom_messages == {
-            'produce_testdata': (grizzly.state.producer.handle_request, True),
             'produce_token': (RefreshTokenDistributor.handle_request, True),
         }
 
@@ -110,7 +108,6 @@ def test_init_master(caplog: LogCaptureFixture, grizzly_fixture: GrizzlyFixture)
             'dict[str, tuple[Callable, bool]]',
             {
                 'test_message': (callback, True),
-                'produce_testdata': (grizzly.state.producer.handle_request, True),
                 'produce_token': (RefreshTokenDistributor.handle_request, True),
             },
         )
@@ -145,7 +142,7 @@ def test_init_worker(grizzly_fixture: GrizzlyFixture) -> None:
         assert runner.custom_messages == cast(
             'dict[str, tuple[Callable, bool]]',
             {
-                'grizzly_worker_quit': (grizzly_worker_quit, False),
+                'locust_quit': (locust_quit, False),
                 'consume_testdata': (TestdataConsumer.handle_response, True),
                 'consume_token': (RefreshTokenDistributor.handle_response, True),
             },
@@ -170,7 +167,7 @@ def test_init_worker(grizzly_fixture: GrizzlyFixture) -> None:
         assert grizzly.state.locust.custom_messages == cast(
             'dict[str, tuple[Callable, bool]]',
             {
-                'grizzly_worker_quit': (grizzly_worker_quit, False),
+                'locust_quit': (locust_quit, False),
                 'consume_testdata': (TestdataConsumer.handle_response, True),
                 'consume_token': (RefreshTokenDistributor.handle_response, True),
                 'test_message_ack': (callback_ack, True),
@@ -200,7 +197,6 @@ def test_init_local(grizzly_fixture: GrizzlyFixture) -> None:
     assert grizzly.state.producer is not None
     assert grizzly.state.locust.custom_messages == {
         'consume_testdata': (TestdataConsumer.handle_response, True),
-        'produce_testdata': (grizzly.state.producer.handle_request, True),
         'consume_token': (RefreshTokenDistributor.handle_response, True),
         'produce_token': (RefreshTokenDistributor.handle_request, True),
     }
@@ -224,7 +220,6 @@ def test_init_local(grizzly_fixture: GrizzlyFixture) -> None:
         'dict[str, tuple[Callable, bool]]',
         {
             'consume_testdata': (TestdataConsumer.handle_response, True),
-            'produce_testdata': (grizzly.state.producer.handle_request, True),
             'consume_token': (RefreshTokenDistributor.handle_response, True),
             'produce_token': (RefreshTokenDistributor.handle_request, True),
             'test_message': (callback, True),
@@ -315,28 +310,6 @@ def test_locust_test_start(grizzly_fixture: GrizzlyFixture, caplog: LogCaptureFi
         locust_test_start()(grizzly.state.locust.environment)
 
     assert caplog.messages == []
-
-
-@pytest.mark.usefixtures('_listener_test_mocker')
-def test_locust_test_stop(mocker: MockerFixture, grizzly_fixture: GrizzlyFixture) -> None:
-    grizzly_fixture()
-
-    grizzly = grizzly_fixture.grizzly
-
-    grizzly.state.producer = TestdataProducer(
-        runner=cast('LocalRunner', grizzly.state.locust),
-        testdata={},
-    )
-
-    on_test_stop_mock = mocker.patch.object(
-        grizzly.state.producer,
-        'on_test_stop',
-        return_value=None,
-    )
-
-    locust_test_stop(grizzly)(grizzly.state.locust.environment)
-
-    on_test_stop_mock.assert_called_once_with()
 
 
 def test_spawning_complete(grizzly_fixture: GrizzlyFixture) -> None:
@@ -457,22 +430,22 @@ def test_validate_result(mocker: MockerFixture, caplog: LogCaptureFixture, grizz
     grizzly.scenario.behave.set_status(Status.passed)
 
 
-def test_grizzly_worker_quit_non_worker(locust_fixture: LocustFixture, caplog: LogCaptureFixture) -> None:
+def test_locust_quit_non_worker(locust_fixture: LocustFixture, caplog: LogCaptureFixture) -> None:
     environment = locust_fixture.environment
 
     message = Message(message_type='test', data=None, node_id=None)
 
     with caplog.at_level(logging.DEBUG), pytest.raises(SystemExit) as se:
-        grizzly_worker_quit(environment, message)
+        locust_quit(environment, message)
     assert se.value.code == 1
 
     assert len(caplog.messages) == 2
-    assert caplog.messages[0] == f'received quit message from master: msg={message!r}'
-    assert caplog.messages[1] == 'received grizzly_worker_quit message on a non WorkerRunner?!'
+    assert caplog.messages[0] == 'received locust_quit message from master, quitting'
+    assert caplog.messages[1] == 'received locust_quit message on non-worker node'
 
 
 @pytest.mark.usefixtures('_listener_test_mocker')
-def test_grizzly_worker_quit_worker(locust_fixture: LocustFixture, caplog: LogCaptureFixture, mocker: MockerFixture) -> None:
+def test_locust_quit_worker(locust_fixture: LocustFixture, caplog: LogCaptureFixture, mocker: MockerFixture) -> None:
     environment = locust_fixture.environment
     environment.runner = WorkerRunner(environment=environment, master_host='localhost', master_port=1337)
 
@@ -487,39 +460,39 @@ def test_grizzly_worker_quit_worker(locust_fixture: LocustFixture, caplog: LogCa
     environment.runner.exceptions = {}
 
     with caplog.at_level(logging.DEBUG), pytest.raises(SystemExit) as se:
-        grizzly_worker_quit(environment, message)
+        locust_quit(environment, message)
     assert se.value.code == 0
 
     log_messages = list(filter(lambda m: 'CPU usage' not in m, caplog.messages))
 
-    assert log_messages == [f'received quit message from master: msg={message!r}']
+    assert log_messages == ['received locust_quit message from master, quitting', 'Sending quit message to master']
     caplog.clear()
 
     runner_stop_mock.assert_called_once()
     runner_send_stat_mock.assert_called_once()
     runner_client_send.assert_called_once_with(
-        SOME(Message, type='client_stopped', data=None, node_id=environment.runner.client_id),
+        SOME(Message, type='quit', data=None, node_id=environment.runner.client_id),
     )
 
     environment.process_exit_code = 1337
 
     with caplog.at_level(logging.DEBUG), pytest.raises(SystemExit) as se:
-        grizzly_worker_quit(environment, message)
+        locust_quit(environment, message)
     assert se.value.code == 1337
 
     log_messages = list(filter(lambda m: 'CPU usage' not in m, caplog.messages))
 
-    assert log_messages == [f'received quit message from master: msg={message!r}']
+    assert log_messages == ['received locust_quit message from master, quitting', 'Sending quit message to master']
     caplog.clear()
 
     environment.process_exit_code = None
     environment.runner.errors.update({'test': StatsError('GET', 'test', 'something', 1)})
 
     with caplog.at_level(logging.DEBUG), pytest.raises(SystemExit) as se:
-        grizzly_worker_quit(environment, message)
+        locust_quit(environment, message)
     assert se.value.code == 3
 
     log_messages = list(filter(lambda m: 'CPU usage' not in m, caplog.messages))
 
-    assert log_messages == [f'received quit message from master: msg={message!r}']
+    assert log_messages == ['received locust_quit message from master, quitting', 'Sending quit message to master']
     caplog.clear()

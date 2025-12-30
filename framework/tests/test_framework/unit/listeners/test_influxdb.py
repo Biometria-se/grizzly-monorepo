@@ -468,7 +468,10 @@ class TestInfluxDblistener:
                 listener._events.clear()
                 listener.destroy_client()
 
-    def test__override_event(self, grizzly_fixture: GrizzlyFixture) -> None:
+    @pytest.mark.usefixtures('patch_influxdblistener')
+    def test__override_event(self, grizzly_fixture: GrizzlyFixture, patch_influxdblistener: Callable[[], None]) -> None:
+        patch_influxdblistener()
+
         event: InfluxDbPoint = {
             'measurement': 'request',
             'tags': {
@@ -518,7 +521,6 @@ class TestInfluxDblistener:
     @pytest.mark.usefixtures('patch_influxdblistener')
     def test__log_request(self, grizzly_fixture: GrizzlyFixture, patch_influxdblistener: Callable[[], None], mocker: MockerFixture) -> None:
         patch_influxdblistener()
-        grizzly_fixture()
 
         expected_datetime = datetime(2022, 12, 16, 10, 28, 0, 123456, timezone.utc)
 

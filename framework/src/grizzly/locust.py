@@ -8,7 +8,6 @@ import subprocess
 import sys
 from collections import defaultdict
 from contextlib import contextmanager, suppress
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from math import ceil, floor
 from operator import attrgetter, itemgetter
@@ -28,12 +27,12 @@ from locust.util.timespan import parse_timespan
 from roundrobin import smooth
 
 from . import __common_version__, __locust_version__, __version__
-from .listeners import init, init_statistics_listener, locust_test_start, locust_test_stop, spawning_complete, validate_result, worker_report
+from .listeners import init, init_statistics_listener, locust_test_start, spawning_complete, validate_result, worker_report
 from .testdata.utils import initialize_testdata
 from .testdata.variables.csv_writer import open_files
 from .types import RequestType, StrDict, TestdataType
 from .types.behave import Context, Status
-from .types.locust import Environment, LocustRunner, MasterRunner, Message, WorkerRunner
+from .types.locust import Environment, LocalRunner, LocustOption, LocustRunner, MasterRunner, Message, WorkerRunner
 from .utils import create_scenario_class_type, create_user_class_type
 
 __all__ = [
@@ -56,6 +55,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 unhandled_greenlet_exception: bool = False
 abort_test: gevent.event.Event = gevent.event.Event()
+run_time_reached: gevent.event.Event = gevent.event.Event()
 
 
 logger = logging.getLogger('grizzly.locust')
@@ -779,7 +779,6 @@ def setup_environment_listeners(context: Context, *, dependencies: GrizzlyDepend
 
     environment.events.init.add_listener(init(grizzly, dependencies, testdata))
     environment.events.test_start.add_listener(locust_test_start())
-    environment.events.test_stop.add_listener(locust_test_stop(grizzly))
 
     environment.events.spawning_complete.add_listener(spawning_complete(grizzly))
     # And save statistics to "..."
@@ -861,6 +860,29 @@ def sig_trap(msg: Message, **_kwargs: Environment) -> None:
         logger.info('worker %s triggered test abort on master', msg.node_id)
 
 
+def sig_handler(runner: LocustRunner, signum: int) -> Callable[[], None]:
+    try:
+        signame = Signals(signum).name
+    except ValueError:
+        signame = 'UNKNOWN'
+
+    def wrapper() -> None:
+        if abort_test.is_set():
+            return
+
+        logger.info('handling signal %s (%d)', signame, signum)
+
+        abort_test.set()
+
+        if isinstance(runner, WorkerRunner):
+            runner._send_stats()
+            runner.client.send(Message('sig_trap', None, runner.client_id))
+
+        runner.environment.events.quitting.fire(environment=runner.environment, reverse=True, abort=True)
+
+    return wrapper
+
+
 def return_code(environment: Environment, msg: Message) -> None:
     rc = int(msg.data)
     old_rc = environment.process_exit_code
@@ -900,19 +922,90 @@ def cleanup_resources(processes: dict[str, subprocess.Popen], greenlet: gevent.G
             file_handle.close()
 
 
-def run(context: Context) -> int:  # noqa: C901, PLR0915, PLR0912
-    grizzly = cast('GrizzlyContext', context.grizzly)
+def stop_locust(runner: LocustRunner) -> None:
+    if isinstance(runner, MasterRunner):
+        runner.stop(send_stop_to_client=False)
+        runner.send_message('locust_quit')
 
-    log_level = 'DEBUG' if context.config.verbose else grizzly.setup.log_level
+        # wait for all clients to quit
+        # when worker receives `quit`, it will runner.stop(), runner._send_stats(), and then
+        # then `client_stopped` back to master.
+        # when master received this message, it will remove the worker from its list of clients
+        count = 0
+        start = perf_counter()
+        while len(runner.clients) > 0:
+            workers = list(iter(runner.clients))
+            count += 1
 
-    csv_prefix: str | None = context.config.userdata.get('csv-prefix', None)
-    csv_interval: int = int(context.config.userdata.get('csv-interval', '1'))
-    csv_flush_interval: int = int(context.config.userdata.get('csv-flush-iterval', '10'))
+            if count % 10 == 0:
+                logger.debug('remaining workers: %s', ', '.join(workers))
+                count = 0
 
-    # And locust log level is
-    setup_logging(log_level, None)
+            gevent.sleep(1.0)
 
-    # make sure the user hasn't screwed up
+        delta = perf_counter() - start
+
+        logger.info('all workers stopped (took %.2f seconds), stopping master', delta)
+
+        runner.greenlet.kill(block=True)
+    elif isinstance(runner, LocalRunner):
+        logger.info('stopping local runner on %s', gethostname())
+        runner.quit()
+
+
+def execute_dry_run(runner: LocustRunner, grizzly: GrizzlyContext) -> None:
+    if isinstance(runner, MasterRunner):
+        logger.info('dry-run starting locust-%s via grizzly-%s, with grizzly-common-%s', __locust_version__, __version__, __common_version__)
+        runner.send_message('quit')
+
+    if not isinstance(runner, WorkerRunner):
+        for scenario in grizzly.scenarios:
+            logger.info('# %s:', scenario.name)
+
+            for variable, value in dict(sorted(scenario.variables.items())).items():
+                if value is None or (isinstance(value, str) and value.lower() == 'none'):
+                    continue
+                logger.info('    %s = %s', variable, value)
+        runner.quit()
+
+
+def create_runner(environment: Environment, context: Context) -> LocustRunner | None:
+    runner: LocustRunner
+
+    if on_master(context):
+        host = '0.0.0.0'
+        port = int(context.config.userdata.get('master-port', 5557))
+        runner = environment.create_master_runner(
+            master_bind_host=host,
+            master_bind_port=port,
+        )
+        logger.debug('started master runner: %s:%d', host, port)
+    elif on_worker(context):
+        try:
+            host = context.config.userdata.get('master-host', 'master')
+            port = context.config.userdata.get('master-port', 5557)
+            logger.debug('trying to connect to locust master: %s:%d', host, port)
+            runner = environment.create_worker_runner(
+                host,
+                port,
+            )
+            logger.debug('connected to locust master: %s:%d', host, port)
+
+            # increase heartbeat timeout towards master
+            from locust import runners  # noqa: PLC0415
+
+            runners.MASTER_HEARTBEAT_TIMEOUT = runners.MASTER_HEARTBEAT_TIMEOUT * 3
+            runners.WORKER_LOG_REPORT_INTERVAL = -1
+        except OSError:
+            logger.exception('failed to connect to locust master at %s:%d', host, port)
+            return None
+    else:
+        runner = environment.create_local_runner()
+
+    return runner
+
+
+def validate_setup(context: Context, grizzly: GrizzlyContext) -> bool:
     is_both_master_and_worker = on_master(context) and on_worker(context)
     is_spawn_rate_not_set = grizzly.setup.spawn_rate is None
     is_user_count_not_set = grizzly.setup.dispatcher_class in [UsersDispatcher, None] and (grizzly.setup.user_count is None or grizzly.setup.user_count < 1)
@@ -927,7 +1020,40 @@ def run(context: Context) -> int:  # noqa: C901, PLR0915, PLR0912
         if is_user_count_not_set:
             logger.error('step \'Given "user_count" users\' is not in the feature file')
 
+        return False
+
+    return True
+
+
+def execute_run_time_reached() -> None:
+    logger.info('time limit reached. stopping locust.')
+    run_time_reached.set()
+
+
+def run(context: Context) -> int:  # noqa: C901, PLR0915, PLR0912
+    grizzly = cast('GrizzlyContext', context.grizzly)
+
+    log_level = 'DEBUG' if context.config.verbose else grizzly.setup.log_level
+
+    csv_prefix: str | None = context.config.userdata.get('csv-prefix', None)
+    csv_interval: int = int(context.config.userdata.get('csv-interval', '1'))
+    csv_flush_interval: int = int(context.config.userdata.get('csv-flush-iterval', '10'))
+
+    # And locust log level is
+    setup_logging(log_level, None)
+
+    # make sure the user hasn't screwed up
+    if not validate_setup(context, grizzly):
         return 254
+
+    # And run for maximum
+    run_time: int | None = None
+    if grizzly.setup.timespan is not None and not on_worker(context):
+        try:
+            run_time = parse_timespan(grizzly.setup.timespan)
+        except ValueError:
+            logger.exception('invalid timespan "%s" expected: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.', grizzly.setup.timespan)
+            return 1
 
     # initialize testdata
     testdata, dependencies = initialize_testdata(grizzly)
@@ -945,9 +1071,10 @@ def run(context: Context) -> int:  # noqa: C901, PLR0915, PLR0912
 
     try:
         setup_resource_limits(context)
-
         if grizzly.setup.dispatcher_class is None:
             grizzly.setup.dispatcher_class = UsersDispatcher
+
+        spawn_rate = cast('float', grizzly.setup.spawn_rate)
 
         environment = Environment(
             user_classes=cast('list[type[User]]', user_classes),
@@ -955,59 +1082,29 @@ def run(context: Context) -> int:  # noqa: C901, PLR0915, PLR0912
             events=events,
             stop_timeout=300,  # only wait at most?
             dispatcher_class=grizzly.setup.dispatcher_class,
+            parsed_options=LocustOption(
+                headless=True,
+                num_users=grizzly.setup.user_count or 0,
+                spawn_rate=spawn_rate,
+                tags=[],
+                exclude_tags=[],
+                enable_rebalancing=False,
+                web_base_path=None,
+            ),
         )
 
-        runner: LocustRunner
+        runner = create_runner(environment, context)
 
-        if on_master(context):
-            host = '0.0.0.0'
-            port = int(context.config.userdata.get('master-port', 5557))
-            runner = environment.create_master_runner(
-                master_bind_host=host,
-                master_bind_port=port,
-            )
-            logger.debug('started master runner: %s:%d', host, port)
-        elif on_worker(context):
-            try:
-                host = context.config.userdata.get('master-host', 'master')
-                port = context.config.userdata.get('master-port', 5557)
-                logger.debug('trying to connect to locust master: %s:%d', host, port)
-                runner = environment.create_worker_runner(
-                    host,
-                    port,
-                )
-                logger.debug('connected to locust master: %s:%d', host, port)
-
-                # increase heartbeat timeout towards master
-                from locust import runners  # noqa: PLC0415
-
-                runners.MASTER_HEARTBEAT_TIMEOUT = runners.MASTER_HEARTBEAT_TIMEOUT * 3
-                runners.WORKER_LOG_REPORT_INTERVAL = -1
-            except OSError:
-                logger.exception('failed to connect to locust master at %s:%d', host, port)
-                return 1
-        else:
-            runner = environment.create_local_runner()
+        if runner is None:
+            return 1
 
         grizzly.state.locust = runner
 
         setup_environment_listeners(context, dependencies=dependencies, testdata=testdata)
 
         if environ.get('GRIZZLY_DRY_RUN', 'false').lower() == 'true':
-            if isinstance(runner, MasterRunner):
-                logger.info('dry-run starting locust-%s via grizzly-%s, with grizzly-common-%s', __locust_version__, __version__, __common_version__)
-                runner.send_message('grizzly_worker_quit', None)
-
-            if not isinstance(runner, WorkerRunner):
-                for scenario in grizzly.scenarios:
-                    logger.info('# %s:', scenario.name)
-
-                    for variable, value in dict(sorted(scenario.variables.items())).items():
-                        if value is None or (isinstance(value, str) and value.lower() == 'none'):
-                            continue
-                        logger.info('    %s = %s', variable, value)
-                runner.quit()
-                return 0
+            execute_dry_run(runner, grizzly)
+            return 0
 
         environment.events.init.fire(environment=environment, runner=runner, web_ui=None)
 
@@ -1089,35 +1186,7 @@ def run(context: Context) -> int:  # noqa: C901, PLR0915, PLR0912
 
         main_greenlet = runner.greenlet
 
-        # And run for maximum
-        run_time: int | None = None
-        if grizzly.setup.timespan is not None and not on_worker(context):
-            try:
-                run_time = parse_timespan(grizzly.setup.timespan)
-            except ValueError:
-                logger.exception('invalid timespan "%s" expected: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.', grizzly.setup.timespan)
-                return 1
-
         stats_printer_greenlet: gevent.Greenlet | None = None
-        spawn_rate = cast('float', grizzly.setup.spawn_rate)
-
-        @dataclass
-        class LocustOption:
-            headless: bool
-            num_users: int
-            spawn_rate: float
-            tags: list[str]
-            exclude_tags: list[str]
-            enable_rebalancing: bool
-
-        environment.parsed_options = LocustOption(
-            headless=True,
-            num_users=grizzly.setup.user_count or 0,
-            spawn_rate=spawn_rate,
-            tags=[],
-            exclude_tags=[],
-            enable_rebalancing=False,
-        )
 
         if isinstance(runner, MasterRunner):
             expected_workers = int(context.config.userdata.get('expected-workers', 1))
@@ -1145,27 +1214,12 @@ def run(context: Context) -> int:  # noqa: C901, PLR0915, PLR0912
             try:
                 runner.start(user_count, spawn_rate)
             except:
-                if isinstance(runner, MasterRunner):
-                    runner.send_message('grizzly_worker_quit', None)
+                stop_locust(runner)
+
                 raise
 
             stats_printer_greenlet = gevent.spawn(grizzly_stats_printer(environment.stats))
             stats_printer_greenlet.link_exception(greenlet_exception_handler)
-
-        def spawn_run_time_limit_greenlet() -> None:
-            def timelimit_stop() -> None:
-                logger.info('time limit reached. stopping locust.')
-                if isinstance(runner, MasterRunner):
-                    runner.send_message('grizzly_worker_quit', None)
-
-                if not isinstance(runner, WorkerRunner):
-                    runner.quit()
-
-            gevent.spawn_later(run_time, timelimit_stop).link_exception(greenlet_exception_handler)
-
-        if run_time is not None:
-            logger.info('run time limit set to %d seconds', run_time)
-            spawn_run_time_limit_greenlet()
 
         gevent.spawn(lstats.stats_history, environment.runner)
 
@@ -1185,7 +1239,7 @@ def run(context: Context) -> int:  # noqa: C901, PLR0915, PLR0912
 
             def run_test() -> None:
                 count = 0
-                while runner.user_count > 0:
+                while runner.user_count > 0 and not run_time_reached.is_set():
                     gevent.sleep(1.0)
                     count += 1
                     if count % 10 == 0:
@@ -1203,19 +1257,7 @@ def run(context: Context) -> int:  # noqa: C901, PLR0915, PLR0912
                 if not abort_test.is_set():
                     runner.environment.events.quitting.fire(environment=runner.environment, reverse=True)
 
-                if isinstance(runner, MasterRunner):
-                    runner.send_message('grizzly_worker_quit', None)
-                    runner.stop(send_stop_to_client=False)
-                    logger.info('stop all remaining workers')
-
-                    # wait for all clients to quit
-                    while len(runner.clients.all) > 0:
-                        gevent.sleep(0.5)
-
-                    runner.greenlet.kill(block=True)
-                else:
-                    logger.info('stopping worker on %s', gethostname())
-                    runner.quit()
+                stop_locust(runner)
 
                 if stats_printer_greenlet is not None:
                     stats_printer_greenlet.kill(block=False)
@@ -1242,30 +1284,15 @@ def run(context: Context) -> int:  # noqa: C901, PLR0915, PLR0912
             # stop when user_count reaches 0
             main_greenlet = running_test
 
-        def sig_handler(signum: int) -> Callable[[], None]:
-            try:
-                signame = Signals(signum).name
-            except ValueError:
-                signame = 'UNKNOWN'
+            if run_time is not None:
+                logger.info('run time limit set to %d seconds', run_time)
+                gevent.spawn_later(run_time, execute_run_time_reached).link_exception(greenlet_exception_handler)
+        else:
+            logger.info('waiting for spawning to complete')
+            grizzly.state.spawning_complete.wait()
 
-            def wrapper() -> None:
-                if abort_test.is_set():
-                    return
-
-                logger.info('handling signal %s (%d)', signame, signum)
-
-                abort_test.set()
-
-                if isinstance(runner, WorkerRunner):
-                    runner._send_stats()
-                    runner.client.send(Message('sig_trap', None, runner.client_id))
-
-                runner.environment.events.quitting.fire(environment=runner.environment, reverse=True, abort=True)
-
-            return wrapper
-
-        gevent.signal_handler(SIGTERM, sig_handler(SIGTERM))
-        gevent.signal_handler(SIGINT, sig_handler(SIGINT))
+        gevent.signal_handler(SIGTERM, sig_handler(runner, SIGTERM))
+        gevent.signal_handler(SIGINT, sig_handler(runner, SIGINT))
 
         try:
             main_greenlet.join()

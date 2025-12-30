@@ -33,9 +33,9 @@ logger = logging.getLogger(__name__)
 
 
 class AuthMethod(Enum):
-    """Azure AD authentication method enumeration.
+    """Azure Entra ID authentication method enumeration.
 
-    Defines the available authentication methods for Azure AD flows.
+    Defines the available authentication methods for Azure Entra ID flows.
 
     Attributes:
         NONE: No authentication required
@@ -58,7 +58,7 @@ class AuthMethod(Enum):
 
 
 class AuthType(Enum):
-    """Azure AD token delivery type enumeration.
+    """Azure Entra ID token delivery type enumeration.
 
     Defines how authentication tokens are delivered and stored in the authentication flow.
 
@@ -73,11 +73,22 @@ class AuthType(Enum):
 
 
 class AzureAadError(Exception):
-    pass
+    """Base exception for Azure Entra ID authentication errors.
+
+    Raised when errors occur during Azure Entra ID authentication flows.
+    This serves as the parent exception for all Azure Entra ID-related errors in this module.
+
+    """
 
 
 class AzureAadFlowError(AzureAadError):
-    pass
+    """Exception raised for errors during Azure Entra ID authentication flows.
+
+    Raised when authentication flow operations fail, such as during user or client
+    authentication processes. This includes errors from unexpected HTTP status codes,
+    service exceptions, token acquisition failures, and other flow-related issues.
+
+    """
 
 
 class CookieTokenPayload(TypedDict):

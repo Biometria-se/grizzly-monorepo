@@ -66,9 +66,13 @@ def test_e2e_step_shapes_user_count(e2e_fixture: End2EndFixture, count: str) -> 
         identifier=count,
     )
 
-    rc, _ = e2e_fixture.execute(feature_file, testdata=testdata)
+    rc, output = e2e_fixture.execute(feature_file, testdata=testdata)
 
-    assert rc == 0
+    try:
+        assert rc == 0
+    except AssertionError:
+        print(''.join(output))
+        raise
 
 
 @pytest.mark.parametrize(

@@ -23,22 +23,4 @@ coverage.xml
 **/*.lock.feature
 **/*.lock.yaml
 **/*.log
-
-# docs/
-docs/build
-
-# example/
-example/environments/*.yaml
-!example/environments/example.yaml
-
-# command-line-interface/
-command-line-interface/tests/test_cli/e2e/example
-command-line-interface/tests/test_cli/tmp
-
-# editor-support
-editor-support/**/.vscode-test
-editor-support/**/out
-editor-support/**/*.vsix
-
-# actions
-!.github/actions/**/dist/
+**/*.prof

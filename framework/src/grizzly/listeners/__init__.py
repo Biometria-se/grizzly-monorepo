@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 def init(grizzly: GrizzlyContext, dependencies: GrizzlyDependencies, testdata: TestdataType | None = None) -> Callable[Concatenate[LocustRunner, P], None]:
-    def ginit(runner: LocustRunner, *_args: P.args, **_kwargs: P.kwargs) -> None:
+    def init_wrapper(runner: LocustRunner, *_args: P.args, **_kwargs: P.kwargs) -> None:
         # acquire lock, that will be released when all users has spawned (on_spawning_complete)
         grizzly.state.spawning_complete.acquire()
 
@@ -40,12 +40,11 @@ def init(grizzly: GrizzlyContext, dependencies: GrizzlyDependencies, testdata: T
                     runner=runner,
                     testdata=testdata,
                 )
-                runner.register_message('produce_testdata', grizzly.state.producer.handle_request, concurrent=True)
             else:
                 logger.error('there is no test data!')
-        else:
-            logger.debug('registered message "grizzly_worker_quit"')
-            runner.register_message('grizzly_worker_quit', grizzly_worker_quit)
+
+        if isinstance(runner, WorkerRunner):
+            runner.register_message('locust_quit', locust_quit, concurrent=False)
 
         if not isinstance(runner, MasterRunner):
             for message_type, callback in grizzly.setup.locust.messages.get(MessageDirection.SERVER_CLIENT, {}).items():
@@ -68,11 +67,11 @@ def init(grizzly: GrizzlyContext, dependencies: GrizzlyDependencies, testdata: T
 
                 runner.register_message(dependency.__message_types__['request'], dependency.handle_request, concurrent=True)
 
-    return cast('Callable[Concatenate[LocustRunner, P], None]', ginit)
+    return cast('Callable[Concatenate[LocustRunner, P], None]', init_wrapper)
 
 
 def init_statistics_listener(url: str) -> Callable[Concatenate[Environment, P], None]:
-    def gstatistics_listener(environment: Environment, *_args: P.args, **_kwargs: P.kwargs) -> None:
+    def statistics_listener(environment: Environment, *_args: P.args, **_kwargs: P.kwargs) -> None:
         parsed = urlparse(url)
 
         if parsed.scheme in ('influxdb', 'influxdb2'):
@@ -83,25 +82,41 @@ def init_statistics_listener(url: str) -> Callable[Concatenate[Environment, P], 
                 url=url,
             )
 
-    return cast('Callable[Concatenate[Environment, P], None]', gstatistics_listener)
+    return cast('Callable[Concatenate[Environment, P], None]', statistics_listener)
 
 
 def locust_test_start() -> Callable[Concatenate[Environment, P], None]:
-    def gtest_start(environment: Environment, *_args: P.args, **_kwargs: P.kwargs) -> None:
+    def locust_test_start_listener(environment: Environment, *_args: P.args, **_kwargs: P.kwargs) -> None:
         if isinstance(environment.runner, MasterRunner):
             num_connected_workers = len(environment.runner.clients.ready) + len(environment.runner.clients.running) + len(environment.runner.clients.spawning)
 
             logger.debug('connected workers: %d', num_connected_workers)
 
-    return cast('Callable[Concatenate[Environment, P], None]', gtest_start)
+    return cast('Callable[Concatenate[Environment, P], None]', locust_test_start_listener)
 
 
-def locust_test_stop(grizzly: GrizzlyContext) -> Callable[Concatenate[Environment, P], None]:
-    def gtest_stop(environment: Environment, *_args: P.args, **_kwargs: P.kwargs) -> None:  # noqa: ARG001
-        if grizzly.state.producer is not None:
-            grizzly.state.producer.on_test_stop()
+def locust_quit(environment: Environment, msg: Message, **_kwargs: Any) -> None:  # noqa: ARG001
+    logger.debug('received locust_quit message from master, quitting')
 
-    return cast('Callable[Concatenate[Environment, P], None]', gtest_stop)
+    runner = environment.runner
+    code: int = 1
+
+    if isinstance(runner, WorkerRunner):
+        runner.stop()
+        runner._send_stats()
+        runner.greenlet.kill(block=True)
+        runner.send_message('quit')
+
+        if environment.process_exit_code is not None:
+            code = environment.process_exit_code
+        elif len(runner.errors) > 0 or len(runner.exceptions) > 0:
+            code = 3
+        else:
+            code = 0
+    else:
+        logger.error('received locust_quit message on non-worker node')
+
+    raise SystemExit(code)
 
 
 def spawning_complete(grizzly: GrizzlyContext) -> Callable[Concatenate[int, P], None]:
@@ -114,30 +129,6 @@ def spawning_complete(grizzly: GrizzlyContext) -> Callable[Concatenate[int, P], 
 
 def worker_report(client_id: str, data: StrDict) -> None:  # noqa: ARG001
     logger.debug('received worker_report from %s', client_id)
-
-
-def grizzly_worker_quit(environment: Environment, msg: Message, **_kwargs: Any) -> None:
-    logger.info('received quit message from master: msg=%r', msg)
-    runner = environment.runner
-    code: int = 1
-
-    if isinstance(runner, WorkerRunner):
-        runner.stop()
-        runner._send_stats()
-        runner.client.send(Message('client_stopped', None, runner.client_id))
-
-        runner.greenlet.kill(block=True)
-
-        if environment.process_exit_code is not None:
-            code = environment.process_exit_code
-        elif len(runner.errors) > 0 or len(runner.exceptions) > 0:
-            code = 3
-        else:
-            code = 0
-    else:
-        logger.error('received grizzly_worker_quit message on a non WorkerRunner?!')
-
-    raise SystemExit(code)
 
 
 def validate_result(grizzly: GrizzlyContext) -> Callable[Concatenate[Environment, P], None]:

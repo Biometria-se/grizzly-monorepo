@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import csv
 import logging
+import socket
+from contextlib import suppress
 from pathlib import Path
+from time import time
 from typing import TYPE_CHECKING, Any, Literal
 
 import gevent
+import requests
 from flask import Flask, jsonify, request
 from flask import Response as FlaskResponse
 from gevent.pywsgi import WSGIServer
@@ -20,6 +24,11 @@ logger = logging.getLogger('webserver')
 
 
 app = Flask('webserver')
+
+
+@app.route('/health')
+def app_health() -> FlaskResponse:
+    return jsonify({'status': 'ok'})
 
 
 @app.route('/api/v1/resources/dogs')
@@ -93,9 +102,40 @@ class Webserver:
 
         return port  # type: ignore[no-any-return]
 
-    def start(self) -> None:
+    def wait_for_start(self, timeout: int = 10) -> None:
+        start_time = time()
+        while time() - start_time < timeout:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                if sock.connect_ex(('127.0.0.1', self.port)) == 0:
+                    return
+                gevent.sleep(0.5)
+
+        message = f'webserver did not start on port {self.port}'
+        raise RuntimeError(message)
+
+    def wait_for_health(self, timeout: int = 300) -> None:
+        start_time = time()
+        while time() - start_time < timeout:
+            with suppress(Exception):
+                response = requests.get(f'http://127.0.0.1:{self.port}/health', timeout=2.0)
+                if response.status_code == 200:
+                    return
+
+            logger.error('webserver not healthy yet, retrying...')
+
+            gevent.sleep(1.0)
+
+        message = 'webserver did not start responding to requests in due time'
+        raise RuntimeError(message)
+
+    def start(self, logger_: logging.Logger | None = None) -> None:
+        if logger_ is not None:
+            global logger  # noqa: PLW0603
+            logger = logger_
+
         gevent.spawn(lambda: self._web_server.serve_forever())
-        gevent.sleep(0.01)
+        self.wait_for_start()
+        self.wait_for_health()
         logger.debug('started webserver on port %d', self.port)
 
     def __enter__(self) -> Self:

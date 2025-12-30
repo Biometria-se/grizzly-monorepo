@@ -167,14 +167,20 @@ def step_start_webserver(context: Context) -> None:
     if on_worker(context):
         return
 
+    import logging
     from importlib.machinery import SourceFileLoader
-    webserver_module = SourceFileLoader(
+
+    logger = logging.getLogger('webserver')
+
+    w = SourceFileLoader(
         'steps.webserver',
         'features/steps/webserver.py',
     ).load_module('steps.webserver')
 
-    webserver = webserver_module.Webserver({port})
-    webserver.start()
+    webserver = w.Webserver({port})
+    logger.info('starting webserver')
+    webserver.start(logger)
+    logger.info('webserver started')
 """
 
     def __enter__(self) -> Self:
