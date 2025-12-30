@@ -12,9 +12,10 @@ import { fileURLToPath } from 'url';
  * @param {string} projectPath - Path to the project directory
  * @param {string} bump - Version bump type (major, minor, patch)
  * @param {object} logger - Logger object with info, warning, error methods (defaults to core)
+ * @param {object} execModule - Exec module for running commands (defaults to exec)
  * @returns {Promise<{nextVersion: string, nextTag: string}>}
  */
-export async function getNextReleaseTag(projectPath, bump, logger = core) {
+export async function getNextReleaseTag(projectPath, bump, logger = core, execModule = exec) {
     let tagPattern;
 
     // Check for pyproject.toml first
@@ -55,7 +56,7 @@ export async function getNextReleaseTag(projectPath, bump, logger = core) {
 
     // Get existing tags
     let stdout = '';
-    await exec.exec('git', [
+    await execModule.exec('git', [
         'tag',
         '-l',
         tagPattern,
@@ -104,7 +105,7 @@ async function run() {
     try {
         const project = core.getInput('project', { required: true });
         const versionBump = core.getInput('version-bump', { required: true });
-        const dryRun = core.getInput('dry-run') === 'true';        const token = core.getInput('github-token', { required: true });
+        const dryRun = core.getInput('dry-run') === 'true'; const token = core.getInput('github-token', { required: true });
 
         // Store token in state for cleanup phase
         core.saveState('github-token', token);
@@ -168,7 +169,7 @@ export async function cleanup(dependencies = {}) {
         const token = coreModule.getState('github-token');
         const runId = env.GITHUB_RUN_ID;
         const repository = env.GITHUB_REPOSITORY;
-        const jobName = env.GITHUB_JOB;
+        const jobId = env.GITHUB_JOB;
 
         if (!token || !runId || !repository) {
             throw new Error('Missing required environment variables (GITHUB_TOKEN, GITHUB_RUN_ID, or GITHUB_REPOSITORY)');
@@ -186,11 +187,18 @@ export async function cleanup(dependencies = {}) {
             run_id: parseInt(runId, 10),
         });
 
-        // Find the current job
-        const currentJob = jobs.find(job => job.name === jobName);
+        // Log available jobs for debugging
+        coreModule.info(`Found ${jobs.length} jobs in workflow run`);
+        jobs.forEach(job => {
+            coreModule.info(`  Job: name="${job.name}", id=${job.id}, status=${job.status}, conclusion=${job.conclusion || 'none'}`);
+        });
+        coreModule.info(`Looking for job with id: ${jobId}`);
+
+        // Find the current job by ID (GITHUB_JOB contains the job_id)
+        const currentJob = jobs.find(job => job.id.toString() === jobId);
 
         if (!currentJob) {
-            throw new Error(`Could not find current job '${jobName}' in workflow run`);
+            throw new Error(`Could not find current job with id '${jobId}' in workflow run`);
         }
 
         coreModule.info(`Job status: ${currentJob.status}, conclusion: ${currentJob.conclusion || 'none'}`);

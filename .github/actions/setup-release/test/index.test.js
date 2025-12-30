@@ -9,6 +9,7 @@ const __dirname = dirname(__filename);
 
 describe('getNextReleaseTag', () => {
   const frameworkPath = resolve(__dirname, '../../../../framework');
+  let execStub;
 
   // Create stub logger to suppress output during tests
   const mockLogger = {
@@ -18,14 +19,30 @@ describe('getNextReleaseTag', () => {
     debug: sinon.stub()
   };
 
+  beforeEach(() => {
+    // Create exec stub to suppress command output during tests
+    execStub = {
+      exec: sinon.stub().callsFake(async (command, args, options) => {
+        // Simulate git tag command output
+        if (command === 'git' && args[0] === 'tag') {
+          if (options?.listeners?.stdout) {
+            options.listeners.stdout(Buffer.from('framework@v3.2.5\n'));
+          }
+          return 0;
+        }
+        return 0;
+      })
+    };
+  });
+
   afterEach(() => {
-    // Reset all logger stubs after each test
+    // Reset all stubs after each test
     sinon.reset();
   });
 
   describe('version bumping', () => {
     it('should calculate next patch version', async () => {
-      const result = await getNextReleaseTag(frameworkPath, 'patch', mockLogger);
+      const result = await getNextReleaseTag(frameworkPath, 'patch', mockLogger, execStub);
 
       expect(result).to.have.property('nextVersion');
       expect(result).to.have.property('nextTag');
@@ -34,7 +51,7 @@ describe('getNextReleaseTag', () => {
     });
 
     it('should calculate next minor version', async () => {
-      const result = await getNextReleaseTag(frameworkPath, 'minor', mockLogger);
+      const result = await getNextReleaseTag(frameworkPath, 'minor', mockLogger, execStub);
 
       expect(result).to.have.property('nextVersion');
       expect(result).to.have.property('nextTag');
@@ -43,7 +60,7 @@ describe('getNextReleaseTag', () => {
     });
 
     it('should calculate next major version', async () => {
-      const result = await getNextReleaseTag(frameworkPath, 'major', mockLogger);
+      const result = await getNextReleaseTag(frameworkPath, 'major', mockLogger, execStub);
 
       expect(result).to.have.property('nextVersion');
       expect(result).to.have.property('nextTag');
@@ -52,14 +69,14 @@ describe('getNextReleaseTag', () => {
     });
 
     it('should increment version correctly for patch', async () => {
-      const result = await getNextReleaseTag(frameworkPath, 'patch', mockLogger);
+      const result = await getNextReleaseTag(frameworkPath, 'patch', mockLogger, execStub);
       const [major, minor, patch] = result.nextVersion.split('.').map(Number);
 
       expect(patch).to.be.greaterThan(0);
     });
 
     it('should reset patch to 0 for minor bump', async () => {
-      const result = await getNextReleaseTag(frameworkPath, 'minor', mockLogger);
+      const result = await getNextReleaseTag(frameworkPath, 'minor', mockLogger, execStub);
       const [major, minor, patch] = result.nextVersion.split('.').map(Number);
 
       expect(patch).to.equal(0);
@@ -67,7 +84,7 @@ describe('getNextReleaseTag', () => {
     });
 
     it('should reset minor and patch to 0 for major bump', async () => {
-      const result = await getNextReleaseTag(frameworkPath, 'major', mockLogger);
+      const result = await getNextReleaseTag(frameworkPath, 'major', mockLogger, execStub);
       const [major, minor, patch] = result.nextVersion.split('.').map(Number);
 
       expect(minor).to.equal(0);
@@ -78,7 +95,7 @@ describe('getNextReleaseTag', () => {
 
   describe('tag format', () => {
     it('should include project prefix in tag', async () => {
-      const result = await getNextReleaseTag(frameworkPath, 'patch', mockLogger);
+      const result = await getNextReleaseTag(frameworkPath, 'patch', mockLogger, execStub);
 
       expect(result.nextTag).to.match(/^framework@v\d+\.\d+\.\d+$/);
     });
@@ -87,7 +104,7 @@ describe('getNextReleaseTag', () => {
   describe('error handling', () => {
     it('should throw error for non-existent path', async () => {
       try {
-        await getNextReleaseTag('/non/existent/path', 'patch', mockLogger);
+        await getNextReleaseTag('/non/existent/path', 'patch', mockLogger, execStub);
         expect.fail('Should have thrown an error');
       } catch (error) {
         expect(error).to.exist;
@@ -107,6 +124,7 @@ describe('cleanup', () => {
     coreStub = {
       getState: sinon.stub(),
       info: sinon.stub(),
+      warning: sinon.stub(),
       error: sinon.stub(),
       setFailed: sinon.stub(),
     };
@@ -145,6 +163,7 @@ describe('cleanup', () => {
         data: {
           jobs: [
             {
+              id: 12345,
               name: 'test-job',
               status: 'completed',
               conclusion: 'success',
@@ -157,7 +176,7 @@ describe('cleanup', () => {
         GITHUB_TOKEN: 'test-token',
         GITHUB_RUN_ID: '12345',
         GITHUB_REPOSITORY: 'owner/repo',
-        GITHUB_JOB: 'test-job',
+        GITHUB_JOB: '12345',
       };
 
       await cleanup({
@@ -180,6 +199,7 @@ describe('cleanup', () => {
         data: {
           jobs: [
             {
+              id: 12345,
               name: 'test-job',
               status: 'in_progress',
               conclusion: null,
@@ -192,7 +212,7 @@ describe('cleanup', () => {
         GITHUB_TOKEN: 'test-token',
         GITHUB_RUN_ID: '12345',
         GITHUB_REPOSITORY: 'owner/repo',
-        GITHUB_JOB: 'test-job',
+        GITHUB_JOB: '12345',
       };
 
       await cleanup({
@@ -215,6 +235,7 @@ describe('cleanup', () => {
         data: {
           jobs: [
             {
+              id: 12345,
               name: 'test-job',
               status: 'completed',
               conclusion: 'failure',
@@ -227,7 +248,7 @@ describe('cleanup', () => {
         GITHUB_TOKEN: 'test-token',
         GITHUB_RUN_ID: '12345',
         GITHUB_REPOSITORY: 'owner/repo',
-        GITHUB_JOB: 'test-job',
+        GITHUB_JOB: '12345',
       };
 
       await cleanup({
@@ -250,6 +271,7 @@ describe('cleanup', () => {
         data: {
           jobs: [
             {
+              id: 12345,
               name: 'test-job',
               status: 'completed',
               conclusion: 'cancelled',
@@ -262,7 +284,7 @@ describe('cleanup', () => {
         GITHUB_TOKEN: 'test-token',
         GITHUB_RUN_ID: '12345',
         GITHUB_REPOSITORY: 'owner/repo',
-        GITHUB_JOB: 'test-job',
+        GITHUB_JOB: '12345',
       };
 
       await cleanup({
@@ -285,6 +307,7 @@ describe('cleanup', () => {
         data: {
           jobs: [
             {
+              id: 12345,
               name: 'test-job',
               status: 'completed',
               conclusion: 'success',
@@ -297,7 +320,7 @@ describe('cleanup', () => {
         GITHUB_TOKEN: 'test-token',
         GITHUB_RUN_ID: '12345',
         GITHUB_REPOSITORY: 'owner/repo',
-        GITHUB_JOB: 'test-job',
+        GITHUB_JOB: '12345',
       };
 
       await cleanup({
@@ -320,6 +343,7 @@ describe('cleanup', () => {
         data: {
           jobs: [
             {
+              id: 12345,
               name: 'test-job',
               status: 'completed',
               conclusion: 'success',
@@ -332,7 +356,7 @@ describe('cleanup', () => {
         GITHUB_TOKEN: 'test-token',
         GITHUB_RUN_ID: '12345',
         GITHUB_REPOSITORY: 'owner/repo',
-        GITHUB_JOB: 'test-job',
+        GITHUB_JOB: '12345',
       };
 
       await cleanup({
@@ -359,6 +383,7 @@ describe('cleanup', () => {
         data: {
           jobs: [
             {
+              id: 99999,
               name: 'test-job',
               status: 'completed',
               conclusion: 'success',
@@ -371,7 +396,7 @@ describe('cleanup', () => {
         GITHUB_TOKEN: 'test-token',
         GITHUB_RUN_ID: '99999',
         GITHUB_REPOSITORY: 'my-org/my-repo',
-        GITHUB_JOB: 'test-job',
+        GITHUB_JOB: '99999',
       };
 
       await cleanup({
@@ -410,7 +435,7 @@ describe('cleanup', () => {
       });
 
       expect(coreStub.setFailed.called).to.be.true;
-      expect(coreStub.setFailed.firstCall.args[0]).to.include('no next-release-tag found');
+      expect(coreStub.setFailed.firstCall.args[0]).to.include('No next-release-tag found');
     });
 
     it('should fail when github-token is missing from state', async () => {
@@ -479,7 +504,7 @@ describe('cleanup', () => {
       expect(coreStub.setFailed.firstCall.args[0]).to.include('Missing required environment variables');
     });
 
-    it('should fail when current job is not found', async () => {
+    it('should fail when job ID is not found', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('false');
       coreStub.getState.withArgs('github-token').returns('test-token');
@@ -488,6 +513,7 @@ describe('cleanup', () => {
         data: {
           jobs: [
             {
+              id: 99999,
               name: 'other-job',
               status: 'completed',
               conclusion: 'success',
@@ -500,7 +526,7 @@ describe('cleanup', () => {
         GITHUB_TOKEN: 'test-token',
         GITHUB_RUN_ID: '12345',
         GITHUB_REPOSITORY: 'owner/repo',
-        GITHUB_JOB: 'test-job',
+        GITHUB_JOB: '12345',
       };
 
       await cleanup({
@@ -514,7 +540,51 @@ describe('cleanup', () => {
       expect(coreStub.setFailed.firstCall.args[0]).to.include('Could not find current job');
     });
 
-    it('should fail when GitHub API call fails', async () => {
+    it('should log all jobs for debugging', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              id: 123,
+              name: 'job1',
+              status: 'completed',
+              conclusion: 'success',
+            },
+            {
+              id: 456,
+              name: 'job2',
+              status: 'in_progress',
+              conclusion: null,
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+        GITHUB_JOB: '456',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.info.calledWith('Found 2 jobs in workflow run')).to.be.true;
+      expect(coreStub.info.calledWith('  Job: name="job1", id=123, status=completed, conclusion=success')).to.be.true;
+      expect(coreStub.info.calledWith('  Job: name="job2", id=456, status=in_progress, conclusion=none')).to.be.true;
+      expect(coreStub.info.calledWith('Looking for job with id: 456')).to.be.true;
+    });
+
+    it('should fail when github api call fails', async () => {
       coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
       coreStub.getState.withArgs('dry-run').returns('false');
       coreStub.getState.withArgs('github-token').returns('test-token');
@@ -550,6 +620,7 @@ describe('cleanup', () => {
         data: {
           jobs: [
             {
+              id: 12345,
               name: 'test-job',
               status: 'completed',
               conclusion: 'success',
@@ -562,7 +633,7 @@ describe('cleanup', () => {
         GITHUB_TOKEN: 'test-token',
         GITHUB_RUN_ID: '12345',
         GITHUB_REPOSITORY: 'owner/repo',
-        GITHUB_JOB: 'test-job',
+        GITHUB_JOB: '12345',
       };
 
       await cleanup({
@@ -587,6 +658,7 @@ describe('cleanup', () => {
         data: {
           jobs: [
             {
+              id: 12345,
               name: 'test-job',
               status: 'completed',
               conclusion: 'failure',
@@ -599,7 +671,7 @@ describe('cleanup', () => {
         GITHUB_TOKEN: 'test-token',
         GITHUB_RUN_ID: '12345',
         GITHUB_REPOSITORY: 'owner/repo',
-        GITHUB_JOB: 'test-job',
+        GITHUB_JOB: '12345',
       };
 
       await cleanup({
@@ -622,6 +694,7 @@ describe('cleanup', () => {
         data: {
           jobs: [
             {
+              id: 12345,
               name: 'test-job',
               status: 'completed',
               conclusion: 'success',
@@ -634,7 +707,7 @@ describe('cleanup', () => {
         GITHUB_TOKEN: 'test-token',
         GITHUB_RUN_ID: '12345',
         GITHUB_REPOSITORY: 'owner/repo',
-        GITHUB_JOB: 'test-job',
+        GITHUB_JOB: '12345',
       };
 
       await cleanup({
