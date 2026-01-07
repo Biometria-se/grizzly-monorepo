@@ -113,10 +113,25 @@ class CookieTokenPayload(TypedDict):
 
 
 class FormPostParser(HTMLParser):
+    """HTML parser for extracting authentication tokens from form post responses.
+
+    Parses HTML form responses from Azure Entra ID authentication flows to extract
+    token payload data. The parser specifically looks for form action URLs and hidden
+    input fields containing id_token, client_info, state, and session_state values
+    that are used in cookie-based authentication flows.
+
+    """
+
     action: str | None
     _payload: CookieTokenPayload
 
     def __init__(self) -> None:
+        """Initialize the FormPostParser with empty payload data.
+
+        Sets up the parser with None values for action URL and all payload fields
+        (id_token, client_info, state, session_state).
+
+        """
         super().__init__()
 
         self.action = None
@@ -124,6 +139,15 @@ class FormPostParser(HTMLParser):
 
     @property
     def payload(self) -> CookieTokenPayload:
+        """Get the extracted token payload data.
+
+        Returns:
+            CookieTokenPayload: Dictionary containing id_token, client_info, state, and session_state.
+
+        Raises:
+            AssertionError: If form action is missing or if any required payload properties are None.
+
+        """
         assert self.action is not None, 'could not find form action attribute in response'
         missing_properties = ', '.join([key for key, value in self._payload.items() if value is None])
         assert len(missing_properties) == 0, f'not all properties was found: {missing_properties}'
@@ -131,6 +155,17 @@ class FormPostParser(HTMLParser):
         return self._payload
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        """Handle HTML start tags during parsing.
+
+        Extracts form action URL from <form> tags and token values from <input> tags.
+        For input tags, extracts name and value attributes for fields matching the
+        expected payload keys (id_token, client_info, state, session_state).
+
+        Args:
+            tag: The HTML tag name.
+            attrs: List of (attribute, value) tuples for the tag.
+
+        """
         if tag == 'form':
             for attr, value in attrs:
                 if attr == 'action':
