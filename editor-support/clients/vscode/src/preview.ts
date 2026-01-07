@@ -68,6 +68,16 @@ export class GherkinPreview {
         }
     }
 
+    /**
+     * Creates a new webview panel for Gherkin preview.
+     *
+     * Initializes a webview panel with syntax highlighting capabilities, positioned beside
+     * the active editor. The panel is configured with the Grizzly icon, disabled find widget,
+     * enabled scripts for highlight.js, and retained context when hidden for better performance.
+     *
+     * @param uri - The URI of the file being previewed, used to extract the basename for the panel title
+     * @returns A configured WebviewPanel instance ready to display Gherkin content
+     */
     private create(uri: vscode.Uri) {
         const basename = path.basename(uri.path);
 

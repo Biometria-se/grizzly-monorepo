@@ -226,6 +226,18 @@ class AzureAadWebserver:
         self.enable = self.credential.redirect is None and self.credential.initialize is None
 
     def _start(self) -> None:
+        """Start the temporary HTTP server for OAuth2 redirect handling.
+
+        Creates and starts an HTTP server on a random available port on localhost (127.0.0.1).
+        The server runs in a daemon thread to avoid blocking the main thread. It's configured
+        with a 0.5 second timeout and address reuse enabled. If the webserver is disabled
+        (when redirect URI or initialize URL is already provided), this method returns immediately.
+
+        The server captures OAuth2 authorization responses during the authentication flow.
+        On Windows, OSError exceptions with 'WinError 10038' are suppressed as they occur
+        during normal socket shutdown operations.
+
+        """
         if not self.enable:
             return
 
