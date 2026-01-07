@@ -92,6 +92,20 @@ class AzureAadFlowError(AzureAadError):
 
 
 class CookieTokenPayload(TypedDict):
+    """TypedDict representing token payload data from cookie-based authentication flows.
+
+    This structure defines the expected fields in the token payload when using
+    cookie-based authentication with Azure Entra ID. The data is typically extracted
+    from HTML form posts during the authentication flow.
+
+    Attributes:
+        id_token: The JWT identity token containing user claims and authentication information
+        client_info: Base64-encoded client information from the authentication response
+        state: State parameter used to maintain request/response correlation and prevent CSRF attacks
+        session_state: Session state information for managing authentication sessions
+
+    """
+
     id_token: str | None
     client_info: str | None
     state: str | None
