@@ -4,6 +4,15 @@ import { Utils } from 'vscode-uri';
 
 import { ConsoleLogOutputChannel } from './log';
 
+/**
+ * Options for configuring Gherkin preview rendering.
+ *
+ * Specifies the source content for the preview, either from an existing
+ * document or as raw content string. One of the properties must be provided.
+ *
+ * @property document - Optional TextDocument to preview. When provided, the document's content is used for rendering.
+ * @property content - Optional raw string content to preview. Used when rendering content that doesn't come from a document.
+ */
 export interface GherkinPreviewOptions {
     document?: vscode.TextDocument;
     content?: string;
