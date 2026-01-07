@@ -158,7 +158,7 @@ jobs:
     - name: Publish
       working-directory: ${{ matrix.changes.directory }}
       run: |
-        if [[ "${{ inputs.dry-run }}" == "false" ]]; then
+        if [[ "${{ inputs.dry-run || 'false' }}" == "false" ]]; then
           npx @vscode/vsce publish -p $VSCE_TOKEN
         else
           ls -l grizzly-loadtester-vscode-*.vsix
