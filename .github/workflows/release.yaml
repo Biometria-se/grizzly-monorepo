@@ -211,6 +211,7 @@ jobs:
         version-bump: ${{ needs.prerequisites.outputs.version-bump }}
         dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'false' }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
+        name: "documentation"
 
     - name: Build
       run: uv run mkdocs build

@@ -758,5 +758,121 @@ describe('cleanup', () => {
 
       expect(coreStub.info.calledWith('Deleting tag framework@v1.2.3 (dry-run mode)')).to.be.true;
     });
+
+    it('should timeout if steps are still in progress after timeout', async function() {
+      this.timeout(5000); // Set timeout to 5 seconds to allow for the 1 second wait
+
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
+      coreStub.getState.withArgs('job-name').returns('test-job');
+
+      // Always return in_progress steps
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              id: 12345,
+              name: 'test-job',
+              status: 'in_progress',
+              conclusion: null,
+              steps: [
+                { name: 'Checkout', status: 'completed', conclusion: 'success' },
+                { name: 'Build', status: 'in_progress', conclusion: null },
+              ],
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+        maxWaitTime: 200, // 200ms for testing
+        baseDelayMs: 10,  // 10ms base delay for fast testing
+        maxDelayMs: 50,   // 50ms max delay for fast testing
+      });
+
+      expect(coreStub.setFailed.calledWith(sinon.match(/Timeout: Steps are still in progress/))).to.be.true;
+      expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
+    });
+
+    it('should wait and retry when steps are initially in progress', async function() {
+      this.timeout(5000); // Allow time for retries
+
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
+      coreStub.getState.withArgs('job-name').returns('test-job');
+
+      let callCount = 0;
+      octokitStub.rest.actions.listJobsForWorkflowRun.callsFake(() => {
+        callCount++;
+        // First call: steps in progress
+        if (callCount === 1) {
+          return Promise.resolve({
+            data: {
+              jobs: [
+                {
+                  id: 12345,
+                  name: 'test-job',
+                  status: 'in_progress',
+                  conclusion: null,
+                  steps: [
+                    { name: 'Checkout', status: 'completed', conclusion: 'success' },
+                    { name: 'Build', status: 'in_progress', conclusion: null },
+                  ],
+                },
+              ],
+            },
+          });
+        }
+        // Second call: all steps completed successfully
+        return Promise.resolve({
+          data: {
+            jobs: [
+              {
+                id: 12345,
+                name: 'test-job',
+                status: 'completed',
+                conclusion: 'success',
+                steps: [
+                  { name: 'Checkout', status: 'completed', conclusion: 'success' },
+                  { name: 'Build', status: 'completed', conclusion: 'success' },
+                ],
+              },
+            ],
+          },
+        });
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+        baseDelayMs: 10,  // 10ms base delay for fast testing
+        maxDelayMs: 50,   // 50ms max delay for fast testing
+      });
+
+      // Should have retried at least twice
+      expect(octokitStub.rest.actions.listJobsForWorkflowRun.callCount).to.be.at.least(2);
+      expect(coreStub.info.calledWith(sinon.match(/Attempt \d+: Some steps are still in progress/))).to.be.true;
+      expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.true;
+    });
   });
 });

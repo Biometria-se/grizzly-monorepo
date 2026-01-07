@@ -36308,6 +36308,9 @@ async function run() {
  * @param {object} dependencies.exec - GitHub Actions exec module
  * @param {object} dependencies.github - GitHub Actions github module
  * @param {object} dependencies.env - Environment variables object (defaults to process.env)
+ * @param {number} dependencies.maxWaitTime - Maximum time to wait for steps to complete in milliseconds (defaults to 30000)
+ * @param {number} dependencies.baseDelayMs - Base delay for exponential backoff in milliseconds (defaults to 1000)
+ * @param {number} dependencies.maxDelayMs - Maximum delay cap for backoff in milliseconds (defaults to 5000)
  * @returns {Promise<void>}
  */
 async function cleanup(dependencies = {}) {
@@ -36316,6 +36319,9 @@ async function cleanup(dependencies = {}) {
         exec: execModule = exec$1,
         github: githubModule = github$1,
         env = process.env,
+        maxWaitTime = 30000,
+        baseDelayMs = 1000,
+        maxDelayMs = 5000,
     } = dependencies;
 
     try {
@@ -36345,25 +36351,55 @@ async function cleanup(dependencies = {}) {
 
         coreModule.info(`Checking job status for run ${runId}...`);
 
-        // Get jobs for this workflow run
-        const { data: { jobs } } = await octokit.rest.actions.listJobsForWorkflowRun({
-            owner,
-            repo,
-            run_id: parseInt(runId, 10),
-        });
+        // Poll until no steps are in progress (with timeout and backoff)
+        const startTime = Date.now();
+        let attempt = 0;
+        let currentJob = null;
+        let hasInProgressSteps = true;
 
-        // Log available jobs for debugging
-        coreModule.info(`Found ${jobs.length} jobs in workflow run`);
-        jobs.forEach(job => {
-            coreModule.info(`  Job: name="${job.name}", id=${job.id}, status=${job.status}, conclusion=${job.conclusion || 'none'}`);
-        });
-        coreModule.info(`Looking for job with name: ${jobName}`);
+        while (hasInProgressSteps && (Date.now() - startTime) < maxWaitTime) {
+            attempt++;
+            
+            // Get jobs for this workflow run
+            const { data: { jobs } } = await octokit.rest.actions.listJobsForWorkflowRun({
+                owner,
+                repo,
+                run_id: parseInt(runId, 10),
+            });
 
-        // Find the current job by name
-        const currentJob = jobs.find(job => job.name === jobName);
+            if (attempt === 1) {
+                // Log available jobs for debugging on first attempt
+                coreModule.info(`Found ${jobs.length} jobs in workflow run`);
+                jobs.forEach(job => {
+                    coreModule.info(`  Job: name="${job.name}", id=${job.id}, status=${job.status}, conclusion=${job.conclusion || 'none'}`);
+                });
+                coreModule.info(`Looking for job with name: ${jobName}`);
+            }
 
-        if (!currentJob) {
-            throw new Error(`Could not find current job with name '${jobName}' in workflow run`);
+            // Find the current job by name
+            currentJob = jobs.find(job => job.name === jobName);
+
+            if (!currentJob) {
+                throw new Error(`Could not find current job with name '${jobName}' in workflow run`);
+            }
+
+            const steps = currentJob.steps || [];
+            hasInProgressSteps = steps.some(step => step.status === 'in_progress');
+
+            if (hasInProgressSteps) {
+                coreModule.info(`Attempt ${attempt}: Some steps are still in progress, waiting...`);
+                
+                // Calculate backoff with jitter: base * 2^(attempt-1) + random jitter up to 500ms
+                const baseDelay = Math.min(baseDelayMs * Math.pow(2, attempt - 1), maxDelayMs);
+                const jitter = Math.random() * 500;
+                const delay = baseDelay + jitter;
+                
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+
+        if (hasInProgressSteps) {
+            throw new Error('Timeout: Steps are still in progress after 30 seconds');
         }
 
         coreModule.info(`Job status: ${currentJob.status}, conclusion: ${currentJob.conclusion || 'none'}`);
@@ -36371,11 +36407,12 @@ async function cleanup(dependencies = {}) {
         // Check if all steps in the job succeeded
         const steps = currentJob.steps || [];
         coreModule.info(`Found ${steps.length} steps in job`);
-        
-        const allStepsSucceeded = steps.every(step => {
+
+        steps.forEach(step => {
             coreModule.info(`  Step: name="${step.name}", status=${step.status}, conclusion=${step.conclusion || 'none'}`);
-            return step.conclusion === 'success';
         });
+
+        const allStepsSucceeded = steps.every(step => step.conclusion === 'success');
 
         if (allStepsSucceeded && steps.length > 0) {
             // All steps succeeded
