@@ -33,8 +33,16 @@ export class GherkinPreview {
      */
     public panels: Map<vscode.Uri, vscode.WebviewPanel>;
 
+    /**
+     * The highlight.js theme style to use based on the active VS Code color theme.
+     * Set to 'github' for light themes and 'github-dark' for dark themes.
+     */
     private style: string;
 
+    /**
+     * Configuration for the webview panel display positioning.
+     * Opens the preview beside the active editor with focus preserved on the original editor.
+     */
     private displayColumn = {
         viewColumn: vscode.ViewColumn.Beside,
         preserveFocus: true,
@@ -95,6 +103,16 @@ export class GherkinPreview {
         return panel;
     }
 
+    /**
+     * Generate HTML content for the webview panel with syntax highlighting.
+     *
+     * Creates an HTML document that uses highlight.js for syntax highlighting of Gherkin or Python content.
+     * The styling adapts to the VS Code theme (github style for light themes, github-dark for dark themes).
+     *
+     * @param content - The Gherkin or Python content to render
+     * @param success - Whether the Gherkin rendering was successful (true: Gherkin syntax, false: Python syntax)
+     * @returns HTML string with embedded highlight.js configuration and the content to be displayed
+     */
     private generateHtml(content: string, success: boolean): string {
         const language = success ? 'gherkin' : 'python';
 
@@ -132,6 +150,13 @@ export class GherkinPreview {
 </html>`;
     }
 
+    /**
+     * Update the content of a webview panel by rendering the Gherkin feature file.
+     *
+     * @param textDocument - The text document to render
+     * @param panel - Optional webview panel to update (if not provided, will be retrieved from panels map)
+     * @param on_the_fly - Whether to render on-the-fly without validation (default: false)
+     */
     public async update(textDocument: vscode.TextDocument, panel?: vscode.WebviewPanel, on_the_fly: boolean = false): Promise<void> {
         if (!panel) {
             panel = this.panels.get(textDocument.uri);
@@ -153,6 +178,12 @@ export class GherkinPreview {
         return;
     }
 
+    /**
+     * Close and dispose the webview panel for a given text document.
+     *
+     * @param textDocument - The text document whose preview panel should be closed
+     * @returns true if the panel was found and closed, false otherwise
+     */
     public close(textDocument: vscode.TextDocument): boolean {
         const panel = this.panels.get(textDocument.uri);
 
@@ -164,6 +195,15 @@ export class GherkinPreview {
         return false;
     }
 
+    /**
+     * Preview a Gherkin feature file in a webview panel, creating a new panel if needed.
+     *
+     * This method checks if the document contains scenarios requiring preview (using {% scenario marker),
+     * creates or reveals the preview panel, and sets up event handlers for panel lifecycle.
+     *
+     * @param textDocument - The text document to preview
+     * @param only_reveal - If true, only reveal existing panel without creating a new one (default: false)
+     */
     public async preview(textDocument: vscode.TextDocument, only_reveal: boolean = false): Promise<void> {
         let panel = this.panels.get(textDocument.uri);
 

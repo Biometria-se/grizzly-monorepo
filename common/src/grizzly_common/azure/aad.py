@@ -266,6 +266,15 @@ class AzureAadWebserver:
         self._thread.start()
 
     def _stop(self) -> None:
+        """Stop the temporary HTTP server and clean up resources.
+
+        Closes the HTTP server socket and waits for the server thread to terminate
+        (with a 1-second timeout). If the webserver is disabled, this method returns
+        immediately without performing any cleanup.
+
+        Any exceptions during thread joining are suppressed to ensure cleanup completes.
+
+        """
         if not self.enable:
             return
 
@@ -274,6 +283,17 @@ class AzureAadWebserver:
             self._thread.join(timeout=1)
 
     def __enter__(self) -> Self:
+        """Enter the context manager and start the OAuth2 redirect server.
+
+        Saves the current redirect URI, starts the HTTP server (if enabled), and
+        temporarily replaces the credential's redirect URI with the localhost server
+        address. This allows the OAuth2 flow to redirect to the local server for
+        capturing the authorization code.
+
+        Returns:
+            Self: The webserver instance for context manager usage.
+
+        """
         self._redirect = self.credential.redirect
 
         self._start()
@@ -289,6 +309,21 @@ class AzureAadWebserver:
         exc: BaseException | None,
         traceback: TracebackType | None,
     ) -> bool:
+        """Exit the context manager and restore the original redirect URI.
+
+        Stops the HTTP server and restores the credential's original redirect URI
+        that was saved on entry. Returns True if no exception occurred during
+        the context, False otherwise.
+
+        Args:
+            exc_type: The type of exception that occurred, if any.
+            exc: The exception instance that occurred, if any.
+            traceback: The traceback of the exception, if any.
+
+        Returns:
+            bool: True if no exception occurred, False otherwise.
+
+        """
         self._stop()
 
         self.credential.redirect = self._redirect
@@ -297,6 +332,33 @@ class AzureAadWebserver:
 
 
 class AzureAadCredential(TokenCredential):
+    """Azure Entra ID credential for authentication and token management.
+
+    Implements Azure's TokenCredential interface to provide OAuth2-based authentication
+    for Azure services. Supports both user authentication (interactive/delegated) and
+    service principal authentication (client credentials flow). Handles token acquisition,
+    refresh, MFA with TOTP, and both header-based and cookie-based authentication flows.
+
+    This credential can authenticate against Azure Entra ID (formerly Azure Active Directory)
+    using various flows including authorization code flow with PKCE, client credentials flow,
+    and form-based authentication with cookie delivery.
+
+    Attributes:
+        COOKIE_NAME: The ASP.NET Core cookie name used for cookie-based authentication.
+        provider_url_template: Template URL for Azure Entra ID OAuth2 endpoints.
+        username: The username for user authentication flows (None for client auth).
+        password: The password or client secret for authentication.
+        scope: The OAuth2 scope for token requests.
+        client_id: The Azure application (client) ID.
+        tenant: The Azure tenant ID or URL.
+        otp_secret: TOTP secret for MFA (optional).
+        refresh_time: Token refresh interval in seconds (default: 3600).
+        redirect: Custom redirect URI for OAuth2 flows (optional).
+        initialize: Initial URL to start authentication from (optional).
+        auth_type: Token delivery type (header or cookie).
+
+    """
+
     COOKIE_NAME: ClassVar[str] = '.AspNetCore.Cookies'
 
     provider_url_template: ClassVar[str] = 'https://login.microsoftonline.com/{tenant}/oauth2/v2.0'
@@ -333,6 +395,25 @@ class AzureAadCredential(TokenCredential):
         scope: str | None = None,
         client_id: str | None = None,
     ) -> None:
+        """Initialize Azure Entra ID credential for authentication.
+
+        Sets up the credential with authentication parameters for either user-based or
+        client-based authentication flows. Configures token delivery method (header or cookie)
+        based on whether an initialize URL is provided.
+
+        Args:
+            username: Username for user authentication (None for client credentials flow).
+            password: Password for user auth or client secret for service principal auth.
+            tenant: Azure tenant ID, URL, or tenant identifier.
+            auth_method: Authentication method (USER, CLIENT, or NONE).
+            host: Base host URL for the service being authenticated against.
+            redirect: Custom OAuth2 redirect URI (optional, defaults to temporary localhost).
+            initialize: Initial URL to start authentication from for cookie-based flows (optional).
+            otp_secret: TOTP secret for MFA authentication (optional, required if user has MFA enabled).
+            scope: OAuth2 scope string for token requests (optional).
+            client_id: Azure application (client) ID (optional, defaults to Azure CLI client ID).
+
+        """
         self.username = username
         self.password = password
         self.tenant = tenant
@@ -358,10 +439,30 @@ class AzureAadCredential(TokenCredential):
 
     @property
     def access_token(self) -> AccessToken:
+        """Get the current access token, acquiring a new one if needed.
+
+        Returns the cached access token or acquires a new one if the cached token
+        is expired or doesn't exist. This is a convenience property that calls
+        get_token() with no arguments.
+
+        Returns:
+            AccessToken: The current valid access token with expiration timestamp.
+
+        """
         return self.get_token()
 
     @property
     def refreshed(self) -> bool:
+        """Check if the token was refreshed in the last get_token call.
+
+        This is a one-time flag that returns True if the previous get_token() call
+        resulted in a token refresh (due to expiration), then resets to False.
+        Useful for tracking when tokens are renewed.
+
+        Returns:
+            bool: True if token was refreshed in last get_token call, False otherwise.
+
+        """
         refreshed = self._refreshed
         self._refreshed = False
 
@@ -369,9 +470,32 @@ class AzureAadCredential(TokenCredential):
 
     @property
     def webserver(self) -> AzureAadWebserver:
+        """Get the OAuth2 redirect webserver instance.
+
+        Returns the temporary HTTP server used for handling OAuth2 redirects during
+        user authentication flows. The server is only activated when needed (no custom
+        redirect URI or initialize URL provided).
+
+        Returns:
+            AzureAadWebserver: The webserver instance for OAuth2 redirect handling.
+
+        """
         return self._webserver
 
     def get_tenant(self, tenant_id: str | None) -> str | None:
+        """Extract and normalize the Azure tenant identifier.
+
+        Resolves the tenant ID to use, either from the provided parameter or from
+        the instance's tenant attribute. If the tenant is a URL, extracts the tenant
+        ID from the URL path.
+
+        Args:
+            tenant_id: Optional tenant ID to use instead of the instance's tenant.
+
+        Returns:
+            str | None: The normalized tenant ID, or None if no tenant is configured.
+
+        """
         tenant = tenant_id if tenant_id is not None else self.tenant
 
         if tenant is None:
@@ -385,6 +509,19 @@ class AzureAadCredential(TokenCredential):
         return tenant
 
     def generate_log(self, file_name: str, name: str, response: requests.Response) -> None:
+        """Generate detailed debug logs for authentication flow HTTP requests.
+
+        Creates markdown-formatted logs of HTTP requests and responses during the
+        authentication flow. Only generates logs when logger is at DEBUG level and
+        GRIZZLY_CONTEXT_ROOT environment variable is set. Logs include request/response
+        URLs, headers, and payloads for debugging authentication issues.
+
+        Args:
+            file_name: Path to the log file to append to.
+            name: Descriptive name for this request/response in the log.
+            response: The HTTP response object to log.
+
+        """
         if logger.getEffectiveLevel() > logging.DEBUG or environ.get('GRIZZLY_CONTEXT_ROOT', None) is None:
             return
 
@@ -432,6 +569,26 @@ class AzureAadCredential(TokenCredential):
         tenant_id: str | None = None,
         **_kwargs: Any,
     ) -> AccessToken:
+        """Get an access token, acquiring a new one if expired or not yet obtained.
+
+        Implements the TokenCredential interface method. Returns a cached token if still
+        valid, or acquires a new token through the appropriate authentication flow (user
+        or client credentials). Sets the refreshed flag when a token is renewed.
+
+        Args:
+            *scopes: OAuth2 scopes to request (uses instance scope if not provided).
+            claims: Optional claims to request in the token (currently unused).
+            tenant_id: Optional tenant ID to override the instance tenant.
+            **_kwargs: Additional keyword arguments (ignored, for interface compatibility).
+
+        Returns:
+            AccessToken: A valid access token with expiration timestamp.
+
+        Raises:
+            AzureAadError: If authentication flow configuration is invalid.
+            AzureAadFlowError: If authentication flow fails.
+
+        """
         now = datetime.now(tz=timezone.utc).timestamp()
 
         if self.scope is not None and len(scopes) < 1:
@@ -455,6 +612,19 @@ class AzureAadCredential(TokenCredential):
         return cast('AccessToken', self._access_token)
 
     def get_expires_on(self, token: str) -> int:
+        """Extract the expiration timestamp from a JWT token.
+
+        Decodes the JWT token payload to extract the 'exp' (expiration) claim.
+        If decoding fails or the claim is missing, returns a default expiration
+        of 3000 seconds from now.
+
+        Args:
+            token: The JWT token string to decode.
+
+        Returns:
+            int: Unix timestamp when the token expires.
+
+        """
         # default to 3000 seconds
         default_exp = int(datetime.now(tz=timezone.utc).timestamp()) + 3000
 
@@ -480,6 +650,38 @@ class AzureAadCredential(TokenCredential):
         claims: str | None = None,  # noqa: ARG002
         tenant_id: str | None = None,
     ) -> AccessToken:
+        """Perform interactive user authentication flow to obtain an access token.
+
+        Executes a complete OAuth2 authorization code flow with PKCE for user authentication.
+        Supports both header-based (redirect URI) and cookie-based (initialize URI) token delivery.
+        Handles multi-factor authentication using TOTP when configured. The flow includes:
+
+        1. Initial authorization request
+        2. Credential type verification
+        3. Username and password submission
+        4. MFA challenge with TOTP (if required)
+        5. Authorization code or token retrieval
+        6. Token exchange (for authorization code flow)
+
+        Args:
+            *scopes: OAuth2 scopes to request for the token.
+            claims: Optional claims to request (currently unused, reserved for future use).
+            tenant_id: Optional tenant ID to override the instance tenant.
+
+        Returns:
+            AccessToken: The obtained access token with expiration timestamp.
+
+        Raises:
+            AzureAadError: If neither initialize nor redirect URI is configured, or if
+                both are configured simultaneously.
+            AzureAadFlowError: If any step in the authentication flow fails, including:
+                - Unexpected HTTP status codes
+                - Service exceptions from Azure
+                - Missing required MFA configuration
+                - Invalid credentials
+                - Missing required response fields
+
+        """
         tenant = self.get_tenant(tenant_id)
 
         log_file = Path('flow.md')
@@ -1128,6 +1330,30 @@ class AzureAadCredential(TokenCredential):
         resource: str | None = None,
         tenant_id: str | None = None,
     ) -> AccessToken:
+        """Exchange authorization code for access token or perform client credentials flow.
+
+        Obtains an access token by either:
+        1. Exchanging an authorization code with PKCE verifier (user auth flow)
+        2. Using client credentials (service principal auth flow)
+
+        The method determines the flow based on the presence of code and verifier parameters.
+        For authorization code flow, exchanges the code received from the authorization endpoint
+        for an access token. For client credentials flow, authenticates using client ID and secret.
+
+        Args:
+            code: Authorization code from OAuth2 authorization flow (optional).
+            verifier: PKCE code verifier corresponding to the authorization code (optional).
+            resource: Resource/scope for client credentials flow (optional).
+            tenant_id: Optional tenant ID to override the instance tenant.
+
+        Returns:
+            AccessToken: The obtained access token with expiration timestamp.
+
+        Raises:
+            AzureAadFlowError: If the token request fails or if neither id_token nor
+                access_token is present in the response.
+
+        """
         tenant = self.get_tenant(tenant_id)
 
         provider_url = self.provider_url_template.format(tenant=tenant)

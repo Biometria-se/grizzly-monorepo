@@ -1,5 +1,3 @@
-# THIS IS A WORK IN PROGRESS, DO NOT USE!
-
 # Grizzly - `/ˈɡɹɪzli/`
 
 <img align="right" src="https://raw.githubusercontent.com/Biometria-se/grizzly/main/docs/assets/logo/grizzly_grasshopper_brown_256px.png" alt="grizzly logo">
