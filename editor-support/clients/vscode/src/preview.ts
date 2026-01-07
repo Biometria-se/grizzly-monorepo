@@ -18,7 +18,14 @@ export interface GherkinPreviewOptions {
     content?: string;
 }
 
-
+/**
+ * Manages Gherkin feature file previews with syntax highlighting.
+ *
+ * Provides webview-based preview functionality for Gherkin feature files,
+ * rendering them with syntax highlighting in a separate editor panel.
+ * Supports both standard Gherkin and templated scenarios using Jinja2 syntax.
+ * Automatically adapts syntax highlighting theme based on VS Code's active color theme.
+ */
 export class GherkinPreview {
     public panels: Map<vscode.Uri, vscode.WebviewPanel>;
 
