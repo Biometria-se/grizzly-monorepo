@@ -211,6 +211,7 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
                 { name: 'Build', status: 'completed', conclusion: 'failure' },
+                { name: 'Cleanup', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -288,6 +289,7 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
                 { name: 'Build', status: 'completed', conclusion: 'cancelled' },
+                { name: 'Cleanup', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -328,6 +330,7 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
                 { name: 'Build', status: 'completed', conclusion: 'success' },
+                { name: 'Cleanup', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -367,6 +370,7 @@ describe('cleanup', () => {
               conclusion: 'success',
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
+                { name: 'Cleanup', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -410,6 +414,7 @@ describe('cleanup', () => {
               conclusion: 'success',
               steps: [
                 { name: 'Test', status: 'completed', conclusion: 'success' },
+                { name: 'Cleanup', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -586,6 +591,7 @@ describe('cleanup', () => {
               conclusion: 'success',
               steps: [
                 { name: 'Step1', status: 'completed', conclusion: 'success' },
+                { name: 'Cleanup', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -655,6 +661,7 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
                 { name: 'Build', status: 'completed', conclusion: 'success' },
+                { name: 'Cleanup', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -677,7 +684,7 @@ describe('cleanup', () => {
       expect(coreStub.info.calledWith('Running post-job cleanup...')).to.be.true;
       expect(coreStub.info.calledWith('Checking job status for run 12345...')).to.be.true;
       expect(coreStub.info.calledWith('Job status: completed, conclusion: success')).to.be.true;
-      expect(coreStub.info.calledWith('Found 2 steps in job')).to.be.true;
+      expect(coreStub.info.calledWith(sinon.match(/Found 3 steps/))).to.be.true;
       expect(coreStub.info.calledWith('Pushing tag framework@v1.2.3 to remote')).to.be.true;
     });
 
@@ -698,6 +705,7 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
                 { name: 'Build', status: 'completed', conclusion: 'failure' },
+                { name: 'Cleanup', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -737,6 +745,7 @@ describe('cleanup', () => {
               conclusion: 'success',
               steps: [
                 { name: 'Test', status: 'completed', conclusion: 'success' },
+                { name: 'Cleanup', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -779,6 +788,7 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
                 { name: 'Build', status: 'in_progress', conclusion: null },
+                { name: 'Cleanup', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -829,6 +839,7 @@ describe('cleanup', () => {
                   steps: [
                     { name: 'Checkout', status: 'completed', conclusion: 'success' },
                     { name: 'Build', status: 'in_progress', conclusion: null },
+                    { name: 'Cleanup', status: 'in_progress', conclusion: null },
                   ],
                 },
               ],
@@ -847,6 +858,7 @@ describe('cleanup', () => {
                 steps: [
                   { name: 'Checkout', status: 'completed', conclusion: 'success' },
                   { name: 'Build', status: 'completed', conclusion: 'success' },
+                  { name: 'Cleanup', status: 'in_progress', conclusion: null },
                 ],
               },
             ],
@@ -873,6 +885,503 @@ describe('cleanup', () => {
       expect(octokitStub.rest.actions.listJobsForWorkflowRun.callCount).to.be.at.least(2);
       expect(coreStub.info.calledWith(sinon.match(/Attempt \d+: Some steps are still in progress/))).to.be.true;
       expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.true;
+    });
+  });
+
+  describe('last step validation', () => {
+    it('should push tag when last step is in_progress and all other steps succeeded', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
+      coreStub.getState.withArgs('job-name').returns('test-job');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              id: 12345,
+              name: 'test-job',
+              status: 'in_progress',
+              conclusion: null,
+              steps: [
+                { name: 'Checkout', status: 'completed', conclusion: 'success' },
+                { name: 'Build', status: 'completed', conclusion: 'success' },
+                { name: 'Cleanup', status: 'in_progress', conclusion: null },
+              ],
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.true;
+      expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'])).to.be.false;
+    });
+
+    it('should push tag when last step has conclusion success', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
+      coreStub.getState.withArgs('job-name').returns('test-job');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              id: 12345,
+              name: 'test-job',
+              status: 'completed',
+              conclusion: 'success',
+              steps: [
+                { name: 'Checkout', status: 'completed', conclusion: 'success' },
+                { name: 'Build', status: 'completed', conclusion: 'success' },
+                { name: 'Cleanup', status: 'completed', conclusion: 'success' },
+              ],
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.true;
+      expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'])).to.be.false;
+    });
+
+    it('should fail when last step has failed status', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
+      coreStub.getState.withArgs('job-name').returns('test-job');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              id: 12345,
+              name: 'test-job',
+              status: 'completed',
+              conclusion: 'failure',
+              steps: [
+                { name: 'Checkout', status: 'completed', conclusion: 'success' },
+                { name: 'Build', status: 'completed', conclusion: 'success' },
+                { name: 'Cleanup', status: 'failed', conclusion: 'failure' },
+              ],
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.error.calledWith(sinon.match(/Last step has invalid state/))).to.be.true;
+      expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
+      expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
+    });
+
+    it('should fail when last step has cancelled status', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
+      coreStub.getState.withArgs('job-name').returns('test-job');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              id: 12345,
+              name: 'test-job',
+              status: 'completed',
+              conclusion: 'cancelled',
+              steps: [
+                { name: 'Checkout', status: 'completed', conclusion: 'success' },
+                { name: 'Build', status: 'completed', conclusion: 'success' },
+                { name: 'Cleanup', status: 'cancelled', conclusion: 'cancelled' },
+              ],
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.error.calledWith(sinon.match(/Last step has invalid state/))).to.be.true;
+      expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
+      expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
+    });
+
+    it('should fail when last step has skipped status', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
+      coreStub.getState.withArgs('job-name').returns('test-job');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              id: 12345,
+              name: 'test-job',
+              status: 'completed',
+              conclusion: 'success',
+              steps: [
+                { name: 'Checkout', status: 'completed', conclusion: 'success' },
+                { name: 'Build', status: 'completed', conclusion: 'success' },
+                { name: 'Cleanup', status: 'skipped', conclusion: 'skipped' },
+              ],
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.error.calledWith(sinon.match(/Last step has invalid state/))).to.be.true;
+      expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
+      expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
+    });
+
+    it('should delete tag when last step is valid but other steps failed', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
+      coreStub.getState.withArgs('job-name').returns('test-job');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              id: 12345,
+              name: 'test-job',
+              status: 'in_progress',
+              conclusion: null,
+              steps: [
+                { name: 'Checkout', status: 'completed', conclusion: 'success' },
+                { name: 'Build', status: 'completed', conclusion: 'failure' },
+                { name: 'Cleanup', status: 'in_progress', conclusion: null },
+              ],
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.error.calledWith('Not all steps succeeded')).to.be.true;
+      expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
+      expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
+    });
+
+    it('should log error when last step status is invalid', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
+      coreStub.getState.withArgs('job-name').returns('test-job');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              id: 12345,
+              name: 'test-job',
+              status: 'completed',
+              conclusion: 'success',
+              steps: [
+                { name: 'Checkout', status: 'completed', conclusion: 'success' },
+                { name: 'Cleanup', status: 'failed', conclusion: 'failure' },
+              ],
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.error.calledWith(sinon.match(/Last step has invalid state/))).to.be.true;
+      expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
+    });
+
+    it('should fail when last step has completed status but null conclusion', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
+      coreStub.getState.withArgs('job-name').returns('test-job');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              id: 12345,
+              name: 'test-job',
+              status: 'completed',
+              conclusion: null,
+              steps: [
+                { name: 'Checkout', status: 'completed', conclusion: 'success' },
+                { name: 'Build', status: 'completed', conclusion: 'success' },
+                { name: 'Cleanup', status: 'completed', conclusion: null },
+              ],
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.error.calledWith(sinon.match(/Last step has invalid state/))).to.be.true;
+      expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
+      expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
+    });
+
+    it('should fail when last step has in_progress status but failure conclusion', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
+      coreStub.getState.withArgs('job-name').returns('test-job');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              id: 12345,
+              name: 'test-job',
+              status: 'in_progress',
+              conclusion: null,
+              steps: [
+                { name: 'Checkout', status: 'completed', conclusion: 'success' },
+                { name: 'Build', status: 'completed', conclusion: 'success' },
+                { name: 'Cleanup', status: 'in_progress', conclusion: 'failure' },
+              ],
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.error.calledWith(sinon.match(/Last step has invalid state/))).to.be.true;
+      expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
+      expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
+    });
+  });
+
+  describe('step logging', () => {
+    it('should log steps on every polling attempt', async function() {
+      this.timeout(5000);
+
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
+      coreStub.getState.withArgs('job-name').returns('test-job');
+
+      let callCount = 0;
+      octokitStub.rest.actions.listJobsForWorkflowRun.callsFake(() => {
+        callCount++;
+        // First two calls: steps in progress
+        if (callCount <= 2) {
+          return Promise.resolve({
+            data: {
+              jobs: [
+                {
+                  id: 12345,
+                  name: 'test-job',
+                  status: 'in_progress',
+                  conclusion: null,
+                  steps: [
+                    { name: 'Checkout', status: 'completed', conclusion: 'success' },
+                    { name: 'Build', status: 'in_progress', conclusion: null },
+                    { name: 'Cleanup', status: 'in_progress', conclusion: null },
+                  ],
+                },
+              ],
+            },
+          });
+        }
+        // Third call: all steps completed successfully
+        return Promise.resolve({
+          data: {
+            jobs: [
+              {
+                id: 12345,
+                name: 'test-job',
+                status: 'completed',
+                conclusion: 'success',
+                steps: [
+                  { name: 'Checkout', status: 'completed', conclusion: 'success' },
+                  { name: 'Build', status: 'completed', conclusion: 'success' },
+                  { name: 'Cleanup', status: 'in_progress', conclusion: null },
+                ],
+              },
+            ],
+          },
+        });
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+        baseDelayMs: 10,
+        maxDelayMs: 50,
+      });
+
+      // Should log steps for each attempt
+      expect(coreStub.info.calledWith(sinon.match(/Attempt 1: Found 3 steps:/))).to.be.true;
+      expect(coreStub.info.calledWith(sinon.match(/Attempt 2: Found 3 steps:/))).to.be.true;
+      expect(coreStub.info.calledWith(sinon.match(/Attempt 3: Found 3 steps:/))).to.be.true;
+
+      // Should log individual step details
+      expect(coreStub.info.calledWith(sinon.match(/Step 1: name="Checkout"/))).to.be.true;
+      expect(coreStub.info.calledWith(sinon.match(/Step 2: name="Build"/))).to.be.true;
+      expect(coreStub.info.calledWith(sinon.match(/Step 3: name="Cleanup"/))).to.be.true;
+    });
+
+    it('should log step status and conclusion', async () => {
+      coreStub.getState.withArgs('next-release-tag').returns('framework@v1.2.3');
+      coreStub.getState.withArgs('dry-run').returns('false');
+      coreStub.getState.withArgs('github-token').returns('test-token');
+      coreStub.getState.withArgs('job-name').returns('test-job');
+
+      octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
+        data: {
+          jobs: [
+            {
+              id: 12345,
+              name: 'test-job',
+              status: 'completed',
+              conclusion: 'success',
+              steps: [
+                { name: 'Step1', status: 'completed', conclusion: 'success' },
+                { name: 'Step2', status: 'completed', conclusion: 'success' },
+                { name: 'Cleanup', status: 'in_progress', conclusion: null },
+              ],
+            },
+          ],
+        },
+      });
+
+      const env = {
+        GITHUB_TOKEN: 'test-token',
+        GITHUB_RUN_ID: '12345',
+        GITHUB_REPOSITORY: 'owner/repo',
+      };
+
+      await cleanup({
+        core: coreStub,
+        exec: execStub,
+        github: githubStub,
+        env,
+      });
+
+      expect(coreStub.info.calledWith('  Step 1: name="Step1", status=completed, conclusion=success')).to.be.true;
+      expect(coreStub.info.calledWith('  Step 2: name="Step2", status=completed, conclusion=success')).to.be.true;
+      expect(coreStub.info.calledWith('  Step 3: name="Cleanup", status=in_progress, conclusion=none')).to.be.true;
     });
   });
 });

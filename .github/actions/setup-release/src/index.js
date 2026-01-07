@@ -145,7 +145,7 @@ async function run() {
  * @param {object} dependencies.exec - GitHub Actions exec module
  * @param {object} dependencies.github - GitHub Actions github module
  * @param {object} dependencies.env - Environment variables object (defaults to process.env)
- * @param {number} dependencies.maxWaitTime - Maximum time to wait for steps to complete in milliseconds (defaults to 30000)
+ * @param {number} dependencies.maxWaitTime - Maximum time to wait for steps to complete in milliseconds (defaults to 60000)
  * @param {number} dependencies.baseDelayMs - Base delay for exponential backoff in milliseconds (defaults to 1000)
  * @param {number} dependencies.maxDelayMs - Maximum delay cap for backoff in milliseconds (defaults to 5000)
  * @returns {Promise<void>}
@@ -156,7 +156,7 @@ export async function cleanup(dependencies = {}) {
         exec: execModule = exec,
         github: githubModule = github,
         env = process.env,
-        maxWaitTime = 30000,
+        maxWaitTime = 60000,
         baseDelayMs = 1000,
         maxDelayMs = 5000,
     } = dependencies;
@@ -221,7 +221,16 @@ export async function cleanup(dependencies = {}) {
             }
 
             const steps = currentJob.steps || [];
-            hasInProgressSteps = steps.some(step => step.status === 'in_progress');
+            // Allow the last step to be in_progress or success (that's the cleanup step itself)
+            const stepsExceptLast = steps.slice(0, -1);
+
+            // Log all steps
+            coreModule.info(`Attempt ${attempt}: Found ${steps.length} steps:`);
+            steps.forEach((step, index) => {
+                coreModule.info(`  Step ${index + 1}: name="${step.name}", status=${step.status}, conclusion=${step.conclusion || 'none'}`);
+            });
+
+            hasInProgressSteps = stepsExceptLast.some(step => step.status === 'in_progress');
 
             if (hasInProgressSteps) {
                 coreModule.info(`Attempt ${attempt}: Some steps are still in progress, waiting...`);
@@ -236,12 +245,12 @@ export async function cleanup(dependencies = {}) {
         }
 
         if (hasInProgressSteps) {
-            throw new Error('Timeout: Steps are still in progress after 30 seconds');
+            throw new Error(`Timeout: Steps are still in progress after ${(maxWaitTime / 1000).toFixed(2)} seconds`);
         }
 
         coreModule.info(`Job status: ${currentJob.status}, conclusion: ${currentJob.conclusion || 'none'}`);
 
-        // Check if all steps in the job succeeded
+        // Check if all steps in the job succeeded (excluding the last step which is the cleanup step)
         const steps = currentJob.steps || [];
         coreModule.info(`Found ${steps.length} steps in job`);
 
@@ -249,15 +258,27 @@ export async function cleanup(dependencies = {}) {
             coreModule.info(`  Step: name="${step.name}", status=${step.status}, conclusion=${step.conclusion || 'none'}`);
         });
 
-        const allStepsSucceeded = steps.every(step => step.conclusion === 'success');
+        // Exclude the last step (cleanup step itself) from the success check
+        const stepsToCheck = steps.slice(0, -1);
+        const lastStep = steps[steps.length - 1];
+        const allStepsSucceeded = stepsToCheck.every(step => step.conclusion === 'success');
 
-        if (allStepsSucceeded && steps.length > 0) {
-            // All steps succeeded
+        // Verify last step is in valid state:
+        // - (status in_progress AND conclusion null) OR (conclusion success)
+        const lastStepValid = lastStep && (
+            (lastStep.status === 'in_progress' && lastStep.conclusion === null) ||
+            lastStep.conclusion === 'success'
+        );
+
+        if (allStepsSucceeded && stepsToCheck.length > 0 && lastStepValid) {
+            // All steps succeeded (excluding cleanup) and last step is valid
             shouldPushTag = !dryRun;
         } else {
             // Some steps failed, were cancelled, or no steps found
-            if (steps.length === 0) {
+            if (stepsToCheck.length === 0) {
                 coreModule.error(`No steps found in job`);
+            } else if (!lastStepValid) {
+                coreModule.error(`Last step has invalid state: status=${lastStep?.status || 'unknown'}, conclusion=${lastStep?.conclusion || 'none'}`);
             } else {
                 coreModule.error(`Not all steps succeeded`);
             }
