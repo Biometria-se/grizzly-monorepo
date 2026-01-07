@@ -36385,16 +36385,10 @@ async function cleanup(dependencies = {}) {
 
             const steps = currentJob.steps || [];
 
-            // Log all steps
-            coreModule.info(`Attempt ${attempt}: Found ${steps.length} steps:`);
-            steps.forEach((step, index) => {
-                coreModule.info(`  Step ${index + 1}: name="${step.name}", status=${step.status}, conclusion=${step.conclusion || 'none'}`);
-            });
-
             // Find our cleanup step: first step starting with "Post" that is currently in_progress
             // All steps before it must be completed before we can validate their conclusions
             const postStepIndex = steps.findIndex(step => step.name.startsWith('Post') && step.status === 'in_progress');
-            
+
             // Early exit conditions:
             // 1. No steps at all - can't find Post step
             // 2. Post step is first (index 0) - no steps to validate before it
@@ -36402,7 +36396,7 @@ async function cleanup(dependencies = {}) {
             if (steps.length === 0 || postStepIndex === 0) {
                 break; // Exit polling loop immediately
             }
-            
+
             if (postStepIndex > 0) {
                 const stepsBeforePost = steps.slice(0, postStepIndex);
                 postStepReady = stepsBeforePost.every(step => step.status === 'completed');
@@ -36417,6 +36411,12 @@ async function cleanup(dependencies = {}) {
                 const delay = baseDelay + jitter;
 
                 await new Promise(resolve => setTimeout(resolve, delay));
+            } else {
+                // Log all steps on successful final attempt
+                coreModule.info(`Attempt ${attempt}: Found ${steps.length} steps:`);
+                steps.forEach((step, index) => {
+                    coreModule.info(`  Step ${index + 1}: name="${step.name}", status=${step.status}, conclusion=${step.conclusion || 'none'}`);
+                });
             }
         }
 
@@ -36428,11 +36428,6 @@ async function cleanup(dependencies = {}) {
 
         // Check if all steps before first Post step succeeded
         const steps = currentJob.steps || [];
-        coreModule.info(`Found ${steps.length} steps in job`);
-
-        steps.forEach(step => {
-            coreModule.info(`  Step: name="${step.name}", status=${step.status}, conclusion=${step.conclusion || 'none'}`);
-        });
 
         // Find the cleanup step (guaranteed to exist since we waited for it in the polling loop)
         const postStepIndex = steps.findIndex(step => step.name.startsWith('Post') && step.status === 'in_progress');

@@ -1329,12 +1329,13 @@ describe('cleanup', () => {
         maxDelayMs: 50,
       });
 
-      // Should log steps for each attempt
-      expect(coreStub.info.calledWith(sinon.match(/Attempt 1: Found 2 steps:/))).to.be.true;
-      expect(coreStub.info.calledWith(sinon.match(/Attempt 2: Found 2 steps:/))).to.be.true;
+      // Should have retried at least twice
+      expect(octokitStub.rest.actions.listJobsForWorkflowRun.callCount).to.be.at.least(2);
+
+      // Should only log steps on the final successful attempt (attempt 3)
       expect(coreStub.info.calledWith(sinon.match(/Attempt 3: Found 3 steps:/))).to.be.true;
 
-      // Should log individual step details
+      // Should log individual step details only on final attempt
       expect(coreStub.info.calledWith(sinon.match(/Step 1: name="Checkout"/))).to.be.true;
       expect(coreStub.info.calledWith(sinon.match(/Step 2: name="Build"/))).to.be.true;
       expect(coreStub.info.calledWith(sinon.match(/Step 3: name="Post Setup release"/))).to.be.true;
