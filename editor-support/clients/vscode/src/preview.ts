@@ -40,6 +40,17 @@ export class GherkinPreview {
         preserveFocus: true,
     };
 
+    /**
+     * Creates a new Gherkin preview manager.
+     *
+     * Initializes the preview manager with context and logger, sets up the panels map,
+     * and configures the syntax highlighting style based on the active VS Code color theme.
+     * Light themes (including high contrast light) use 'github' style, while dark themes
+     * (including high contrast dark) use 'github-dark' style.
+     *
+     * @param context - The VS Code extension context, used for accessing extension resources like icons
+     * @param logger - Console output channel for logging preview operations and errors
+     */
     constructor(private readonly context: vscode.ExtensionContext, private readonly logger: ConsoleLogOutputChannel) {
         this.panels = new Map();
 

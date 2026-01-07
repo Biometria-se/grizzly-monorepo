@@ -209,6 +209,19 @@ class AzureAadWebserver:
     _redirect: str | None
 
     def __init__(self, credential: AzureAadCredential) -> None:
+        """Initialize the webserver for OAuth2 redirect handling.
+
+        Sets up the webserver configuration based on the credential's redirect URI and
+        initialize URL settings. The webserver is enabled only when both redirect URI
+        and initialize URL are None, indicating that a temporary localhost server is
+        needed to capture the OAuth2 authorization response.
+
+        Args:
+            credential: The AzureAadCredential instance that this webserver will serve.
+                The credential's redirect URI will be temporarily replaced with the
+                webserver's localhost address during authentication.
+
+        """
         self.credential = credential
         self.enable = self.credential.redirect is None and self.credential.initialize is None
 
