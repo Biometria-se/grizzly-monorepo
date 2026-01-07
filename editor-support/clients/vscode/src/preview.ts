@@ -27,6 +27,10 @@ export interface GherkinPreviewOptions {
  * Automatically adapts syntax highlighting theme based on VS Code's active color theme.
  */
 export class GherkinPreview {
+    /**
+     * Map of active webview panels keyed by document URI.
+     * Tracks all currently open preview panels to prevent duplicates and enable proper cleanup.
+     */
     public panels: Map<vscode.Uri, vscode.WebviewPanel>;
 
     private style: string;
