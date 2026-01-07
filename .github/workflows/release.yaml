@@ -157,6 +157,8 @@ jobs:
 
     - name: Publish
       working-directory: ${{ matrix.changes.directory }}
+      env:
+        VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
       run: |
         if [[ "${{ inputs.dry-run || 'false' }}" == "false" ]]; then
           npx @vscode/vsce publish -p $VSCE_TOKEN
