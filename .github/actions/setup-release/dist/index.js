@@ -36351,13 +36351,13 @@ async function cleanup(dependencies = {}) {
 
         coreModule.info(`Checking job status for run ${runId}...`);
 
-        // Poll until no steps are in progress (with timeout and backoff)
+        // Poll until the first Post* step is in_progress and all steps before it are completed
         const startTime = Date.now();
         let attempt = 0;
         let currentJob = null;
-        let hasInProgressSteps = true;
+        let postStepReady = false;
 
-        while (hasInProgressSteps && (Date.now() - startTime) < maxWaitTime) {
+        while (!postStepReady && (Date.now() - startTime) < maxWaitTime) {
             attempt++;
 
             // Get jobs for this workflow run
@@ -36384,8 +36384,6 @@ async function cleanup(dependencies = {}) {
             }
 
             const steps = currentJob.steps || [];
-            // Allow the last step to be in_progress or success (that's the cleanup step itself)
-            const stepsExceptLast = steps.slice(0, -1);
 
             // Log all steps
             coreModule.info(`Attempt ${attempt}: Found ${steps.length} steps:`);
@@ -36393,12 +36391,27 @@ async function cleanup(dependencies = {}) {
                 coreModule.info(`  Step ${index + 1}: name="${step.name}", status=${step.status}, conclusion=${step.conclusion || 'none'}`);
             });
 
-            hasInProgressSteps = stepsExceptLast.some(step => step.status === 'in_progress');
+            // Find our cleanup step: first step starting with "Post" that is currently in_progress
+            // All steps before it must be completed before we can validate their conclusions
+            const postStepIndex = steps.findIndex(step => step.name.startsWith('Post') && step.status === 'in_progress');
+            
+            // Early exit conditions:
+            // 1. No steps at all - can't find Post step
+            // 2. Post step is first (index 0) - no steps to validate before it
+            // 3. Job is completed with non-success conclusion and no Post step - won't appear
+            if (steps.length === 0 || postStepIndex === 0) {
+                break; // Exit polling loop immediately
+            }
+            
+            if (postStepIndex > 0) {
+                const stepsBeforePost = steps.slice(0, postStepIndex);
+                postStepReady = stepsBeforePost.every(step => step.status === 'completed');
+            }
 
-            if (hasInProgressSteps) {
-                coreModule.info(`Attempt ${attempt}: Some steps are still in progress, waiting...`);
+            if (!postStepReady) {
+                coreModule.info(`Attempt ${attempt}: Cleanup step (Post*) not ready or previous steps still running, waiting...`);
 
-                // Calculate backoff with jitter: base * 2^(attempt-1) + random jitter up to 500ms
+                // Calculate exponential backoff with jitter: base * 2^(attempt-1) + random jitter up to 500ms
                 const baseDelay = Math.min(baseDelayMs * Math.pow(2, attempt - 1), maxDelayMs);
                 const jitter = Math.random() * 500;
                 const delay = baseDelay + jitter;
@@ -36407,13 +36420,13 @@ async function cleanup(dependencies = {}) {
             }
         }
 
-        if (hasInProgressSteps) {
-            throw new Error(`Timeout: Steps are still in progress after ${(maxWaitTime / 1000).toFixed(2)} seconds`);
+        if (!postStepReady) {
+            throw new Error(`Timeout after ${(maxWaitTime / 1000).toFixed(2)}s: Cleanup step (Post*) not found with in_progress status or previous steps not completed`);
         }
 
         coreModule.info(`Job status: ${currentJob.status}, conclusion: ${currentJob.conclusion || 'none'}`);
 
-        // Check if all steps in the job succeeded (excluding the last step which is the cleanup step)
+        // Check if all steps before first Post step succeeded
         const steps = currentJob.steps || [];
         coreModule.info(`Found ${steps.length} steps in job`);
 
@@ -36421,29 +36434,27 @@ async function cleanup(dependencies = {}) {
             coreModule.info(`  Step: name="${step.name}", status=${step.status}, conclusion=${step.conclusion || 'none'}`);
         });
 
-        // Exclude the last step (cleanup step itself) from the success check
-        const stepsToCheck = steps.slice(0, -1);
-        const lastStep = steps[steps.length - 1];
+        // Find the cleanup step (guaranteed to exist since we waited for it in the polling loop)
+        const postStepIndex = steps.findIndex(step => step.name.startsWith('Post') && step.status === 'in_progress');
+
+        if (postStepIndex === -1) {
+            throw new Error('Cleanup step (Post*) unexpectedly not found - this should not happen');
+        }
+
+        // Get all steps before first Post step
+        const stepsToCheck = steps.slice(0, postStepIndex);
         const allStepsSucceeded = stepsToCheck.every(step => step.conclusion === 'success');
 
-        // Verify last step is in valid state:
-        // - (status in_progress AND conclusion null) OR (conclusion success)
-        const lastStepValid = lastStep && (
-            (lastStep.status === 'in_progress' && lastStep.conclusion === null) ||
-            lastStep.conclusion === 'success'
-        );
-
-        if (allStepsSucceeded && stepsToCheck.length > 0 && lastStepValid) {
-            // All steps succeeded (excluding cleanup) and last step is valid
+        if (allStepsSucceeded && stepsToCheck.length > 0) {
+            // All steps before first Post step succeeded
             shouldPushTag = !dryRun;
         } else {
-            // Some steps failed, were cancelled, or no steps found
+            // Some steps failed, were cancelled, skipped, or no steps to validate
             if (stepsToCheck.length === 0) {
-                coreModule.error(`No steps found in job`);
-            } else if (!lastStepValid) {
-                coreModule.error(`Last step has invalid state: status=${lastStep?.status || 'unknown'}, conclusion=${lastStep?.conclusion || 'none'}`);
+                coreModule.error(`No steps found before cleanup step - cannot validate`);
             } else {
-                coreModule.error(`Not all steps succeeded`);
+                const failedSteps = stepsToCheck.filter(step => step.conclusion !== 'success');
+                coreModule.error(`Not all steps succeeded (${failedSteps.length}/${stepsToCheck.length} failed)`);
             }
             shouldPushTag = false;
         }

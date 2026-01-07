@@ -171,6 +171,7 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
                 { name: 'Build', status: 'completed', conclusion: 'success' },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -211,7 +212,7 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
                 { name: 'Build', status: 'completed', conclusion: 'failure' },
-                { name: 'Cleanup', status: 'in_progress', conclusion: null },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -266,10 +267,10 @@ describe('cleanup', () => {
         exec: execStub,
         github: githubStub,
         env,
+        maxWaitTime: 200, // Short timeout for test
       });
 
-      expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
-      expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
+      expect(coreStub.setFailed.calledWith(sinon.match(/Cleanup step \(Post\*\) not found with in_progress status or previous steps not completed/))).to.be.true;
     });
 
     it('should delete tag when a step was cancelled', async () => {
@@ -289,7 +290,7 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
                 { name: 'Build', status: 'completed', conclusion: 'cancelled' },
-                { name: 'Cleanup', status: 'in_progress', conclusion: null },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -330,7 +331,7 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
                 { name: 'Build', status: 'completed', conclusion: 'success' },
-                { name: 'Cleanup', status: 'in_progress', conclusion: null },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -370,7 +371,7 @@ describe('cleanup', () => {
               conclusion: 'success',
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
-                { name: 'Cleanup', status: 'in_progress', conclusion: null },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -414,7 +415,7 @@ describe('cleanup', () => {
               conclusion: 'success',
               steps: [
                 { name: 'Test', status: 'completed', conclusion: 'success' },
-                { name: 'Cleanup', status: 'in_progress', conclusion: null },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -591,7 +592,7 @@ describe('cleanup', () => {
               conclusion: 'success',
               steps: [
                 { name: 'Step1', status: 'completed', conclusion: 'success' },
-                { name: 'Cleanup', status: 'in_progress', conclusion: null },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -661,7 +662,7 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
                 { name: 'Build', status: 'completed', conclusion: 'success' },
-                { name: 'Cleanup', status: 'in_progress', conclusion: null },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -705,7 +706,7 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
                 { name: 'Build', status: 'completed', conclusion: 'failure' },
-                { name: 'Cleanup', status: 'in_progress', conclusion: null },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -725,7 +726,7 @@ describe('cleanup', () => {
         env,
       });
 
-      expect(coreStub.error.calledWith('Not all steps succeeded')).to.be.true;
+      expect(coreStub.error.calledWith(sinon.match(/Not all steps succeeded.*failed/))).to.be.true;
       expect(coreStub.info.calledWith('Deleting tag framework@v1.2.3 (job failed or was cancelled)')).to.be.true;
     });
 
@@ -745,7 +746,7 @@ describe('cleanup', () => {
               conclusion: 'success',
               steps: [
                 { name: 'Test', status: 'completed', conclusion: 'success' },
-                { name: 'Cleanup', status: 'in_progress', conclusion: null },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -776,7 +777,7 @@ describe('cleanup', () => {
       coreStub.getState.withArgs('github-token').returns('test-token');
       coreStub.getState.withArgs('job-name').returns('test-job');
 
-      // Always return in_progress steps
+      // Never return "Post Setup release" step - simulating timeout waiting for it
       octokitStub.rest.actions.listJobsForWorkflowRun.resolves({
         data: {
           jobs: [
@@ -788,7 +789,6 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
                 { name: 'Build', status: 'in_progress', conclusion: null },
-                { name: 'Cleanup', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -811,7 +811,7 @@ describe('cleanup', () => {
         maxDelayMs: 50,   // 50ms max delay for fast testing
       });
 
-      expect(coreStub.setFailed.calledWith(sinon.match(/Timeout: Steps are still in progress/))).to.be.true;
+      expect(coreStub.setFailed.calledWith(sinon.match(/Cleanup step \(Post\*\) not found with in_progress status or previous steps not completed/))).to.be.true;
       expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
     });
 
@@ -826,7 +826,7 @@ describe('cleanup', () => {
       let callCount = 0;
       octokitStub.rest.actions.listJobsForWorkflowRun.callsFake(() => {
         callCount++;
-        // First call: steps in progress
+        // First call: "Post Setup release" step not present yet
         if (callCount === 1) {
           return Promise.resolve({
             data: {
@@ -839,14 +839,13 @@ describe('cleanup', () => {
                   steps: [
                     { name: 'Checkout', status: 'completed', conclusion: 'success' },
                     { name: 'Build', status: 'in_progress', conclusion: null },
-                    { name: 'Cleanup', status: 'in_progress', conclusion: null },
                   ],
                 },
               ],
             },
           });
         }
-        // Second call: all steps completed successfully
+        // Second call: "Post Setup release" appears, all steps before it completed
         return Promise.resolve({
           data: {
             jobs: [
@@ -858,7 +857,7 @@ describe('cleanup', () => {
                 steps: [
                   { name: 'Checkout', status: 'completed', conclusion: 'success' },
                   { name: 'Build', status: 'completed', conclusion: 'success' },
-                  { name: 'Cleanup', status: 'in_progress', conclusion: null },
+                  { name: 'Post Setup release', status: 'in_progress', conclusion: null },
                 ],
               },
             ],
@@ -883,7 +882,7 @@ describe('cleanup', () => {
 
       // Should have retried at least twice
       expect(octokitStub.rest.actions.listJobsForWorkflowRun.callCount).to.be.at.least(2);
-      expect(coreStub.info.calledWith(sinon.match(/Attempt \d+: Some steps are still in progress/))).to.be.true;
+      expect(coreStub.info.calledWith(sinon.match(/Cleanup step \(Post\*\) not ready or previous steps still running, waiting/))).to.be.true;
       expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.true;
     });
   });
@@ -906,7 +905,7 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
                 { name: 'Build', status: 'completed', conclusion: 'success' },
-                { name: 'Cleanup', status: 'in_progress', conclusion: null },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -947,7 +946,7 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
                 { name: 'Build', status: 'completed', conclusion: 'success' },
-                { name: 'Cleanup', status: 'completed', conclusion: 'success' },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -987,8 +986,8 @@ describe('cleanup', () => {
               conclusion: 'failure',
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
-                { name: 'Build', status: 'completed', conclusion: 'success' },
-                { name: 'Cleanup', status: 'failed', conclusion: 'failure' },
+                { name: 'Build', status: 'completed', conclusion: 'failure' },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -1008,7 +1007,7 @@ describe('cleanup', () => {
         env,
       });
 
-      expect(coreStub.error.calledWith(sinon.match(/Last step has invalid state/))).to.be.true;
+      expect(coreStub.error.calledWith(sinon.match(/Not all steps succeeded.*failed/))).to.be.true;
       expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
       expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
     });
@@ -1029,8 +1028,8 @@ describe('cleanup', () => {
               conclusion: 'cancelled',
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
-                { name: 'Build', status: 'completed', conclusion: 'success' },
-                { name: 'Cleanup', status: 'cancelled', conclusion: 'cancelled' },
+                { name: 'Build', status: 'completed', conclusion: 'cancelled' },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -1050,7 +1049,7 @@ describe('cleanup', () => {
         env,
       });
 
-      expect(coreStub.error.calledWith(sinon.match(/Last step has invalid state/))).to.be.true;
+      expect(coreStub.error.calledWith(sinon.match(/Not all steps succeeded.*failed/))).to.be.true;
       expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
       expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
     });
@@ -1071,8 +1070,8 @@ describe('cleanup', () => {
               conclusion: 'success',
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
-                { name: 'Build', status: 'completed', conclusion: 'success' },
-                { name: 'Cleanup', status: 'skipped', conclusion: 'skipped' },
+                { name: 'Build', status: 'completed', conclusion: 'skipped' },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -1092,7 +1091,7 @@ describe('cleanup', () => {
         env,
       });
 
-      expect(coreStub.error.calledWith(sinon.match(/Last step has invalid state/))).to.be.true;
+      expect(coreStub.error.calledWith(sinon.match(/Not all steps succeeded.*failed/))).to.be.true;
       expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
       expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
     });
@@ -1114,7 +1113,7 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
                 { name: 'Build', status: 'completed', conclusion: 'failure' },
-                { name: 'Cleanup', status: 'in_progress', conclusion: null },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -1134,7 +1133,7 @@ describe('cleanup', () => {
         env,
       });
 
-      expect(coreStub.error.calledWith('Not all steps succeeded')).to.be.true;
+      expect(coreStub.error.calledWith(sinon.match(/Not all steps succeeded.*failed/))).to.be.true;
       expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
       expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
     });
@@ -1154,8 +1153,8 @@ describe('cleanup', () => {
               status: 'completed',
               conclusion: 'success',
               steps: [
-                { name: 'Checkout', status: 'completed', conclusion: 'success' },
-                { name: 'Cleanup', status: 'failed', conclusion: 'failure' },
+                { name: 'Checkout', status: 'completed', conclusion: 'failure' },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -1175,7 +1174,7 @@ describe('cleanup', () => {
         env,
       });
 
-      expect(coreStub.error.calledWith(sinon.match(/Last step has invalid state/))).to.be.true;
+      expect(coreStub.error.calledWith(sinon.match(/Not all steps succeeded.*failed/))).to.be.true;
       expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
     });
 
@@ -1195,8 +1194,8 @@ describe('cleanup', () => {
               conclusion: null,
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
-                { name: 'Build', status: 'completed', conclusion: 'success' },
-                { name: 'Cleanup', status: 'completed', conclusion: null },
+                { name: 'Build', status: 'completed', conclusion: null },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -1216,7 +1215,7 @@ describe('cleanup', () => {
         env,
       });
 
-      expect(coreStub.error.calledWith(sinon.match(/Last step has invalid state/))).to.be.true;
+      expect(coreStub.error.calledWith(sinon.match(/Not all steps succeeded.*failed/))).to.be.true;
       expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
       expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
     });
@@ -1237,8 +1236,8 @@ describe('cleanup', () => {
               conclusion: null,
               steps: [
                 { name: 'Checkout', status: 'completed', conclusion: 'success' },
-                { name: 'Build', status: 'completed', conclusion: 'success' },
-                { name: 'Cleanup', status: 'in_progress', conclusion: 'failure' },
+                { name: 'Build', status: 'completed', conclusion: 'failure' },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -1258,7 +1257,7 @@ describe('cleanup', () => {
         env,
       });
 
-      expect(coreStub.error.calledWith(sinon.match(/Last step has invalid state/))).to.be.true;
+      expect(coreStub.error.calledWith(sinon.match(/Not all steps succeeded.*failed/))).to.be.true;
       expect(execStub.exec.calledWith('git', ['push', 'origin', 'framework@v1.2.3'])).to.be.false;
       expect(execStub.exec.calledWith('git', ['tag', '-d', 'framework@v1.2.3'], { ignoreReturnCode: true })).to.be.true;
     });
@@ -1276,7 +1275,7 @@ describe('cleanup', () => {
       let callCount = 0;
       octokitStub.rest.actions.listJobsForWorkflowRun.callsFake(() => {
         callCount++;
-        // First two calls: steps in progress
+        // First two calls: "Post Setup release" not present yet
         if (callCount <= 2) {
           return Promise.resolve({
             data: {
@@ -1289,14 +1288,13 @@ describe('cleanup', () => {
                   steps: [
                     { name: 'Checkout', status: 'completed', conclusion: 'success' },
                     { name: 'Build', status: 'in_progress', conclusion: null },
-                    { name: 'Cleanup', status: 'in_progress', conclusion: null },
                   ],
                 },
               ],
             },
           });
         }
-        // Third call: all steps completed successfully
+        // Third call: "Post Setup release" appears, all steps before it completed
         return Promise.resolve({
           data: {
             jobs: [
@@ -1308,7 +1306,7 @@ describe('cleanup', () => {
                 steps: [
                   { name: 'Checkout', status: 'completed', conclusion: 'success' },
                   { name: 'Build', status: 'completed', conclusion: 'success' },
-                  { name: 'Cleanup', status: 'in_progress', conclusion: null },
+                  { name: 'Post Setup release', status: 'in_progress', conclusion: null },
                 ],
               },
             ],
@@ -1332,14 +1330,14 @@ describe('cleanup', () => {
       });
 
       // Should log steps for each attempt
-      expect(coreStub.info.calledWith(sinon.match(/Attempt 1: Found 3 steps:/))).to.be.true;
-      expect(coreStub.info.calledWith(sinon.match(/Attempt 2: Found 3 steps:/))).to.be.true;
+      expect(coreStub.info.calledWith(sinon.match(/Attempt 1: Found 2 steps:/))).to.be.true;
+      expect(coreStub.info.calledWith(sinon.match(/Attempt 2: Found 2 steps:/))).to.be.true;
       expect(coreStub.info.calledWith(sinon.match(/Attempt 3: Found 3 steps:/))).to.be.true;
 
       // Should log individual step details
       expect(coreStub.info.calledWith(sinon.match(/Step 1: name="Checkout"/))).to.be.true;
       expect(coreStub.info.calledWith(sinon.match(/Step 2: name="Build"/))).to.be.true;
-      expect(coreStub.info.calledWith(sinon.match(/Step 3: name="Cleanup"/))).to.be.true;
+      expect(coreStub.info.calledWith(sinon.match(/Step 3: name="Post Setup release"/))).to.be.true;
     });
 
     it('should log step status and conclusion', async () => {
@@ -1359,7 +1357,7 @@ describe('cleanup', () => {
               steps: [
                 { name: 'Step1', status: 'completed', conclusion: 'success' },
                 { name: 'Step2', status: 'completed', conclusion: 'success' },
-                { name: 'Cleanup', status: 'in_progress', conclusion: null },
+                { name: 'Post Setup release', status: 'in_progress', conclusion: null },
               ],
             },
           ],
@@ -1381,7 +1379,7 @@ describe('cleanup', () => {
 
       expect(coreStub.info.calledWith('  Step 1: name="Step1", status=completed, conclusion=success')).to.be.true;
       expect(coreStub.info.calledWith('  Step 2: name="Step2", status=completed, conclusion=success')).to.be.true;
-      expect(coreStub.info.calledWith('  Step 3: name="Cleanup", status=in_progress, conclusion=none')).to.be.true;
+      expect(coreStub.info.calledWith('  Step 3: name="Post Setup release", status=in_progress, conclusion=none')).to.be.true;
     });
   });
 });
