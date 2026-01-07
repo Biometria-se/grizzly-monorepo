@@ -3453,7 +3453,8 @@ eval "$(grizzly-cli --bash-completion)"</p>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">                      </span><span class="o">[</span>--csv-interval<span class="w"> </span>CSV_INTERVAL<span class="o">]</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">                      </span><span class="o">[</span>--csv-flush-interval<span class="w"> </span>CSV_FLUSH_INTERVAL<span class="o">]</span><span class="w"> </span><span class="o">[</span>-l<span class="w"> </span>LOG_FILE<span class="o">]</span>
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">                      </span><span class="o">[</span>--log-dir<span class="w"> </span>LOG_DIR<span class="o">]</span><span class="w"> </span><span class="o">[</span>--dump<span class="w"> </span><span class="o">[</span>DUMP<span class="o">]]</span><span class="w"> </span><span class="o">[</span>--dry-run<span class="o">]</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">                      </span>file<span class="w"> </span><span class="o">[</span>file<span class="w"> </span>...<span class="o">]</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">                      </span><span class="o">[</span>--profile<span class="o">]</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">                      </span>file<span class="w"> </span><span class="o">[</span>file<span class="w"> </span>...<span class="o">]</span>
 </span></code></pre></div>
 <h5 id="positional-arguments_3">Positional arguments</h5>
 <table>
@@ -3536,6 +3537,11 @@ eval "$(grizzly-cli --bash-completion)"</p>
 <td><code>--dry-run</code></td>
 <td><code>False</code></td>
 <td>Will setup and run anything up until when locust should start. Useful for<br/>debugging feature files when developing new tests</td>
+</tr>
+<tr>
+<td><code>--profile</code></td>
+<td><code>False</code></td>
+<td>Enable profiling of grizzly execution, generates a .hprof file upon completion</td>
 </tr>
 </tbody>
 </table>
@@ -3744,7 +3750,8 @@ host the archive and override the download host with environment variable <code>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">                     </span><span class="o">[</span>--csv-interval<span class="w"> </span>CSV_INTERVAL<span class="o">]</span>
 </span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">                     </span><span class="o">[</span>--csv-flush-interval<span class="w"> </span>CSV_FLUSH_INTERVAL<span class="o">]</span><span class="w"> </span><span class="o">[</span>-l<span class="w"> </span>LOG_FILE<span class="o">]</span>
 </span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">                     </span><span class="o">[</span>--log-dir<span class="w"> </span>LOG_DIR<span class="o">]</span><span class="w"> </span><span class="o">[</span>--dump<span class="w"> </span><span class="o">[</span>DUMP<span class="o">]]</span><span class="w"> </span><span class="o">[</span>--dry-run<span class="o">]</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">                     </span>file<span class="w"> </span><span class="o">[</span>file<span class="w"> </span>...<span class="o">]</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">                     </span><span class="o">[</span>--profile<span class="o">]</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">                     </span>file<span class="w"> </span><span class="o">[</span>file<span class="w"> </span>...<span class="o">]</span>
 </span></code></pre></div>
 <h5 id="positional-arguments_6">Positional arguments</h5>
 <table>
@@ -3827,6 +3834,11 @@ host the archive and override the download host with environment variable <code>
 <td><code>--dry-run</code></td>
 <td><code>False</code></td>
 <td>Will setup and run anything up until when locust should start. Useful for<br/>debugging feature files when developing new tests</td>
+</tr>
+<tr>
+<td><code>--profile</code></td>
+<td><code>False</code></td>
+<td>Enable profiling of grizzly execution, generates a .hprof file upon completion</td>
 </tr>
 </tbody>
 </table>
