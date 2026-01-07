@@ -77,7 +77,7 @@ jobs:
       name: testpypi
     permissions:
       id-token: write
-      contents: read
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -113,6 +113,8 @@ jobs:
     needs: [prerequisites]
     if: needs.prerequisites.outputs.should-release == 'true' && needs.prerequisites.outputs.changes_npm != '[]'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -175,6 +177,8 @@ jobs:
       (needs.uv-release.result == 'success' || needs.uv-release.result == 'skipped') &&
       (needs.npm-release.result == 'success' || needs.npm-release.result == 'skipped')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v4
       with:
