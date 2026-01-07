@@ -106,9 +106,11 @@ async function run() {
         const project = core.getInput('project', { required: true });
         const versionBump = core.getInput('version-bump', { required: true });
         const dryRun = core.getInput('dry-run') === 'true'; const token = core.getInput('github-token', { required: true });
+        const jobName = core.getInput('name', { required: true });
 
-        // Store token in state for cleanup phase
+        // Store token and job name in state for cleanup phase
         core.saveState('github-token', token);
+        core.saveState('job-name', jobName);
         core.info(`Starting release with version bump: ${versionBump}`);
         core.info(`Dry run mode: ${dryRun}`);
 
@@ -167,12 +169,12 @@ export async function cleanup(dependencies = {}) {
 
         // Always check job status
         const token = coreModule.getState('github-token');
+        const jobName = coreModule.getState('job-name');
         const runId = env.GITHUB_RUN_ID;
         const repository = env.GITHUB_REPOSITORY;
-        const jobId = env.GITHUB_JOB;
 
-        if (!token || !runId || !repository) {
-            throw new Error('Missing required environment variables (GITHUB_TOKEN, GITHUB_RUN_ID, or GITHUB_REPOSITORY)');
+        if (!token || !runId || !repository || !jobName) {
+            throw new Error('Missing required environment variables or state (GITHUB_TOKEN, GITHUB_RUN_ID, GITHUB_REPOSITORY, or job-name)');
         }
 
         const [owner, repo] = repository.split('/');
@@ -192,23 +194,36 @@ export async function cleanup(dependencies = {}) {
         jobs.forEach(job => {
             coreModule.info(`  Job: name="${job.name}", id=${job.id}, status=${job.status}, conclusion=${job.conclusion || 'none'}`);
         });
-        coreModule.info(`Looking for job with id: ${jobId}`);
+        coreModule.info(`Looking for job with name: ${jobName}`);
 
-        // Find the current job by ID (GITHUB_JOB contains the job_id)
-        const currentJob = jobs.find(job => job.id.toString() === jobId);
+        // Find the current job by name
+        const currentJob = jobs.find(job => job.name === jobName);
 
         if (!currentJob) {
-            throw new Error(`Could not find current job with id '${jobId}' in workflow run`);
+            throw new Error(`Could not find current job with name '${jobName}' in workflow run`);
         }
 
         coreModule.info(`Job status: ${currentJob.status}, conclusion: ${currentJob.conclusion || 'none'}`);
 
-        if (currentJob.conclusion === 'success' || currentJob.status === 'in_progress') {
-            // Job succeeded or still running (all steps so far passed)
+        // Check if all steps in the job succeeded
+        const steps = currentJob.steps || [];
+        coreModule.info(`Found ${steps.length} steps in job`);
+
+        const allStepsSucceeded = steps.every(step => {
+            coreModule.info(`  Step: name="${step.name}", status=${step.status}, conclusion=${step.conclusion || 'none'}`);
+            return step.conclusion === 'success';
+        });
+
+        if (allStepsSucceeded && steps.length > 0) {
+            // All steps succeeded
             shouldPushTag = !dryRun;
         } else {
-            // Job failed or was cancelled
-            coreModule.error(`Job ${currentJob.status} with conclusion: ${currentJob.conclusion}`);
+            // Some steps failed, were cancelled, or no steps found
+            if (steps.length === 0) {
+                coreModule.error(`No steps found in job`);
+            } else {
+                coreModule.error(`Not all steps succeeded`);
+            }
             shouldPushTag = false;
         }
 

@@ -100,6 +100,7 @@ jobs:
         version-bump: ${{ needs.prerequisites.outputs.version-bump }}
         dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'false' }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
+        name: "uv release / ${{ matrix.changes.package }}"
 
     - name: Build
       run: uv build --package ${{ matrix.changes.package }} --sdist --wheel
@@ -138,6 +139,7 @@ jobs:
         version-bump: ${{ needs.prerequisites.outputs.version-bump }}
         dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'false' }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
+        name: "npm release / ${{ matrix.changes.package }}"
 
     - name: Install dependencies
       working-directory: ${{ matrix.changes.directory }}
