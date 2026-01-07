@@ -185,6 +185,22 @@ class FormPostParser(HTMLParser):
 
 
 class AzureAadWebserver:
+    """Temporary HTTP server for OAuth2 redirect handling during Azure Entra ID authentication.
+
+    Manages a local HTTP server that acts as the OAuth2 redirect URI endpoint during
+    user authentication flows. The server runs on localhost and captures the authorization
+    code or token from the authentication response. This is only used when no custom
+    redirect URI is provided and the credential is not being initialized.
+
+    The server automatically starts when entering the context manager and stops when exiting,
+    temporarily replacing the credential's redirect URI with its own localhost address.
+
+    Attributes:
+        enable: Whether the webserver should be activated. True when no redirect URI or initialize URL is provided.
+        credential: The AzureAadCredential instance this webserver is associated with.
+
+    """
+
     enable: bool
     credential: AzureAadCredential
 
