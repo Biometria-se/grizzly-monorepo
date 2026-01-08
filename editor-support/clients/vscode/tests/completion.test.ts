@@ -1,3 +1,29 @@
+/**
+ * Completion Tests for Grizzly VS Code Extension
+ *
+ * This test suite validates the auto-completion functionality of the Grizzly language server
+ * in VS Code. It covers three main areas of completion:
+ *
+ * 1. **Keyword Completion**: Tests auto-completion for Gherkin keywords (Feature, Scenario, Given, When, Then, etc.)
+ *    - Ensures keywords are suggested at appropriate locations in the document hierarchy
+ *    - Validates that used keywords are filtered out appropriately (e.g., Background appears only once)
+ *    - Tests fuzzy matching for keyword suggestions
+ *
+ * 2. **Step Completion**: Tests auto-completion for Grizzly step definitions
+ *    - Validates step suggestions based on keyword context (Given, When, Then)
+ *    - Tests partial step matching and completion
+ *    - Ensures proper snippet placeholders for step parameters
+ *    - Tests completion of partially-typed steps with existing quoted values
+ *
+ * 3. **Variable Completion**: Tests auto-completion for template variables ({{ variable }})
+ *    - Validates suggestion of variables defined earlier in the feature file
+ *    - Tests partial variable name matching
+ *    - Ensures proper handling of variable template syntax
+ *
+ * Each test uses the testCompletion helper to simulate VS Code's completion provider
+ * and validates the returned completion items against expected values.
+ */
+
 import * as vscode from 'vscode';
 import { expect } from 'chai';
 import { activate, getDocUri, acceptAndAssertSuggestion } from './helper';
@@ -98,6 +124,11 @@ describe('Should do completion on keywords', () => {
     });
 });
 
+/**
+ * Tests auto-completion for Grizzly step definitions.
+ * Steps should be suggested based on the current keyword context and support
+ * partial matching and completion of steps with existing parameter values.
+ */
 describe('Should do completion on steps', () => {
     it('Complete steps, keyword `Given` step `variable`', async () => {
         const content = `Feature:
@@ -490,6 +521,11 @@ describe('Should do completion on steps', () => {
     });
 });
 
+/**
+ * Tests auto-completion for variable references within template strings.
+ * Variables defined earlier in the feature file (using steps like "value for variable")
+ * should be suggested when typing {{ inside quoted strings.
+ */
 describe('Should do completion on variables', () => {
     it('Complete variable, not a complete step, no ending "', async () => {
         const content = `Feature:
@@ -591,6 +627,13 @@ describe('Should do completion on variables', () => {
     });
 });
 
+/**
+ * Helper function to execute completion at a specific position in a test document.
+ *
+ * @param content - The feature file content to test against
+ * @param position - The cursor position where completion should be triggered
+ * @returns A promise resolving to the completion list provided by the language server
+ */
 async function testCompletion(content: string, position: vscode.Position): Promise<vscode.CompletionList> {
     const docUri = getDocUri('features/empty.feature');
     await activate(docUri, content);
