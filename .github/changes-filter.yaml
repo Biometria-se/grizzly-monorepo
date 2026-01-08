@@ -1,3 +1,4 @@
+workflows: '.github/workflows/**'
 framework: 'framework/**'
 common: 'common/**'
 command-line-interface: 'command-line-interface/**'

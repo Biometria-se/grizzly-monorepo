@@ -284,6 +284,11 @@ def main() -> int:
             print(f'invalid json in --changes: "{args.changes}"', file=sys.stderr)
             return 1
 
+    # Fail if workflow files were modified - cannot release when .github/workflows/ changes
+    if args.release and any('workflows' in directory for directory in workflow_input):
+        print('error: workflow files cannot be part of a release', file=sys.stderr)
+        return 1
+
     changes: Changes = {'uv': set(), 'npm': set()}
     uv_lock_file = (Path(__file__).parent / '..' / '..' / 'uv.lock').resolve()
 
