@@ -8,7 +8,7 @@
 # ///
 """Map changed directories to package changes and their test configurations.
 
-This script analyzes the monorepo structure to determine which packages have changed
+This script analyzes the repoistory structure to determine which packages have changed
 and identifies their corresponding test suites. It supports both Python (uv-managed)
 and Node.js (npm-managed) packages.
 

@@ -1,6 +1,6 @@
 # Development Guide
 
-This guide covers everything you need to know to develop in the grizzly-monorepo.
+This guide covers everything you need to know to develop in the [grizzly repository](https://github.com/biometria-se/grizzly).
 
 ## Repository Structure
 

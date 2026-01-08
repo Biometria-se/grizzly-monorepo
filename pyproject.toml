@@ -3,7 +3,7 @@
 # - tool.coverage.path
 # - tool.mypy
 [project]
-name = "grizzly-loadtester-monorepo"
+name = "grizzly-loadtester-bundle"
 dynamic = ["version"]
 description = "Monorepo containing all grizzly related packages"
 readme = "README.md"

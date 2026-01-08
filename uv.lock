@@ -9,11 +9,11 @@ resolution-markers = [
 [manifest]
 members = [
     "grizzly-loadtester",
+    "grizzly-loadtester-bundle",
     "grizzly-loadtester-cli",
     "grizzly-loadtester-common",
     "grizzly-loadtester-extras-async-messaged",
     "grizzly-loadtester-ls",
-    "grizzly-loadtester-monorepo",
     "grizzly-mkdocs",
 ]
 
@@ -1064,6 +1064,48 @@ dev = [
 ]
 
 [[package]]
+name = "grizzly-loadtester-bundle"
+source = { editable = "." }
+
+[package.dev-dependencies]
+dev = [
+    { name = "astunparse" },
+    { name = "atomicwrites" },
+    { name = "coverage", extra = ["toml"] },
+    { name = "hatch" },
+    { name = "line-profiler" },
+    { name = "mypy" },
+    { name = "parameterized" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "pytest-mock" },
+    { name = "pytest-timeout" },
+    { name = "ruff" },
+    { name = "semver" },
+    { name = "snakeviz" },
+]
+
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "astunparse", specifier = ">=1.6.3" },
+    { name = "atomicwrites", specifier = ">=1.4.1" },
+    { name = "coverage", extras = ["toml"], specifier = ">=7.10.5" },
+    { name = "hatch", specifier = ">=1.14.1" },
+    { name = "line-profiler", specifier = ">=5.0.0" },
+    { name = "mypy", specifier = ">=1.17.1" },
+    { name = "parameterized", specifier = ">=0.9.0" },
+    { name = "pytest", specifier = ">=8.4.1" },
+    { name = "pytest-cov", specifier = ">=6.2.1" },
+    { name = "pytest-mock", specifier = ">=3.14.1" },
+    { name = "pytest-timeout", specifier = ">=2.4.0" },
+    { name = "ruff", specifier = ">=0.12.10" },
+    { name = "semver", specifier = ">=3.0.4" },
+    { name = "snakeviz", specifier = ">=2.2.2" },
+]
+
+[[package]]
 name = "grizzly-loadtester-cli"
 source = { editable = "command-line-interface" }
 dependencies = [
@@ -1207,48 +1249,6 @@ debug = [{ name = "debugpy", specifier = ">=1.8.16" }]
 dev = [
     { name = "grizzly-loadtester", editable = "framework" },
     { name = "types-colorama", specifier = ">=0.4.15.20250801" },
-]
-
-[[package]]
-name = "grizzly-loadtester-monorepo"
-source = { editable = "." }
-
-[package.dev-dependencies]
-dev = [
-    { name = "astunparse" },
-    { name = "atomicwrites" },
-    { name = "coverage", extra = ["toml"] },
-    { name = "hatch" },
-    { name = "line-profiler" },
-    { name = "mypy" },
-    { name = "parameterized" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "pytest-mock" },
-    { name = "pytest-timeout" },
-    { name = "ruff" },
-    { name = "semver" },
-    { name = "snakeviz" },
-]
-
-[package.metadata]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "astunparse", specifier = ">=1.6.3" },
-    { name = "atomicwrites", specifier = ">=1.4.1" },
-    { name = "coverage", extras = ["toml"], specifier = ">=7.10.5" },
-    { name = "hatch", specifier = ">=1.14.1" },
-    { name = "line-profiler", specifier = ">=5.0.0" },
-    { name = "mypy", specifier = ">=1.17.1" },
-    { name = "parameterized", specifier = ">=0.9.0" },
-    { name = "pytest", specifier = ">=8.4.1" },
-    { name = "pytest-cov", specifier = ">=6.2.1" },
-    { name = "pytest-mock", specifier = ">=3.14.1" },
-    { name = "pytest-timeout", specifier = ">=2.4.0" },
-    { name = "ruff", specifier = ">=0.12.10" },
-    { name = "semver", specifier = ">=3.0.4" },
-    { name = "snakeviz", specifier = ">=2.2.2" },
 ]
 
 [[package]]

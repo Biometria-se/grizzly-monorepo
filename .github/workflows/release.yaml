@@ -74,7 +74,7 @@ jobs:
     if: needs.prerequisites.outputs.should-release == 'true' && needs.prerequisites.outputs.changes_uv != '[]'
     runs-on: ubuntu-latest
     environment:
-      name: testpypi
+      name: pypi
     permissions:
       id-token: write
       contents: write
@@ -106,7 +106,7 @@ jobs:
       run: uv build --package ${{ matrix.changes.package }} --sdist --wheel
 
     - name: "Publish${{ github.event_name == 'workflow_dispatch' && inputs.dry-run && ' (dry-run)' || '' }}"
-      run: uv publish --index testpypi ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run && '--dry-run' || '' }}
+      run: uv publish ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run && '--dry-run' || '' }}
 
   npm-release:
     name: "npm release / ${{ matrix.changes.package }}"
